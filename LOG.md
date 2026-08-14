@@ -878,3 +878,94 @@ Live application, 2026Q3: guidance midpoint $1,140m, trailing-8 mean beat
 [$1,174m, $1,203m], implied YoY +34.2%, QoQ +6.0%. The band is narrow because
 the recent beat has been remarkably stable — which is itself why the
 alternative data has so little room to add value.
+
+---
+
+## Pre-Phase-5 (2026-08-14)
+
+### D32. Guidance verified — 28/28 by an independent parser
+Not a re-run of the extraction regex, which would only prove determinism.
+`src/verify_guidance.py` uses a different parsing path over the same cached
+8-K exhibits: anchor on the quarter-specific Outlook heading, enumerate *every*
+dollar amount in the following window with its unit, then require that the
+template's low and high both appear, in that order, with matching units.
+
+**28/28 agree, including all 12 worklist rows.** The four `C_yoy_jump` flags
+(2021Q3, 2022Q3, 2022Q4, 2023Q1) are confirmed as real deceleration economics,
+not misparses. Verbatim windows for the worklist are written to
+`data/manual/verification_evidence.txt`.
+
+Headline number confirmed against the primary document:
+2026Q3 — *"Third Quarter 2026 Outlook: Revenue between $1.135 billion and
+$1.145 billion"*, 8-K accession 0001628280-26-053829, filed 2026-08-06.
+Midpoint **$1,140m**.
+
+The `machine_verified` column records this check. The `verified` column stays
+reserved for human sign-off on the figures that get spoken aloud — machine
+agreement between two parsers is strong evidence, but it is not a person
+reading the filing.
+
+### D33. Structural break — the brief's prediction is inverted, and that supports the headline rule
+Brief section 5.5 predicted that a model calibrated on 2022–2025 would
+"systematically under-predict 2026", and asked whether walk-forward residuals
+turn systematically negative from 2025. Tested on the headline rule
+(guidance midpoint x trailing 8-quarter mean beat):
+
+| period | n | mean residual | positive |
+|---|---|---|---|
+| pre-2025 | 7 | **−1.96pp** | 1/7 |
+| 2025 onward | 6 | **+0.53pp** | 5/6 |
+
+The residuals run the other way. The rule **over**-predicted through the
+2023–24 deceleration and **under**-predicts only mildly through the 2026
+acceleration. Sign test p=0.219 at n=6 — underpowered, reported as descriptive.
+
+**Why, and why it matters:** the company's own guidance already absorbs the
+regime change. 2026Q2 was the largest acceleration in the sample (35.6% YoY)
+and the rule's residual there is **+0.18pp**. A revenue-history-anchored model
+(AR/ARIMA) must *infer* a break; a guidance-anchored rule inherits it from
+management. That is an independent reason to prefer the headline rule beyond
+its error metrics, and it is the answer to "what about the structural break".
+
+**Is `beat_vs_guide` stationary?** — the actual assumption behind the call:
+
+| window | n | mean | sd | slope pp/qtr | slope p | Spearman ρ (p) |
+|---|---|---|---|---|---|---|
+| full sample | 27 | 6.03% | 2.88pp | **−0.247** | 0.0001 | −0.568 (0.002) |
+| last 16 | 16 | 4.14% | 0.98pp | +0.016 | 0.768 | +0.124 (0.649) |
+| last 12 | 12 | 4.20% | 0.58pp | +0.046 | 0.365 | +0.406 (0.191) |
+| last 8 | 8 | 4.25% | 0.66pp | +0.136 | 0.199 | +0.691 (0.058) |
+
+ADF/KPSS: full sample **non-stationary** (ADF p=0.079, KPSS p=0.028); last 16
+**stationary** (ADF p=0.007, KPSS p=0.100). The full-sample trend is the 2020–21
+hypergrowth regime rolling off, not an ongoing drift.
+
+So the flat trailing-mean assumption is supported on the recent sample, with
+one caveat worth stating: over the last 8 quarters the beat shows a mild
+widening tendency (ρ=+0.691, p=0.058) that is not significant but is not
+nothing. Last 4 vs prior 4: +0.59pp, bootstrap 95% CI [−0.10, +1.34], covers
+zero.
+
+### D34. The interval is conditional, and the condition is now quantified
+±$15m reflects **only** the historical variance of the beat. It excludes:
+- **guidance extraction error** — now zero after D32, and stated as such;
+- **regime risk in the beat distribution** — quantified rather than waved at:
+  the flat-mean call is $1,188m, the trend-extrapolated alternative is $1,195m,
+  a spread of **$7m**, which sits inside the ±$15m band. So on this specific
+  call the regime risk is second-order.
+- **anything that breaks the guidance-to-actual relationship itself** — a
+  guidance philosophy change, a large customer restructuring, an acquisition.
+  Not quantifiable from 27 observations, and named rather than priced.
+
+Report wording: the interval is *conditional on the beat distribution remaining
+stationary*, a condition supported on the last 16 quarters and mildly strained
+over the last 8.
+
+### D35. The decoupling finding is promoted to a standalone section
+Downloads per $m of revenue +398% over the sample, Spearman ρ=+0.927,
+p<0.0001, near-monotonic over 27 quarters (D30). This gets its own section
+heading in the report and its own slide, because it generalises beyond this
+project: it is a finding about **download-based SaaS nowcasting in general**,
+not just about Datadog. It explains why the models fail rather than merely
+recording that they did. Treatment of the CI hypothesis stays as in D30 —
+tested and not supported; remaining candidates named, not implied to be tested.

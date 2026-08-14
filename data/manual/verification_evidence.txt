@@ -1,0 +1,95 @@
+==============================================================================
+2021Q3  guidance $246m - $248m (mid $247.0m)
+issued 2021-08-05   accession 0001561550-21-000015
+https://www.sec.gov/Archives/edgar/data/1561550/000156155021000015/0001561550-21-000015-index.htm
+machine check: agree   amounts found: [246.0, 248.0, 18.0, 20.0, 0.06, 938.0]
+------------------------------------------------------------------------------
+Third Quarter 2021 Outlook: ◦ Revenue between $246 million and $248 million. ◦ Non-GAAP operating income between $18 million and $20 million. ◦ Non-GAAP net income per share between $0.05 and $0.06, assuming approximately 344 million weighted average diluted shares outstanding. • Full Year 2021 Outlook: ◦ Revenue between $938 million and $944 million. ◦ Non-GAAP operating income between $87 million and $93 million. ◦ Non-GAAP net income per share between $0.26 and $0.28, assuming approximately 344 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive plans. Acc
+
+==============================================================================
+2022Q3  guidance $410m - $414m (mid $412.0m)
+issued 2022-08-04   accession 0001561550-22-000033
+https://www.sec.gov/Archives/edgar/data/1561550/000156155022000033/0001561550-22-000033-index.htm
+machine check: agree   amounts found: [410.0, 414.0, 51.0, 55.0, 170.0, 1610.0]
+------------------------------------------------------------------------------
+Third Quarter 2022 Outlook: ◦ Revenue between $410 million and $414 million. ◦ Non-GAAP operating income between $51 million and $55 million. ◦ Non-GAAP net income per share between $0.15 and $0.17, assuming approximately 347 million weighted average diluted shares outstanding. • Full Year 2022 Outlook: ◦ Revenue between $1.61 billion and $1.63 billion. ◦ Non-GAAP operating income between $255 million and $275 million. ◦ Non-GAAP net income per share between $0.74 and $0.81, assuming approximately 347 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive plans.
+
+==============================================================================
+2022Q4  guidance $445m - $449m (mid $447.0m)
+issued 2022-11-03   accession 0001561550-22-000043
+https://www.sec.gov/Archives/edgar/data/1561550/000156155022000043/0001561550-22-000043-index.htm
+machine check: agree   amounts found: [445.0, 449.0, 56.0, 60.0, 200.0, 1650.0]
+------------------------------------------------------------------------------
+Fourth Quarter 2022 Outlook: ◦ Revenue between $445 million and $449 million. ◦ Non-GAAP operating income between $56 million and $60 million. ◦ Non-GAAP net income per share between $0.18 and $0.20, assuming approximately 347 million weighted average diluted shares outstanding. • Full Year 2022 Outlook: ◦ Revenue between $1.650 billion and $1.654 billion. ◦ Non-GAAP operating income between $300 million and $304 million. ◦ Non-GAAP net income per share between $0.90 and $0.92, assuming approximately 346 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive pla
+
+==============================================================================
+2023Q1  guidance $466m - $470m (mid $468.0m)
+issued 2023-02-16   accession 0001561550-23-000003
+https://www.sec.gov/Archives/edgar/data/1561550/000156155023000003/0001561550-23-000003-index.htm
+machine check: agree   amounts found: [466.0, 470.0, 68.0, 72.0, 240.0, 2070.0]
+------------------------------------------------------------------------------
+First Quarter 2023 Outlook: ◦ Revenue between $466 million and $470 million. ◦ Non-GAAP operating income between $68 million and $72 million. ◦ Non-GAAP net income per share between $0.22 and $0.24, assuming approximately 348 million weighted average diluted shares outstanding. • Fiscal Year 2023 Outlook: ◦ Revenue between $2.07 billion and $2.09 billion. ◦ Non-GAAP operating income between $300 million and $320 million. ◦ Non-GAAP net income per share between $1.02 and $1.09, assuming approximately 351 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive plan
+
+==============================================================================
+2024Q4  guidance $709m - $713m (mid $711.0m)
+issued 2024-11-07   accession 0001561550-24-000171
+https://www.sec.gov/Archives/edgar/data/1561550/000156155024000171/0001561550-24-000171-index.htm
+machine check: agree   amounts found: [709.0, 713.0, 163.0, 167.0, 440.0, 2656.0]
+------------------------------------------------------------------------------
+Fourth Quarter 2024 Outlook: ◦ Revenue between $709 million and $713 million. ◦ Non-GAAP operating income between $163 million and $167 million. ◦ Non-GAAP net income per share between $0.42 and $0.44, assuming approximately 361 million weighted average diluted shares outstanding. • Full Year 2024 Outlook: ◦ Revenue between $2.656 billion and $2.660 billion. ◦ Non-GAAP operating income between $658 million and $662 million. ◦ Non-GAAP net income per share between $1.75 and $1.77, assuming approximately 359 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive p
+
+==============================================================================
+2025Q1  guidance $737m - $741m (mid $739.0m)
+issued 2025-02-13   accession 0001561550-25-000017
+https://www.sec.gov/Archives/edgar/data/1561550/000156155025000017/0001561550-25-000017-index.htm
+machine check: agree   amounts found: [737.0, 741.0, 162.0, 166.0, 430.0, 3175.0]
+------------------------------------------------------------------------------
+First Quarter 2025 Outlook: ◦ Revenue between $737 million and $741 million. ◦ Non-GAAP operating income between $162 million and $166 million. ◦ Non-GAAP net income per share between $0.41 and $0.43, assuming approximately 366 million weighted average diluted shares outstanding. • Fiscal Year 2025 Outlook: ◦ Revenue between $3.175 billion and $3.195 billion. ◦ Non-GAAP operating income between $655 million and $675 million. ◦ Non-GAAP net income per share between $1.65 and $1.70, assuming approximately 369 million weighted average diluted shares outstanding. The dilutive effect of our 0.125% Convertible Senior Notes due 2025 and our 0% Convertible Senior Notes due 2029 using the if-converted method is reflected in our guidance for weighted average diluted shares outstanding for the first quarter 2025 and each of the four quarters for the fiscal year 2025. However, upon conversion or mat
+
+==============================================================================
+2025Q2  guidance $787m - $791m (mid $789.0m)
+issued 2025-05-06   accession 0001561550-25-000118
+https://www.sec.gov/Archives/edgar/data/1561550/000156155025000118/0001561550-25-000118-index.htm
+machine check: agree   amounts found: [787.0, 791.0, 148.0, 152.0, 420.0, 3215.0]
+------------------------------------------------------------------------------
+Second Quarter 2025 Outlook: ◦ Revenue between $787 million and $791 million. ◦ Non-GAAP operating income between $148 million and $152 million. ◦ Non-GAAP net income per share between $0.40 and $0.42, assuming approximately 361 million weighted average diluted shares outstanding. • Full Year 2025 Outlook: ◦ Revenue between $3.215 billion and $3.235 billion. ◦ Non-GAAP operating income between $625 million and $645 million. ◦ Non-GAAP net income per share between $1.67 and $1.71, assuming approximately 362 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive p
+
+==============================================================================
+2025Q3  guidance $847m - $851m (mid $849.0m)
+issued 2025-08-07   accession 0001561550-25-000216
+https://www.sec.gov/Archives/edgar/data/1561550/000156155025000216/0001561550-25-000216-index.htm
+machine check: agree   amounts found: [847.0, 851.0, 176.0, 180.0, 460.0, 3312.0]
+------------------------------------------------------------------------------
+Third Quarter 2025 Outlook: ◦ Revenue between $847 million and $851 million. ◦ Non-GAAP operating income between $176 million and $180 million. ◦ Non-GAAP net income per share between $0.44 and $0.46, assuming approximately 364 million weighted average diluted shares outstanding. • Full Year 2025 Outlook: ◦ Revenue between $3.312 billion and $3.322 billion. ◦ Non-GAAP operating income between $684 million and $694 million. ◦ Non-GAAP net income per share between $1.80 and $1.83, assuming approximately 364 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive pl
+
+==============================================================================
+2025Q4  guidance $912m - $916m (mid $914.0m)
+issued 2025-11-06   accession 0001561550-25-000310
+https://www.sec.gov/Archives/edgar/data/1561550/000156155025000310/0001561550-25-000310-index.htm
+machine check: agree   amounts found: [912.0, 916.0, 216.0, 220.0, 560.0, 3386.0]
+------------------------------------------------------------------------------
+Fourth Quarter 2025 Outlook: ◦ Revenue between $912 million and $916 million. ◦ Non-GAAP operating income between $216 million and $220 million. ◦ Non-GAAP net income per share between $0.54 and $0.56, assuming approximately 367 million weighted average diluted shares outstanding. • Full Year 2025 Outlook: ◦ Revenue between $3.386 billion and $3.390 billion. ◦ Non-GAAP operating income between $754 million and $758 million. ◦ Non-GAAP net income per share between $2.00 and $2.02, assuming approximately 364 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive p
+
+==============================================================================
+2026Q1  guidance $951m - $961m (mid $956.0m)
+issued 2026-02-10   accession 0001628280-26-006645
+https://www.sec.gov/Archives/edgar/data/1561550/000162828026006645/0001628280-26-006645-index.htm
+machine check: agree   amounts found: [951.0, 961.0, 195.0, 205.0, 510.0, 4060.0]
+------------------------------------------------------------------------------
+First Quarter 2026 Outlook: ◦ Revenue between $951 million and $961 million. ◦ Non-GAAP operating income between $195 million and $205 million. ◦ Non-GAAP net income per share between $0.49 and $0.51, assuming approximately 367 million weighted average diluted shares outstanding. • Fiscal Year 2026 Outlook: ◦ Revenue between $4.06 billion and $4.10 billion. ◦ Non-GAAP operating income between $840 million and $880 million. ◦ Non-GAAP net income per share between $2.08 and $2.16, assuming approximately 372 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive pl
+
+==============================================================================
+2026Q2  guidance $1,070m - $1,080m (mid $1,075.0m)
+issued 2026-05-07   accession 0001628280-26-031677
+https://www.sec.gov/Archives/edgar/data/1561550/000162828026031677/0001628280-26-031677-index.htm
+machine check: agree   amounts found: [1070.0, 1080.0, 225.0, 235.0, 590.0, 4300.0]
+------------------------------------------------------------------------------
+Second Quarter 2026 Outlook: ◦ Revenue between $1.07 billion and $1.08 billion. ◦ Non-GAAP operating income between $225 million and $235 million. ◦ Non-GAAP net income per share between $0.57 and $0.59, assuming approximately 369 million weighted average diluted shares outstanding. • Full Year 2026 Outlook: ◦ Revenue between $4.30 billion and $4.34 billion. ◦ Non-GAAP operating income between $940 million and $980 million. ◦ Non-GAAP net income per share between $2.36 and $2.44, assuming approximately 372 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentive p
+
+==============================================================================
+2026Q3  guidance $1,135m - $1,145m (mid $1,140.0m)
+issued 2026-08-06   accession 0001628280-26-053829
+https://www.sec.gov/Archives/edgar/data/1561550/000162828026053829/0001628280-26-053829-index.htm
+machine check: agree   amounts found: [1135.0, 1145.0, 260.0, 270.0, 650.0, 4450.0]
+------------------------------------------------------------------------------
+Third Quarter 2026 Outlook: ◦ Revenue between $1.135 billion and $1.145 billion. ◦ Non-GAAP operating income between $260 million and $270 million. ◦ Non-GAAP net income per share between $0.63 and $0.65, assuming approximately 378 million weighted average diluted shares outstanding. • Full Year 2026 Outlook: ◦ Revenue between $4.45 billion and $4.47 billion. ◦ Non-GAAP operating income between $1.01 billion and $1.03 billion. ◦ Non-GAAP net income per share between $2.50 and $2.54, assuming approximately 376 million weighted average diluted shares outstanding. Datadog has not reconciled its expectations as to non-GAAP operating income, or as to non-GAAP net income per share, to their most directly comparable GAAP measure as a result of uncertainty regarding, and the potential variability of, reconciling items such as stock-based compensation and employer payroll taxes on equity incentiv
