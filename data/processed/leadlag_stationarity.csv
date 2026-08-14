@@ -1,0 +1,9 @@
+series,n,adf_p,kpss_p,verdict
+rev_yoy,27,0.06270543365645467,0.021816953781632398,non-stationary (both agree)
+beat_vs_guide,27,0.07902185891330366,0.028187064830142126,non-stationary (both agree)
+dd_rel_plc_full,28,0.013123866251564958,0.023864533549551918,inconclusive (tests disagree)
+dd_rel_full,28,0.00673844955848798,0.02124395837204749,inconclusive (tests disagree)
+dd_abs_full,28,6.490824400629227e-05,0.016382264186775637,inconclusive (tests disagree)
+ctrl_rel_plc_full,28,0.0017018710521101508,0.1,stationary (both agree)
+plc_rel_full,28,0.0017018710521101508,0.1,stationary (both agree)
+plc_abs_full,28,0.0074838047621289755,0.04584436832192838,inconclusive (tests disagree)

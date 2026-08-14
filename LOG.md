@@ -579,3 +579,79 @@ it cannot be re-derived after the results are visible.
 
 Each candidate carries its own negative control through the identical pipeline:
 `dd_rel_plc` → `ctrl_rel_plc`, `dd_rel` → `plc_rel`, `dd_abs` → `plc_abs`.
+
+---
+
+## Phase 3 — Lead–lag (2026-08-14)
+
+### D25. The pre-registered ranking inverted. Rank 1 fails; rank 3 is the only one with an edge.
+
+**Stationarity undermines the correlation evidence before it is read.**
+Both targets are non-stationary with ADF and KPSS agreeing (`rev_yoy`
+ADF p=0.063 / KPSS p=0.022; `beat_vs_guide` 0.079 / 0.028). The candidate
+features are inconclusive (tests disagree). Correlations between two trending
+series are not evidence, which is exactly what the next two sections show.
+
+**(A) Cross-quarter CCF: flat across lags, and the placebo nearly matches.**
+Against `rev_yoy`, `dd_abs_full` correlates 0.86–0.89 at lags −2 and −1 —
+superficially a strong lead. But `plc_abs_full`, four JavaScript utilities with
+no connection to Datadog, correlates **0.72–0.76 at every lag from −2 to +2**.
+A correlation that is flat in the lag and nearly reproduced by unrelated
+packages is measuring common trend, not lead structure. The CCF is reported and
+is not treated as evidence of a lead.
+
+**Granger, descriptive only — and the controls "cause" revenue too.**
+`dd_rel_full` reaches p=0.001 at lag 1 against `rev_yoy`, which looks decisive.
+So does the control `ctrl_rel_plc_full` at p=0.014, and `plc_abs_full` at
+p=0.026 at lag 2. When the negative controls Granger-cause the target as
+readily as the signal does, the tests are detecting shared trend at n≈24. This
+is precisely why the brief called them descriptive; recorded as such, and no
+conclusion is drawn from them.
+
+**(B) The within-quarter test — the operational question, and the real result.**
+Expanding-window walk-forward, train on 12 quarters then predict one at a time,
+`feature + rev_yoy_lag1` against an AR(1) baseline using `rev_yoy_lag1` alone.
+RMSE ratio below 1 beats the baseline. Every candidate carries its own negative
+control through the identical path. At the day-45 horizon:
+
+| target | rank | feature | RMSE ratio | control ratio | hit | verdict |
+|---|---|---|---|---|---|---|
+| rev_yoy | 1 | `dd_rel_plc` | 1.077 | 1.622 | 4/13 | **fails** |
+| rev_yoy | 2 | `dd_rel` | 1.370 | 1.622 | 7/13 | **fails** |
+| rev_yoy | 3 | `dd_abs` | **0.860** | 1.283 | 7/13 | beats AR(1), control does not |
+| beat_vs_guide | 1 | `dd_rel_plc` | 1.069 | 0.945 | 7/14 | **fails, and its control beats AR(1)** |
+| beat_vs_guide | 2 | `dd_rel` | 0.970 | 0.945 | 10/14 | beats AR(1) — **but so does its control** |
+| beat_vs_guide | 3 | `dd_abs` | **0.883** | 1.373 | 8/14 | beats AR(1), control does not |
+
+**The a priori ranking inverted completely.** `dd_rel_plc`, the
+best-justified construction, fails on both targets — and on `beat_vs_guide` its
+own negative control outperforms it. `dd_abs`, ranked last precisely because it
+makes no drift adjustment, is the only candidate that beats the baseline while
+its control fails.
+
+**D24 is now doing its job, and the cost is real.** The headline stays with
+rank 1 and reports that it fails. `dd_abs` is reported as a pre-registered
+alternative that outperformed. Promoting it to headline now would be selecting
+on ~13 out-of-sample points — the identical error identified in D11 and D20(a),
+committed one step later in the pipeline. The ranking was fixed in writing
+before these numbers existed specifically so this temptation could be refused.
+
+**Three further reasons not to over-read `dd_abs`'s edge:**
+1. **Hit rates prove nothing.** Two-sided binomial p-values against 0.5: the
+   best is 0.18, most are 1.00. At n=13–14 nothing here separates skill from
+   chance. AR(1) itself gets direction right only 5/13 on `rev_yoy` — worse
+   than a coin flip — so "beats AR(1) on hit rate" is a low bar.
+2. **More data makes it worse.** On `rev_yoy`, `dd_abs` scores 0.734 at day 30,
+   0.860 at day 45, 0.895 at day 60 and 0.975 for the full quarter. A signal
+   that degrades as its window lengthens is behaving like noise that happened
+   to fit early, not like a measurement that sharpens with sample.
+3. **In-sample fit inverts out-of-sample rank.** `dd_rel` has the highest
+   partial correlation given AR(1) of any candidate (0.837 at day 45) and the
+   *worst* out-of-sample ratio (1.370). A textbook demonstration of why the
+   walk-forward exists, and worth a slide of its own.
+
+**What Phase 4 must therefore decide** is whether `dd_abs`'s edge survives the
+full baseline set (guidance midpoint plus mean beat, random walk), a bootstrap
+CI on the error ratio, and the 2025–2026 structural break — or whether the
+honest headline is that no download-based feature beats a naive baseline on
+this sample.
