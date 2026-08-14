@@ -969,3 +969,39 @@ project: it is a finding about **download-based SaaS nowcasting in general**,
 not just about Datadog. It explains why the models fail rather than merely
 recording that they did. Treatment of the CI hypothesis stays as in D30 —
 tested and not supported; remaining candidates named, not implied to be tested.
+
+### D36. CORRECTION — the decoupling base figure was wrong, and how it was caught
+The first computation of "downloads per $m of revenue, first 4 quarters" used
+`out.iloc[:4]`, which silently averaged only **two** quarters: 2019Q1 and
+2019Q2 are NaN because reliable disclosure dates start at 2019Q3, and pandas
+skips NaN in `.mean()`. That produced 19,534 and an increase of +398%.
+
+Correct figure, using the first four quarters that actually have data
+(2019Q3–2020Q2): **21,818 → 97,228, +346%**, a decay of ~4.5x rather than ~5x.
+Spearman rho=+0.927 and p<0.0001 are unaffected — the trend test already masked
+non-finite values.
+
+Caught by a fact-check pass that re-derived every headline number in the report
+from the processed data files: 17 of 18 checks matched, this one did not,
+because the dashboard payload computed `.dropna().head(4)` while the mechanism
+script computed `.iloc[:4]`. Two code paths disagreeing is what surfaced it.
+Fixed in `check_download_mechanism.py`, `report.md`, `slides.md` and
+`qa_appendix.md` so all four agree on one definition.
+
+Worth keeping visible rather than quietly patching: the error inflated the
+headline finding, and it was found by cross-checking two implementations rather
+than by re-reading one.
+
+### D37. The market-reaction claim in the brief was NOT verified, so it is not asserted
+Brief section 5.6 states that Q2 2026 beat consensus by ~2% and beat on EPS,
+guidance was raised, and the stock still fell sharply — and asks for this to be
+verified from public reporting. **I could not verify it from a source I could
+cite within the data scope of this project** (no price feed, no citable
+consensus figure). It is therefore not asserted anywhere in the report, the
+slides, or the Q&A appendix.
+
+The substantive point survives without the anecdote and is retained: a beat
+against *guidance* is not a beat against an elevated *expectations* bar, so
+predicting revenue direction is insufficient for an investment decision. That
+is also the strongest argument for adding a vendor consensus feed, which is how
+it is presented.

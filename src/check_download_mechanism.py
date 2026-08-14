@@ -144,12 +144,16 @@ def main() -> None:
         print(f"  {col:<26} slope={slope:+.4f}/qtr  p={p:.4f}  "
               f"spearman rho={rho:+.3f} p={prho:.4f}")
 
+    # Use the first/last four quarters THAT HAVE DATA. Slicing out.iloc[:4]
+    # silently averaged only two quarters, because downloads_per_musd is NaN
+    # before 2019Q3 (the first quarter with a reliable disclosure date).
     first, last = out.iloc[:4], out.iloc[-4:]
+    dpm = out["downloads_per_musd"].dropna()
     print(f"\nWeekday/weekend ratio: {first['weekday_weekend_ratio'].mean():.2f} "
           f"(first 4 quarters) -> {last['weekday_weekend_ratio'].mean():.2f} (last 4)")
     print(f"Release-window volume share: {first['share_volume_in_window'].mean():.3f} "
           f"-> {last['share_volume_in_window'].mean():.3f}")
-    d0, d1 = first["downloads_per_musd"].mean(), last["downloads_per_musd"].mean()
+    d0, d1 = dpm.head(4).mean(), dpm.tail(4).mean()
     print(f"Downloads per $m of revenue: {d0:,.0f} -> {d1:,.0f}  "
           f"({d1 / d0 - 1:+.0%} over the sample)")
     print("\nThe release-window test is underpowered and is reported as such: "
