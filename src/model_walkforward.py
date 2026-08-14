@@ -111,6 +111,48 @@ def baseline_predict(name: str, train: pd.DataFrame, test: pd.Series, target: st
         if pd.isna(implied):
             return float(train[target].tail(8).mean())
         return float((1 + implied) * (1 + mean_beat) - 1)
+    if name == "guidance + auto-window beat":
+        # Critique-2 fix. The 8-quarter window in "guidance + trailing beat (8q)"
+        # was chosen post hoc, after seeing the full sample. That is data
+        # snooping on the BASELINE while the signals were held to walk-forward
+        # discipline -- an asymmetry that flatters the baseline.
+        #
+        # Here the window is selected using ONLY the training data available at
+        # each step: candidate windows are scored by a nested walk-forward
+        # inside the training set, and the winner is applied to the test point.
+        # Nothing about the choice uses information from the future.
+        candidates = [4, 6, 8, 12, None]  # None = expanding mean
+        best_w, best_err = None, np.inf
+        n_inner = min(6, max(3, len(train) // 3))
+        for w in candidates:
+            errs = []
+            for j in range(len(train) - n_inner, len(train)):
+                if j < 4:
+                    continue
+                inner = train.iloc[:j]
+                beats = inner["beat_vs_guide"].dropna()
+                if len(beats) < 2:
+                    continue
+                mb = beats.tail(w).mean() if w else beats.mean()
+                row = train.iloc[j]
+                if target == "beat_vs_guide":
+                    pred = mb
+                else:
+                    imp = row["guide_implied_yoy"]
+                    if pd.isna(imp):
+                        continue
+                    pred = (1 + imp) * (1 + mb) - 1
+                errs.append((pred - row[target]) ** 2)
+            if errs and np.mean(errs) < best_err:
+                best_err, best_w = np.mean(errs), w
+        beats = train["beat_vs_guide"].dropna()
+        mean_beat = beats.tail(best_w).mean() if best_w else beats.mean()
+        if target == "beat_vs_guide":
+            return float(mean_beat)
+        implied = test["guide_implied_yoy"]
+        if pd.isna(implied):
+            return float(train[target].mean())
+        return float((1 + implied) * (1 + mean_beat) - 1)
     if name == "guidance + mean beat":
         if target == "beat_vs_guide":
             return float(train[target].mean())
@@ -130,14 +172,45 @@ BASELINES = [
     "ARIMA(1,1,0)",
     "guidance + mean beat",
     "guidance + trailing beat (8q)",
+    "guidance + auto-window beat",
 ]
 
 
 # -------------------------------------------------------------- walk-forward
 
 
+def _orthogonalise(train: pd.DataFrame, test: pd.Series, feature: str) -> tuple:
+    """Residualise the feature against guidance-implied growth, train-only.
+
+    Critique-5 fix. A hedge fund does not use alternative data to replace
+    guidance; it uses it to predict the SURPRISE around guidance. Testing a raw
+    download growth rate against the target leaves the model competing with
+    information guidance already contains. Regressing the feature on
+    `guide_implied_yoy` -- with coefficients estimated on the training window
+    only -- and keeping the residual tests the feature's INCREMENTAL content.
+    """
+    ok = train[feature].notna() & train["guide_implied_yoy"].notna()
+    if ok.sum() < 6:
+        return train[feature].values, float(test[feature])
+    X = np.column_stack([np.ones(ok.sum()), train.loc[ok, "guide_implied_yoy"].values])
+    beta = np.linalg.lstsq(X, train.loc[ok, feature].values, rcond=None)[0]
+    g = train["guide_implied_yoy"].values.astype(float)
+    fitted = beta[0] + beta[1] * g
+    # Where guidance is missing (pre-IPO comparatives) fall back to the mean
+    # fitted value, so the residual stays defined instead of poisoning the fit.
+    fitted = np.where(np.isfinite(fitted), fitted, np.nanmean(fitted))
+    resid_train = train[feature].values.astype(float) - fitted
+    if not np.all(np.isfinite(resid_train)):
+        resid_train = np.where(np.isfinite(resid_train), resid_train,
+                               np.nanmean(resid_train))
+    if pd.isna(test["guide_implied_yoy"]):
+        return resid_train, float(test[feature])
+    resid_test = float(test[feature]) - (beta[0] + beta[1] * float(test["guide_implied_yoy"]))
+    return resid_train, resid_test
+
+
 def walk_forward(f: pd.DataFrame, target: str, feature: str | None,
-                 baseline: str = "AR(1)") -> dict | None:
+                 baseline: str = "AR(1)", orthogonalise: bool = False) -> dict | None:
     """Expanding window. Returns aligned prediction arrays for model and baseline.
 
     The model is always `feature + lag1`; the baseline is whichever of the
@@ -157,7 +230,13 @@ def walk_forward(f: pd.DataFrame, target: str, feature: str | None,
     for i in range(FIRST_TRAIN, len(d)):
         tr, te = d.iloc[:i], d.iloc[i]
         if feature:
-            model_pred.append(_ols_predict(tr, te, [feature, lag1], target))
+            if orthogonalise:
+                rtr, rte = _orthogonalise(tr, te, feature)
+                tr2 = tr.copy(); tr2["_orth"] = rtr
+                te2 = te.copy(); te2["_orth"] = rte
+                model_pred.append(_ols_predict(tr2, te2, ["_orth", lag1], target))
+            else:
+                model_pred.append(_ols_predict(tr, te, [feature, lag1], target))
         base_pred.append(baseline_predict(baseline, tr, te, target))
         actual.append(te[target])
         prev.append(te[lag1])
@@ -226,7 +305,36 @@ def bootstrap_rmse_ratio(e1: np.ndarray, e2: np.ndarray, rng) -> tuple[float, fl
 # --------------------------------------------------------------------- grids
 
 
-def run_grid(f: pd.DataFrame, baseline: str = "AR(1)") -> pd.DataFrame:
+def min_detectable_ratio(e_base: np.ndarray, alpha: float = 0.05,
+                         power: float = 0.80) -> tuple:
+    """Smallest RMSE ratio detectable at this n -- critique-3 quantified.
+
+    Absence of evidence is not evidence of absence, so the honest statement is
+    not "we found nothing" but "we could only have found an improvement larger
+    than X". Solved by simulating a model whose errors are the baseline's
+    scaled by r, and finding the smallest r the DM test rejects at `power`.
+    """
+    rng = np.random.default_rng(SEED)
+    n = len(e_base)
+    curve = {}
+    for r in (0.95, 0.90, 0.85, 0.80, 0.70, 0.60, 0.50, 0.40):
+        rejects = 0
+        trials = 600
+        for _ in range(trials):
+            idx = rng.integers(0, n, n)
+            eb = e_base[idx]
+            # A competing forecast's errors are correlated with the baseline's
+            # (both track the same series) plus an idiosyncratic component.
+            em = eb * r + rng.normal(0, np.std(eb) * 0.15, n)
+            _, p = diebold_mariano(em, eb)
+            rejects += (p < alpha) and (np.sqrt(np.mean(em**2)) < np.sqrt(np.mean(eb**2)))
+        curve[r] = rejects / trials
+    detectable = [r for r, pw in curve.items() if pw >= power]
+    return max(detectable) if detectable else float("nan"), curve
+
+
+def run_grid(f: pd.DataFrame, baseline: str = "AR(1)",
+             orthogonalise: bool = False) -> pd.DataFrame:
     """All 24 candidate cells plus their 24 matched controls."""
     rows = []
     for target in TARGETS:
@@ -236,7 +344,7 @@ def run_grid(f: pd.DataFrame, baseline: str = "AR(1)") -> pd.DataFrame:
                     feat = f"{name}_{win}"
                     if feat not in f:
                         continue
-                    r = walk_forward(f, target, feat, baseline)
+                    r = walk_forward(f, target, feat, baseline, orthogonalise)
                     if r is None:
                         continue
                     m = metrics(r["model"], r["actual"], r["prev"])

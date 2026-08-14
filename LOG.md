@@ -1005,3 +1005,149 @@ against *guidance* is not a beat against an elevated *expectations* bar, so
 predicting revenue direction is insufficient for an investment decision. That
 is also the strongest argument for adding a vendor consensus feed, which is how
 it is presented.
+
+---
+
+## Revision round — six review critiques (2026-08-14)
+
+### D38. C1 — the proxy was the wrong slice of the business. Claim narrowed, gap quantified.
+**The critique is correct and it is the most damaging one.** Datadog's core
+billable surface is the Go agent, distributed through Docker Hub, APT/YUM, Helm
+and cloud marketplaces. `dd-trace` on npm is the Node.js SDK of the APM product
+line only — a minority of a multi-product platform whose largest lines are
+infrastructure monitoring and log management.
+
+| channel | what it distributes | cumulative units | history | in model |
+|---|---|---|---|---|
+| npm constant-composition basket | Node.js APM tracer + metrics client | 1.13bn | daily, 2017+ | **yes** |
+| npm, all Datadog packages | Node.js SDKs incl. RUM/logs/CI | 2.18bn | daily, 2017+ | appendix |
+| **Docker Hub `datadog/agent`** | **the core Go agent** | **11.25bn** | **cumulative counter only** | **no** |
+| Docker Hub `datadog/cluster-agent` | core agent, Kubernetes | 0.13bn | cumulative counter only | no |
+| APT / YUM, Helm, cloud marketplaces | core agent | not exposed | none | no |
+
+The core agent's channel carries **10x** the volume of the channel the model
+could see — and Docker Hub exposes only a lifetime cumulative counter with no
+time series and no per-tag breakdown, so it **cannot be backfilled**.
+
+**This reframes the whole report.** The finding is not "alternative data does
+not predict Datadog". It is: *the freely and historically observable slice of
+Datadog's telemetry footprint is the wrong slice, and the right slice is not
+retrospectively observable at all.* Every claim in the report is narrowed
+accordingly, and the title of §4 changes from a general statement about
+download-based nowcasting to one about the observable channel.
+
+Forward-looking remedy, which is a productisation point rather than a fix here:
+a daily snapshot of the Docker Hub cumulative counter yields a usable daily
+delta series **from the day collection starts**. That is the correct signal; it
+just cannot be recovered for the 27 quarters already gone.
+
+### D39. C2 — the baseline was data-snooped. Fixed, and the fix made the baseline STRONGER.
+**Correct, and my original defence was insufficient.** Saying the post hoc
+8-quarter window "raises the bar" is true but does not license the asymmetry:
+the signals faced walk-forward discipline while the baseline was allowed to see
+the whole sample.
+
+Fix: `guidance + auto-window beat` selects the window from {4, 6, 8, 12,
+expanding} by a **nested walk-forward inside the training set only**, at every
+step. No future information enters the choice.
+
+| target | AR(1) | random walk | ARIMA(1,1,0) | guidance + trailing 8q (post hoc) | **guidance + auto-window (fair)** |
+|---|---|---|---|---|---|
+| `rev_yoy` RMSE | 0.0309 | 0.0263 | 0.0220 | 0.0229 | **0.0200** |
+| `rev_yoy` MAPE % | 7.47 | 6.03 | 5.59 | 5.48 | **4.10** |
+| `rev_yoy` hit | 0.385 | n/a | 0.615 | 0.692 | **0.769** |
+| `beat_vs_guide` RMSE | 0.0183 | **0.0119** | **0.0119** | 0.0227 | 0.0174 |
+
+**Removing the snooping made the baseline better, not worse** (0.0229 → 0.0200
+on RMSE, 5.48% → 4.10% on MAPE). The bar for the signals therefore rose. And
+for the live quarter the fair rule *selects the 8-quarter window on its own*,
+so the published call is unchanged at **$1,188.5m [1,173.8, 1,203.2]** — same
+number, now with a legitimate derivation.
+
+### D40. C5 — features were not orthogonal to guidance. Fixed; conclusion strengthens.
+**The critique's substance is right**, though one detail needs correcting: the
+report *did* test `beat_vs_guide`, which is the surprise. What it did not do is
+orthogonalise the *features* against guidance-implied growth, so the regression
+`target ~ feature + lag1` had the feature competing with information guidance
+already carried.
+
+Fix: at each walk-forward step, regress the feature on `guide_implied_yoy`
+using training rows only and keep the residual. This tests incremental content
+over guidance, which is how a quantamental desk would actually use it.
+
+| feature treatment | cells beating the strongest baseline | best cell |
+|---|---|---|
+| raw | 0 of 24 | 1.075 |
+| **guidance-orthogonalised** | **0 of 24** | **1.323** |
+
+Orthogonalising makes the features **worse**, not better: once what guidance
+already implies is removed, less is left. That is the opposite of what the
+critique predicted, and it is a stronger result than the original.
+
+### D41. C3 — power quantified rather than conceded.
+**Correct that "absence of evidence" was doing too much work.** Replaced the
+concession with a simulation: given the observed baseline error series, how
+often would a Diebold–Mariano test at n=13–14 detect a competing model whose
+RMSE was r times the baseline's?
+
+| target | n | r=0.95 | r=0.90 | r=0.85 | r=0.80 | r=0.70 | r=0.50 |
+|---|---|---|---|---|---|---|---|
+| `rev_yoy` | 13 | 6% | 15% | 23% | 28% | 30% | 32% |
+| `beat_vs_guide` | 14 | 10% | 24% | 50% | 57% | 75% | 77% |
+
+**A genuine 5–10% edge would have gone undetected roughly 85–90% of the time.**
+So "0 of 24" bounds the effect size; it does not establish that the effect is
+zero, and the report now says exactly that.
+
+The part that is *not* a power problem: the observed cells sit at ratios of
+**1.05 to 2.65** — the wrong side of parity by margins far outside the noise
+band. Failing to detect a small positive edge is a power limitation; observing
+consistent, large degradation is a measurement.
+
+### D42. C4 — SaaS mechanics tested, and they explain only a fraction.
+**Correct that the linear downloads-to-dollars mapping was naive.** Tested on
+the customer-normalised series (28 quarters of $100k+ ARR customer counts from
+the press releases):
+
+| series | first 4 → last 4 | Spearman ρ |
+|---|---|---|
+| revenue per $100k+ customer | **+67%** | +0.993 |
+| downloads per $100k+ customer | **+644%** | +0.981 |
+| downloads per $m revenue | +346% | +0.927 |
+
+Cross-sell and tiering are **real and measurable**: revenue per large customer
+rose 67%, which is exactly the platform monetisation effect the critique names.
+But downloads per large customer rose **644% — roughly ten times faster**. So
+per-customer monetisation explains a minority of the gap; the dominant term is
+download-side inflation. The decoupling survives the correct normalisation,
+and the critique's mechanism is retained as a secondary contributor rather than
+dismissed.
+
+Private-registry mirroring (one pull fanned out to thousands of hosts) would
+push in the *opposite* direction — fewer downloads per host — so it cannot
+explain a 644% rise in downloads per customer either.
+
+### D43. C6 — the assignment's other target metrics were never tested. Now they are.
+**A genuine scope gap.** The Objective names billings/RPO, NRR and $100k+ ARR
+customer growth; the first report modelled only revenue and revenue growth.
+
+This also tests a hypothesis the first report *listed as a bias and then never
+acted on*: downloads are an **unweighted count** while revenue is
+**dollar-weighted**, so a count-type target should be the better match.
+
+| target | source | quarters | n_oos | strongest baseline | cells beating it | best cell |
+|---|---|---|---|---|---|---|
+| `cust_yoy` ($100k+ ARR customers) | press release | 28 | 11 | ARIMA(1,1,0) | **0 of 12** | **1.049** |
+| `billings_yoy` (rev + Δdeferred) | XBRL | 26 | 7 | AR(1) | 0 of 12 | 1.106 |
+| `rpo_yoy` | XBRL | 20 | — | — | not testable | insufficient history |
+| NRR | — | — | — | — | **not disclosed numerically in 8-K exhibits** | excluded, not approximated |
+
+**The count-vs-dollars hypothesis is directionally supported and still not
+sufficient.** Against customer growth the best cell is **1.049** — the closest
+any signal came to a baseline anywhere in this project, and better than the
+1.137 achieved against revenue growth. The matched controls fail on every one
+of those cells (1.69–1.83), so what edge exists is attributable. But 1.049 is
+still a loss, at n=11.
+
+`billings_yoy` has only 7 out-of-sample points and is reported as underpowered
+rather than as a result. `rpo_yoy` cannot support a walk-forward at all.
