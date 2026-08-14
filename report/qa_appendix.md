@@ -8,13 +8,24 @@ two sentences, then stop.
 
 ### "Your headline uses no alternative data. Isn't that a failed assignment?"
 
-The assignment asked for evidence, and this is what the evidence supports —
-it explicitly says a well-validated simple model beats an overfit sophisticated
-one, and asks me to be explicit about what the data does and does not support.
-I tested two signals across 24 validated cells; none beat a correctly specified
-naive baseline, and I can show exactly why. A version that reported a
-signal-weighted estimate would be reporting a relationship my own validation
-rejected.
+The assignment asks for evidence and for honesty about what the data does and
+does not support, and this is what it supports. I tested two signals across 24
+cells on two revenue targets plus two more target metrics, with matched
+controls throughout; none beat a correctly specified naive baseline, and I can
+show exactly why. Reporting a signal-weighted estimate would mean reporting a
+relationship my own validation rejected.
+
+### "npm is the wrong proxy. Datadog's agent is Go, shipped via Docker and APT — you tested a minor SDK and generalised."
+
+That is the right criticism and I have narrowed the claim to match. Docker Hub
+`datadog/agent` has 11.25bn cumulative pulls against 1.13bn lifetime downloads
+for the npm basket — roughly **10x the volume in a channel I could not test**,
+because Docker Hub publishes only a lifetime counter with no time series and no
+per-tag split, so it cannot be backfilled. The finding is therefore not
+"alternative data cannot predict Datadog"; it is that the freely and
+historically observable slice is the wrong slice, and the right slice is not
+retrospectively observable. The forward fix is one API call a day, which is now
+the first item in productisation.
 
 ### "Why is OpenTelemetry excluded from the control basket?"
 
@@ -34,13 +45,15 @@ strongest baseline the permutation null produces 0.01 cells and the observed
 count is 0. The features carry drift; a correctly specified naive model already
 has it.
 
-### "The 8-quarter trailing window wasn't pre-registered. Isn't that a free parameter?"
+### "The 8-quarter trailing window wasn't pre-registered. You held the signals to walk-forward but let the baseline see the whole sample."
 
-Correct, and it's flagged as post hoc in the report. I chose it after observing
-that the expanding mean is contaminated by the 2020–21 regime, when beats ran to
-12.1% against a recent level near 4.3%. It matters that this choice moves the
-bar for the signals **up**, not down — it makes the baseline harder to beat, so
-it cannot flatter my conclusion.
+Correct, and flagging it as post hoc was not sufficient — so I replaced it. The
+baseline now selects its window from {4, 6, 8, 12, expanding} by a nested
+walk-forward **inside the training set only**, at every step. Removing the
+snooping made the baseline *better*, not worse — RMSE 0.0229 → 0.0200, MAPE
+5.48% → 4.10% — so the bar for the signals went up. And for the live quarter
+the fair rule independently selects 8 quarters, so the published call is
+unchanged; only its derivation is now legitimate.
 
 ### "You cleaned the data and the conclusion flipped. How do I know that's not the tail wagging the dog?"
 
@@ -79,14 +92,17 @@ both targets. Had I ranked after seeing results I'd have promoted `dd_abs`,
 which is precisely the selection-on-test-set error that makes a hit rate
 meaningless at 13 out-of-sample points.
 
-### "Downloads grew 112% and revenue 36%. Doesn't that break your Part 1 story?"
+### "Your decoupling finding ignores SaaS economics — volume discounts, private registries, cross-sell."
 
-It does, and it's in the main body rather than in limitations for that reason.
-Downloads per $m of revenue rose 346% over the sample, ρ=+0.927, near-monotonic —
-the proxy decayed roughly 4.5×. I tested the obvious explanation, CI/CD re-pulls,
-and it is *not* supported: the weekday/weekend ratio is flat to falling
-(p=0.77). I can measure the decoupling; I can't attribute it with public data,
-and I name the untested candidates rather than implying I ruled them out.
+I tested those rather than assuming them away. Normalising by the disclosed
+$100k+ ARR customer count: revenue per large customer rose **+67%** — that is
+exactly the cross-sell and tiering effect, and it is real — but downloads per
+large customer rose **+644%**, roughly ten times faster. So per-customer
+monetisation explains a minority of the gap. Private-registry mirroring would
+push downloads per customer *down*, so it cannot explain a 644% rise either.
+The decoupling survives the correct normalisation; the critique's mechanism is
+retained as a secondary contributor, not dismissed. CI/CD re-pulls also fail
+the test: weekday/weekend ratio 6.39 → 5.61, p=0.77.
 
 ### "Why is the hyperscaler signal worse than useless?"
 
@@ -97,13 +113,46 @@ illustration in the project of why a hit rate alone is a bad metric: right
 direction, badly wrong magnitude. That pattern is what tracking a common cycle
 looks like.
 
-### "Only 13 out-of-sample points. Can you conclude anything?"
+### "Only 13 out-of-sample points. Isn't 'no significant result' just low power — absence of evidence, not evidence of absence?"
 
-Not about small effects, and I don't claim to — every hit rate here is
-indistinguishable from chance (binomial p ≥ 0.18 in all cases) and I say so.
-What 13 points *can* support is the negative: the candidates lose to the naive
-baselines by 1.03× to 2.4×, which is not a marginal miss. And the mechanism
-evidence in §4 is independent of the sample size problem.
+Exactly right, so I measured the power rather than conceding the point. Given
+the observed baseline errors, a Diebold–Mariano test at n=13 detects a
+competing model with 5% lower RMSE only **6%** of the time, and 10% lower
+**15%** of the time. **A genuine modest edge would have been missed roughly
+85–90% of the time**, so "0 of 24" *bounds* the effect size rather than showing
+it is zero — and the report says that in those words. The part that is not a
+power problem: the observed cells sit at ratios of **1.05 to 2.65**, consistent
+large degradation on the wrong side of parity. Missing a small positive edge is
+low power; measuring a large negative one is measurement.
+
+### "You never tested billings, RPO, NRR or large-customer growth — the brief names them."
+
+A real gap in the first version, now closed. `cust_yoy` ($100k+ ARR customers,
+28 quarters): 0 of 12 cells beat the baseline, best **1.049**. `billings_yoy`
+(revenue + change in deferred revenue): 0 of 12, n_oos=7, reported as
+underpowered rather than as a result. `rpo_yoy`: 20 quarters cannot support a
+walk-forward. NRR is not disclosed as a number in the 8-K exhibits, so it is
+excluded rather than approximated. The customer test also has a point to it —
+see the next question.
+
+### "Downloads are a count and revenue is dollar-weighted. Isn't that just bad feature engineering?"
+
+It is a real mismatch, and I turned it into a falsifiable prediction: if the
+count-vs-dollars gap is what breaks the mapping, a count-type target should fit
+better. It does — against $100k+ customer growth the best cell is **1.049**
+versus **1.137** against revenue growth, the closest any signal came to a
+baseline in this project, and the matched controls fail on those cells (1.69 to
+1.83), so the residual edge is attributable. Directionally the critique is
+correct. It is still a loss, at n=11.
+
+### "You tested the signal against revenue, but alt data is used to predict the surprise around guidance, not to replace it."
+
+Half of that I had done — `beat_vs_guide` is a target in the grid, and it is the
+surprise. The half I had not done is the one that matters: the features were
+raw, so they competed with information guidance already carried. I re-ran every
+cell with the feature residualised against guidance-implied growth using
+train-only coefficients. Result: **0 of 24 again, and the best cell worsens from
+1.075 to 1.323** — stripping out what guidance implies leaves less, not more.
 
 ### "Why not gradient boosting or an LSTM?"
 
@@ -149,8 +198,11 @@ automatically as new quarters arrive.
 | Call | $1,188.5m, band $1,173.8–1,203.2m, YoY +34.2% |
 | Guidance | $1.135–1.145bn, midpoint $1,140m, 8-K 0001628280-26-053829 |
 | Trailing beat | +4.25%, sd 0.66pp, 0 of 27 quarters below midpoint |
-| Best baseline | guidance + trailing beat: MAPE 5.48%, hit 69.2% |
-| Grid result | 0 of 24 vs strongest baseline; 15 of 24 vs AR(1), null 0.58, p=0.002 |
+| Best baseline | guidance + out-of-sample-selected window: MAPE 4.10%, hit 76.9% |
+| Grid result | 0 of 24 vs strongest baseline; 0 of 24 orthogonalised; 15 of 24 vs AR(1), null 0.58, p=0.002 |
+| Other targets | customer growth best 1.049 (n=11); billings 1.106 (n=7); RPO untestable; NRR not disclosed |
+| Observability | Docker `datadog/agent` 11.25bn pulls vs npm basket 1.13bn — 10x, no history |
+| Power | detects r=0.95 6% of the time, r=0.90 15% |
 | Decoupling | 21,818 → 97,228 downloads per $m, +346%, ρ=+0.927 |
 | Sample | 27 usable quarters, 13–14 out-of-sample points |
 | Reporting lag | median 38 days; Q4 44 days; 8-K leads 10-Q by up to 18 |

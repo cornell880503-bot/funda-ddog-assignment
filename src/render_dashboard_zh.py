@@ -62,15 +62,20 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
     (">not sourced<", ">無可引用來源<"),
     ("<strong>Why the headline is not built from the alternative data.</strong>",
      "<strong>為什麼頭條數字不是用另類數據建的。</strong>"),
-    ("""No download or hyperscaler construction beat the strongest naive baseline out
-    of sample &mdash; 0 of ${DATA.diagnostics.grid_cells} grid cells (see Model
-    diagnostics). Presenting a signal-weighted estimate would show a relationship
-    the validation rejected. The signals below run as a <em>divergence monitor</em>:
-    they do not set the number, they flag when the rule behind it is likely to break.""",
-     """沒有任何下載量或 hyperscaler 構造在樣本外勝過最強的樸素基準 &mdash;
-    ${DATA.diagnostics.grid_cells} 格中 0 格（見模型診斷）。呈現訊號加權的估計值，
-    等於呈現一個被驗證推翻的關係。下方訊號的角色是<em>背離監控器</em>：
-    它們不決定數字，只標示背後那條規則何時可能失效。"""),
+    ("""No construction beat the strongest naive baseline out of sample &mdash; 0 of
+    ${DATA.diagnostics.grid_cells} grid cells, and 0 again once features are
+    orthogonalised against guidance (see Model diagnostics). The scope of that
+    claim is narrow and deliberate: what was testable is the Node.js SDK channel,
+    roughly a tenth of the observable install volume, while the core agent's
+    channel publishes no history at all (see Observability). The signals below run
+    as a <em>divergence monitor</em>: they do not set the number, they flag when
+    the rule behind it is likely to break.""",
+     """沒有任何構造在樣本外勝過最強的樸素基準 &mdash;
+    ${DATA.diagnostics.grid_cells} 格中 0 格；把特徵對指引正交化之後，仍然是 0 格
+    （見模型診斷）。這個結論的範圍是刻意收窄的：可測試的只有 Node.js SDK 這條管道，
+    約佔可觀測安裝量的十分之一，而核心 agent 的管道根本不公布任何歷史（見可觀測性）。
+    下方訊號的角色是<em>背離監控器</em>：它們不決定數字，
+    只標示背後那條規則何時可能失效。"""),
     ("""  The band reflects only the historical variance of the beat. It is
   <strong>conditional on the beat distribution remaining stationary</strong> &mdash;
   supported over the last 16 quarters (ADF p=0.007, KPSS p=0.100), mildly strained
@@ -186,6 +191,30 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
       信賴區間排除 1.0，但落在錯誤的那一側。它在營收成長上確實達到 0.846 的方向命中率，
       誤差卻是基準的約 3 倍，這清楚說明了為什麼單看命中率是壞指標：
       方向對、幅度大錯。"""),
+    ('Observability &mdash; what the signal can and cannot see',
+     '可觀測性 &mdash; 訊號看得到什麼、看不到什麼'),
+    ('<th>Distribution channel</th><th>Carries</th>',
+     '<th>分發管道</th><th>承載什麼</th>'),
+    ('<th class="num">Cumulative</th><th>History</th><th>Testable</th>',
+     '<th class="num">累計量</th><th>可得歷史</th><th>可測試</th>'),
+    ("<strong>This is the project's binding constraint.</strong>\n    Datadog's core billable unit is the Go agent, shipped through Docker Hub,\n    APT/YUM, Helm and cloud marketplaces. That channel carries about\n    <strong>10x</strong> the volume of the npm channel this dashboard measures, and\n    Docker Hub exposes only a lifetime cumulative counter &mdash; no time series, no\n    per-tag split &mdash; so it cannot be backfilled for the 27 quarters already\n    elapsed. A daily snapshot of that counter yields a usable delta series\n    <em>from the day collection starts</em>, which is the correct forward fix and\n    the single highest-value addition to this pipeline.",
+     '<strong>這是本專案的關鍵限制。</strong>\n    Datadog 的核心計費單位是 Go agent，透過 Docker Hub、APT/YUM、Helm 與雲市集分發。\n    該管道的量約為本 dashboard 所量測的 npm 管道的 <strong>10 倍</strong>，\n    而 Docker Hub 只公布終身累計計數 &mdash; 無時序、無分 tag &mdash;\n    因此已經過去的 27 季無法回補。每日對該計數取快照可以得到一條可用的差分序列，\n    但<em>只能從開始蒐集那天起算</em>。這是正確的前瞻性補救，\n    也是這條管線單一價值最高的補強。'),
+    ('Guidance-orthogonalised features &mdash; incremental content over guidance',
+     '對指引正交化的特徵 &mdash; 相對指引的增量資訊'),
+    ('Re-running every cell with the feature\n      residualised against guidance-implied growth (train-only coefficients), which\n      is how a quantamental desk would use it: predict the surprise, not the level.\n      Result: <strong>${D.cells_beating_best_orth} of ${D.grid_cells}</strong> cells\n      beat the baseline, best ${D.best_cell_ratio_orth}. Stripping out what guidance\n      already implies leaves <em>less</em>, not more.',
+     '把每一格都改用「特徵對指引隱含成長取殘差」（係數只用訓練集）重跑一次 &mdash;\n      這才是基本面量化實際的用法：預測預期差，而不是預測水準值。\n      結果：<strong>${D.grid_cells} 格中 ${D.cells_beating_best_orth} 格</strong>勝過基準，\n      最佳 ${D.best_cell_ratio_orth}。扣掉指引已隱含的部分後，剩下的<em>更少</em>而非更多。'),
+    ('Other target metrics from the brief',
+     '題目指定的其他目標指標'),
+    ('<th>Target</th><th class="num">n OOS</th>\n      <th class="num">Cells beating baseline</th><th class="num">Best cell</th>',
+     '<th>目標</th><th class="num">樣本外 n</th>\n      <th class="num">勝過基準格數</th><th class="num">最佳格</th>'),
+    ('Downloads are an unweighted count while\n      revenue is dollar-weighted, so a count-type target should match better. It does:\n      against $100k+ customer growth the best cell is <strong>1.049</strong>, the\n      closest any signal came to a baseline here, versus 1.137 against revenue growth.\n      Still a loss, at n=11. RPO has insufficient history; NRR is not disclosed as a\n      number in the 8-K exhibits and is excluded rather than approximated.',
+     '下載量是未加權的計數，營收則是金額加權，\n      因此計數型目標理應匹配得更好 &mdash; 而它確實如此：對 $100k+ 客戶數成長，\n      最佳格是 <strong>1.049</strong>，這是本專案中訊號最接近基準的一次，\n      優於對營收成長的 1.137。但在 n=11 之下，它仍然是輸。\n      RPO 歷史不足；NRR 在 8-K 附件中沒有數字揭露，故排除而非以近似值頂替。'),
+    ('Statistical power &mdash; what this sample could have detected',
+     '統計檢定力 &mdash; 這個樣本原本能偵測到什麼'),
+    ('<th>Target</th><th class="num">n</th>\n      <th class="num">detect r=0.95</th><th class="num">r=0.90</th>\n      <th class="num">r=0.80</th>',
+     '<th>目標</th><th class="num">n</th>\n      <th class="num">偵測 r=0.95</th><th class="num">r=0.90</th>\n      <th class="num">r=0.80</th>'),
+    ('<strong>A genuine 5&ndash;10% edge would\n      have gone undetected roughly 85&ndash;90% of the time.</strong> "0 of 24"\n      therefore <em>bounds</em> the effect size rather than showing it is zero. What\n      is <em>not</em> a power problem: the observed cells sit at ratios of 1.05 to\n      2.65 &mdash; consistent, large degradation on the wrong side of parity.',
+     '<strong>一個真實的 5&ndash;10% 邊際，約有 85&ndash;90% 的機率會被漏掉。</strong>\n      因此「24 格中 0 格」是<em>界定</em>效果量的上界，而不是證明效果為零。\n      但有一半<em>不是</em>檢定力問題：實際觀測到的格子落在 1.05 到 2.65 &mdash;\n      大幅且一致地落在錯誤的那一側。'),
     # cadence + templating + footer
     ("<th>訊號</th><th>Frequency</th><th>Latency</th><th>Role</th>",
      "<th>訊號</th><th>頻率</th><th>延遲</th><th>角色</th>"),
@@ -230,8 +259,12 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
 PAYLOAD_MAP = {
     "Datadog, Inc.": "Datadog, Inc.（DDOG）",
     "early November 2026": "2026 年 11 月初",
-    "guidance midpoint x (1 + trailing 8-quarter mean beat)":
-        "指引中點 × (1 + 近八季平均超額)",
+    ("guidance midpoint x (1 + mean beat over a trailing window "
+     "whose length is selected out-of-sample)"):
+        "指引中點 × (1 + 樣本外選定視窗的平均超額)",
+    "guidance + auto-window beat": "指引 + 自動選窗超額",
+    "cust_yoy": "$100k+ 客戶數成長", "billings_yoy": "Billings 成長",
+    "rev_yoy": "營收年增率", "beat_vs_guide": "相對指引超額",
     "yes -- primary document re-fetched from EDGAR and read":
         "已核對（主文件自 EDGAR 重新抓取並閱讀）",
     ("Sell-side consensus is not included: no free, citable public "
@@ -269,6 +302,27 @@ PAYLOAD_MAP = {
     "guidance + trailing beat (8q)": "指引 + 近八季平均超額",
     "AR(1)+trend": "AR(1)+趨勢",
     "signal": "訊號", "control": "對照組",
+    # coverage-table strings (payload side)
+    "npm (constant-composition basket)": "npm（常數組成籃）",
+    "npm (all Datadog packages)": "npm（全部 Datadog 套件）",
+    "Docker Hub datadog/agent": "Docker Hub datadog/agent",
+    "Docker Hub datadog/cluster-agent": "Docker Hub datadog/cluster-agent",
+    "APT / YUM repositories": "APT / YUM 套件庫",
+    "Helm chart / Kubernetes operator": "Helm chart / Kubernetes operator",
+    "AWS / Azure / GCP marketplace": "AWS / Azure / GCP 雲市集",
+    "Node.js APM tracer + metrics client": "Node.js APM tracer + metrics client",
+    "Node.js SDKs incl. browser RUM/logs, CI": "Node.js SDK（含 browser RUM/logs、CI）",
+    "the core Go agent (host + container monitoring)": "核心 Go agent（主機 + 容器監控）",
+    "Linux package installs of the core agent": "核心 agent 的 Linux 套件安裝",
+    "container-orchestrated agent rollout": "容器編排的 agent 部署",
+    "marketplace-billed deployments": "雲市集計費的部署",
+    "daily, 2017+": "每日，2017 起",
+    "CUMULATIVE COUNTER ONLY -- no time series": "僅累計計數 —— 無時序資料",
+    "not publicly exposed": "未公開",
+    "NO -- not backfillable": "否 —— 無法回補",
+    "appendix": "附錄",
+    "yes": "是",
+    "NO": "否",
     "Ecosystem-wide download inflation": "全生態系下載量膨脹",
     "Download-to-revenue decoupling": "下載量與營收脫鉤",
     "Hyperscaler divergence": "Hyperscaler 背離",
@@ -336,8 +390,8 @@ def main() -> None:
         "${DATA.diagnostics.grid_cells} 格另類數據中 0 格勝過最強樸素基準。本頁每個訊號都應視為監控用途，而非預測用途。",
     )
     tpl = tpl.replace(
-        "Downloads per $m of revenue rose from ${DATA.decoupling.first4.toLocaleString()} to ${DATA.decoupling.last4.toLocaleString()} (Spearman &rho;=${DATA.decoupling.rho}, p${DATA.decoupling.p}). The proxy has degraded ~5x over the sample.",
-        "每百萬美元營收對應的下載量從 ${DATA.decoupling.first4.toLocaleString()} 升到 ${DATA.decoupling.last4.toLocaleString()}（Spearman &rho;=${DATA.decoupling.rho}、p${DATA.decoupling.p}）。代理關係在樣本期內衰減約 4.5 倍。",
+        "Downloads per $m of revenue rose from ${DATA.decoupling.first4.toLocaleString()} to ${DATA.decoupling.last4.toLocaleString()} (Spearman &rho;=${DATA.decoupling.rho}, p${DATA.decoupling.p}). Normalising by disclosed $100k+ customers: revenue per customer +${DATA.decoupling.rev_per_cust_pct}% but downloads per customer +${DATA.decoupling.dl_per_cust_pct}% &mdash; cross-sell and tiering are real but explain a minority of the gap.",
+        "每百萬美元營收對應的下載量從 ${DATA.decoupling.first4.toLocaleString()} 升到 ${DATA.decoupling.last4.toLocaleString()}（Spearman &rho;=${DATA.decoupling.rho}、p${DATA.decoupling.p}）。以揭露的 $100k+ 客戶數正規化後：每客戶營收 +${DATA.decoupling.rev_per_cust_pct}%，但每客戶下載量 +${DATA.decoupling.dl_per_cust_pct}% &mdash; 交叉銷售與階梯定價確實存在，但只解釋了缺口的少數。",
     )
     # Risk-flag names and state literals live in the template's JS array, not
     # in the payload, so they need template-side replacement.
@@ -356,6 +410,11 @@ def main() -> None:
         ('paceUnits: "millions of downloads, cumulative"',
          'paceUnits: "單位：百萬次下載，累計"'),
         ('h.role === "control"', 'h.role === "對照組"'),
+        ('c.in_model.startsWith("yes")', 'c.in_model.startsWith("是")'),
+        ('c.in_model === "appendix"', 'c.in_model === "附錄"'),
+        ('\'<span class="tag t-good">yes</span>\'', '\'<span class="tag t-good">是</span>\''),
+        ('\'<span class="tag t-dim">appendix</span>\'', '\'<span class="tag t-dim">附錄</span>\''),
+        ('\'<span class="tag t-bad">no</span>\'', '\'<span class="tag t-bad">否</span>\''),
         ('c.role === "HEADLINE INPUT"', 'c.role === "頭條輸入"'),
     ):
         if en not in tpl:

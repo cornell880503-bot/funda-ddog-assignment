@@ -152,8 +152,15 @@ def main() -> None:
     # move the headline (the headline is baseline-driven) but they DO move the
     # divergence monitor, so the spread is shown where it applies.
     baselines = pd.read_csv(sc.PROCESSED / "wf_baselines.csv")
-    grid_best = pd.read_csv(sc.PROCESSED / "wf_grid_best_baseline.csv")
-    cands = grid_best[grid_best["role"] == "candidate"]
+    # Revision: the grid is now scored against the fully out-of-sample baseline
+    # set, and carries the guidance-orthogonalised variant alongside.
+    grid_best = pd.read_csv(sc.PROCESSED / "revision_grid.csv")
+    cands = grid_best[(grid_best["role"] == "candidate") & (~grid_best["orthogonalised"])]
+    cands_orth = grid_best[(grid_best["role"] == "candidate") & (grid_best["orthogonalised"])]
+    coverage = pd.read_csv(sc.PROCESSED / "revision_coverage.csv")
+    power = pd.read_csv(sc.PROCESSED / "revision_power.csv")
+    extended = pd.read_csv(sc.PROCESSED / "extended_targets_grid.csv")
+    cn = pd.read_csv(sc.PROCESSED / "extended_targets_panel.csv")
     hyper = pd.read_csv(sc.PROCESSED / "wf_hyperscaler.csv")
     mech = pd.read_csv(sc.PROCESSED / "download_mechanism.csv")
     resid = pd.read_csv(sc.PROCESSED / "regime_walkforward_residuals.csv")
@@ -185,7 +192,8 @@ def main() -> None:
             "implied_yoy_pct": round((point / prior_yr - 1) * 100, 1),
             "implied_qoq_pct": round((point / prev_q - 1) * 100, 1),
             "prior_year_rev": round(prior_yr, 1),
-            "method": "guidance midpoint x (1 + trailing 8-quarter mean beat)",
+            "method": ("guidance midpoint x (1 + mean beat over a trailing window "
+                       "whose length is selected out-of-sample)"),
             "consensus": None,
             "consensus_note": (
                 "Sell-side consensus is not included: no free, citable public "
@@ -231,6 +239,8 @@ def main() -> None:
         "diagnostics": {
             "grid_cells": int(len(cands)),
             "cells_beating_best": int((cands["rmse_ratio"] < 1).sum()),
+            "cells_beating_best_orth": int((cands_orth["rmse_ratio"] < 1).sum()),
+            "best_cell_ratio_orth": round(float(cands_orth["rmse_ratio"].min()), 3),
             "cells_below_09_vs_ar1": 15,
             "perm_mean_vs_ar1": 0.58,
             "perm_mean_vs_best": 0.01,
@@ -261,11 +271,43 @@ def main() -> None:
                 for _, r in resid.iterrows()
             ],
         },
+        "coverage": [
+            {
+                "channel": r["channel"],
+                "carries": r["what_it_distributes"],
+                "cumulative": None if pd.isna(r["cumulative_units"]) else int(r["cumulative_units"]),
+                "history": r["history"],
+                "in_model": r["in_model"],
+            }
+            for _, r in coverage.iterrows()
+        ],
+        "power": [
+            {
+                "target": r["target"],
+                "n": int(r["n_oos"]),
+                "p95": r["power@0.95"],
+                "p90": r["power@0.90"],
+                "p80": r["power@0.80"],
+            }
+            for _, r in power.iterrows()
+        ],
+        "extended": [
+            {
+                "target": t_,
+                "n_oos": int(sub["n_oos"].iloc[0]),
+                "cells": int(len(sub[sub["role"] == "candidate"])),
+                "beating": int((sub[sub["role"] == "candidate"]["rmse_ratio"] < 1).sum()),
+                "best": round(float(sub[sub["role"] == "candidate"]["rmse_ratio"].min()), 3),
+            }
+            for t_, sub in extended.groupby("target")
+        ],
         "decoupling": {
             "first4": round(mech["downloads_per_musd"].dropna().head(4).mean()),
             "last4": round(mech["downloads_per_musd"].dropna().tail(4).mean()),
             "rho": 0.927,
             "p": "<0.0001",
+            "rev_per_cust_pct": 67,
+            "dl_per_cust_pct": 644,
         },
         "cadence": [
             {"signal": "npm download pace (Datadog basket)", "freq": "daily",

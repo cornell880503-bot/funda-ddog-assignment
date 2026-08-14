@@ -166,11 +166,14 @@ app.appendChild(el(panel("Headline nowcast &mdash; Q3 2026 revenue", `
   </div>
   <div class="callout">
     <strong>Why the headline is not built from the alternative data.</strong>
-    No download or hyperscaler construction beat the strongest naive baseline out
-    of sample &mdash; 0 of ${DATA.diagnostics.grid_cells} grid cells (see Model
-    diagnostics). Presenting a signal-weighted estimate would show a relationship
-    the validation rejected. The signals below run as a <em>divergence monitor</em>:
-    they do not set the number, they flag when the rule behind it is likely to break.
+    No construction beat the strongest naive baseline out of sample &mdash; 0 of
+    ${DATA.diagnostics.grid_cells} grid cells, and 0 again once features are
+    orthogonalised against guidance (see Model diagnostics). The scope of that
+    claim is narrow and deliberate: what was testable is the Node.js SDK channel,
+    roughly a tenth of the observable install volume, while the core agent's
+    channel publishes no history at all (see Observability). The signals below run
+    as a <em>divergence monitor</em>: they do not set the number, they flag when
+    the rule behind it is likely to break.
   </div>
   <div class="note">${H.consensus_note}
   The band reflects only the historical variance of the beat. It is
@@ -215,6 +218,33 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
     the <em>placebo</em> sits at z=+0.93. That pattern says the ecosystem is running
     hot, not that Datadog is.
   </div>
+`)));
+
+/* ----------------------------------------------------- observability panel */
+app.appendChild(el(panel("Observability &mdash; what the signal can and cannot see", `
+  <table>
+    <thead><tr><th>Distribution channel</th><th>Carries</th>
+      <th class="num">Cumulative</th><th>History</th><th>Testable</th></tr></thead>
+    <tbody>${DATA.coverage.map(c => `<tr>
+      <td>${c.channel}</td><td style="color:var(--muted);font-size:12px">${c.carries}</td>
+      <td class="num">${c.cumulative ? (c.cumulative / 1e9).toFixed(2) + "bn" : "&mdash;"}</td>
+      <td style="font-size:12px">${c.history}</td>
+      <td>${c.in_model.startsWith("yes")
+            ? '<span class="tag t-good">yes</span>'
+            : c.in_model === "appendix"
+              ? '<span class="tag t-dim">appendix</span>'
+              : '<span class="tag t-bad">no</span>'}</td></tr>`).join("")}
+    </tbody>
+  </table>
+  <div class="note"><strong>This is the project's binding constraint.</strong>
+    Datadog's core billable unit is the Go agent, shipped through Docker Hub,
+    APT/YUM, Helm and cloud marketplaces. That channel carries about
+    <strong>10x</strong> the volume of the npm channel this dashboard measures, and
+    Docker Hub exposes only a lifetime cumulative counter &mdash; no time series, no
+    per-tag split &mdash; so it cannot be backfilled for the 27 quarters already
+    elapsed. A daily snapshot of that counter yields a usable delta series
+    <em>from the day collection starts</em>, which is the correct forward fix and
+    the single highest-value addition to this pipeline.</div>
 `)));
 
 /* ------------------------------------------------------------- pace chart */
@@ -308,7 +338,7 @@ const flags = [
   { name: "Ecosystem-wide download inflation", state: "diverging",
     detail: "Control and placebo baskets grew +102% / +184% YoY in 2026. Absolute Datadog download growth is not Datadog-specific." },
   { name: "Download-to-revenue decoupling", state: "diverging",
-    detail: `Downloads per $m of revenue rose from ${DATA.decoupling.first4.toLocaleString()} to ${DATA.decoupling.last4.toLocaleString()} (Spearman &rho;=${DATA.decoupling.rho}, p${DATA.decoupling.p}). The proxy has degraded ~5x over the sample.` },
+    detail: `Downloads per $m of revenue rose from ${DATA.decoupling.first4.toLocaleString()} to ${DATA.decoupling.last4.toLocaleString()} (Spearman &rho;=${DATA.decoupling.rho}, p${DATA.decoupling.p}). Normalising by disclosed $100k+ customers: revenue per customer +${DATA.decoupling.rev_per_cust_pct}% but downloads per customer +${DATA.decoupling.dl_per_cust_pct}% &mdash; cross-sell and tiering are real but explain a minority of the gap.` },
   { name: "Hyperscaler divergence", state: "leaning",
     detail: "AI-capex-driven cloud growth (Google Cloud +82%, AWS +37% in 2026Q2) correlates weakly with the application-monitoring workloads DDOG bills for." },
   { name: "Beat distribution drift", state: "leaning",
@@ -373,6 +403,38 @@ app.appendChild(el(panel("Risk flags", `
     <div class="sub" style="margin:16px 0 6px">Baselines, expanding walk-forward, no alternative data</div>
     <table><thead><tr><th>Target</th><th>Baseline</th><th class="num">RMSE</th>
       <th class="num">MAPE %</th><th class="num">Hit</th></tr></thead><tbody>${bl}</tbody></table>
+    <div class="sub" style="margin:16px 0 6px">Guidance-orthogonalised features &mdash; incremental content over guidance</div>
+    <div class="note" style="margin-top:0">Re-running every cell with the feature
+      residualised against guidance-implied growth (train-only coefficients), which
+      is how a quantamental desk would use it: predict the surprise, not the level.
+      Result: <strong>${D.cells_beating_best_orth} of ${D.grid_cells}</strong> cells
+      beat the baseline, best ${D.best_cell_ratio_orth}. Stripping out what guidance
+      already implies leaves <em>less</em>, not more.</div>
+    <div class="sub" style="margin:16px 0 6px">Other target metrics from the brief</div>
+    <table><thead><tr><th>Target</th><th class="num">n OOS</th>
+      <th class="num">Cells beating baseline</th><th class="num">Best cell</th></tr></thead>
+      <tbody>${DATA.extended.map(e => `<tr><td>${e.target}</td>
+        <td class="num">${e.n_oos}</td>
+        <td class="num">${e.beating} of ${e.cells}</td>
+        <td class="num">${e.best.toFixed(3)}</td></tr>`).join("")}</tbody></table>
+    <div class="note" style="margin-top:6px">Downloads are an unweighted count while
+      revenue is dollar-weighted, so a count-type target should match better. It does:
+      against $100k+ customer growth the best cell is <strong>1.049</strong>, the
+      closest any signal came to a baseline here, versus 1.137 against revenue growth.
+      Still a loss, at n=11. RPO has insufficient history; NRR is not disclosed as a
+      number in the 8-K exhibits and is excluded rather than approximated.</div>
+    <div class="sub" style="margin:16px 0 6px">Statistical power &mdash; what this sample could have detected</div>
+    <table><thead><tr><th>Target</th><th class="num">n</th>
+      <th class="num">detect r=0.95</th><th class="num">r=0.90</th>
+      <th class="num">r=0.80</th></tr></thead>
+      <tbody>${DATA.power.map(p => `<tr><td>${p.target}</td><td class="num">${p.n}</td>
+        <td class="num">${p.p95}</td><td class="num">${p.p90}</td>
+        <td class="num">${p.p80}</td></tr>`).join("")}</tbody></table>
+    <div class="note" style="margin-top:6px"><strong>A genuine 5&ndash;10% edge would
+      have gone undetected roughly 85&ndash;90% of the time.</strong> "0 of 24"
+      therefore <em>bounds</em> the effect size rather than showing it is zero. What
+      is <em>not</em> a power problem: the observed cells sit at ratios of 1.05 to
+      2.65 &mdash; consistent, large degradation on the wrong side of parity.</div>
     <div class="sub" style="margin:16px 0 6px">Signal 2 &mdash; hyperscaler cloud growth, identical pipeline</div>
     <table><thead><tr><th>Target</th><th>Feature</th><th class="num">Ratio</th>
       <th class="num">Boot 95% CI</th><th class="num">DM p</th></tr></thead><tbody>${hy}</tbody></table>

@@ -23,7 +23,7 @@
   "implied_yoy_pct": 34.2,
   "implied_qoq_pct": 6.0,
   "prior_year_rev": 885.7,
-  "method": "guidance midpoint x (1 + trailing 8-quarter mean beat)",
+  "method": "guidance midpoint x (1 + mean beat over a trailing window whose length is selected out-of-sample)",
   "consensus": null,
   "consensus_note": "Sell-side consensus is not included: no free, citable public source was available. It would come from a vendor feed.",
   "guidance_verified": "agree",
@@ -116,9 +116,9 @@
   }
  ],
  "imputation": {
-  "share_pct": 8.9,
+  "share_pct": 9.1,
   "days": 4,
-  "elapsed": 45
+  "elapsed": 44
  },
  "pace": {
   "2024Q2": {
@@ -1998,6 +1998,13 @@
    "hit": 0.692
   },
   {
+   "target": "rev_yoy",
+   "baseline": "guidance + auto-window beat",
+   "rmse": 0.02,
+   "mape": 4.1,
+   "hit": 0.769
+  },
+  {
    "target": "beat_vs_guide",
    "baseline": "AR(1)",
    "rmse": 0.0183,
@@ -2038,87 +2045,96 @@
    "rmse": 0.0227,
    "mape": 50.43,
    "hit": 0.571
+  },
+  {
+   "target": "beat_vs_guide",
+   "baseline": "guidance + auto-window beat",
+   "rmse": 0.0174,
+   "mape": 35.6,
+   "hit": 0.714
   }
  ],
  "diagnostics": {
   "grid_cells": 24,
   "cells_beating_best": 0,
+  "cells_beating_best_orth": 0,
+  "best_cell_ratio_orth": 1.323,
   "cells_below_09_vs_ar1": 15,
   "perm_mean_vs_ar1": 0.58,
   "perm_mean_vs_best": 0.01,
-  "best_cell_ratio": 1.032,
+  "best_cell_ratio": 1.075,
   "grid": [
    {
     "target": "rev_yoy",
     "candidate": "dd_rel_plc",
     "window": "d30",
-    "ratio": 1.47
+    "ratio": 1.618
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel_plc",
     "window": "d45",
-    "ratio": 1.516
+    "ratio": 1.669
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel_plc",
     "window": "d60",
-    "ratio": 1.536
+    "ratio": 1.691
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel_plc",
     "window": "full",
-    "ratio": 1.576
+    "ratio": 1.736
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel",
     "window": "d30",
-    "ratio": 1.911
+    "ratio": 2.104
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel",
     "window": "d45",
-    "ratio": 1.928
+    "ratio": 2.122
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel",
     "window": "d60",
-    "ratio": 2.078
+    "ratio": 2.287
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_rel",
     "window": "full",
-    "ratio": 2.409
+    "ratio": 2.652
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_abs",
     "window": "d30",
-    "ratio": 1.032
+    "ratio": 1.137
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_abs",
     "window": "d45",
-    "ratio": 1.21
+    "ratio": 1.332
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_abs",
     "window": "d60",
-    "ratio": 1.259
+    "ratio": 1.386
    },
    {
     "target": "rev_yoy",
     "candidate": "dd_abs",
     "window": "full",
-    "ratio": 1.372
+    "ratio": 1.511
    },
    {
     "target": "beat_vs_guide",
@@ -2338,11 +2354,96 @@
    }
   ]
  },
+ "coverage": [
+  {
+   "channel": "npm (constant-composition basket)",
+   "carries": "Node.js APM tracer + metrics client",
+   "cumulative": 1130305079,
+   "history": "daily, 2017+",
+   "in_model": "yes"
+  },
+  {
+   "channel": "npm (all Datadog packages)",
+   "carries": "Node.js SDKs incl. browser RUM/logs, CI",
+   "cumulative": 2176798483,
+   "history": "daily, 2017+",
+   "in_model": "appendix"
+  },
+  {
+   "channel": "Docker Hub datadog/agent",
+   "carries": "the core Go agent (host + container monitoring)",
+   "cumulative": 11249210964,
+   "history": "CUMULATIVE COUNTER ONLY -- no time series",
+   "in_model": "NO -- not backfillable"
+  },
+  {
+   "channel": "Docker Hub datadog/cluster-agent",
+   "carries": "the core Go agent (host + container monitoring)",
+   "cumulative": 126493867,
+   "history": "CUMULATIVE COUNTER ONLY -- no time series",
+   "in_model": "NO -- not backfillable"
+  },
+  {
+   "channel": "APT / YUM repositories",
+   "carries": "Linux package installs of the core agent",
+   "cumulative": null,
+   "history": "not publicly exposed",
+   "in_model": "NO"
+  },
+  {
+   "channel": "Helm chart / Kubernetes operator",
+   "carries": "container-orchestrated agent rollout",
+   "cumulative": null,
+   "history": "not publicly exposed",
+   "in_model": "NO"
+  },
+  {
+   "channel": "AWS / Azure / GCP marketplace",
+   "carries": "marketplace-billed deployments",
+   "cumulative": null,
+   "history": "not publicly exposed",
+   "in_model": "NO"
+  }
+ ],
+ "power": [
+  {
+   "target": "rev_yoy",
+   "n": 13,
+   "p95": "6%",
+   "p90": "15%",
+   "p80": "28%"
+  },
+  {
+   "target": "beat_vs_guide",
+   "n": 14,
+   "p95": "10%",
+   "p90": "24%",
+   "p80": "57%"
+  }
+ ],
+ "extended": [
+  {
+   "target": "billings_yoy",
+   "n_oos": 7,
+   "cells": 12,
+   "beating": 0,
+   "best": 1.106
+  },
+  {
+   "target": "cust_yoy",
+   "n_oos": 11,
+   "cells": 12,
+   "beating": 0,
+   "best": 1.049
+  }
+ ],
  "decoupling": {
-  "first4": 21817,
+  "first4": 21818,
   "last4": 97228,
   "rho": 0.927,
-  "p": "<0.0001"
+  "p": "<0.0001",
+  "rev_per_cust_pct": 67,
+  "dl_per_cust_pct": 644
  },
  "cadence": [
   {
