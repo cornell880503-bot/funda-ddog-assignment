@@ -758,3 +758,90 @@ only construction that beat AR(1) is the one with the least drift adjustment,
 its advantage decays as the observation window lengthens, and it loses to a
 random walk. Because the targets are non-stationary, "beats AR(1)" is a
 substantially lower bar than it appears.
+
+### D29. Signal 2 (hyperscaler cloud growth) — extracted, tested, also fails
+**Deliverable requirement.** The assignment asks for at least two signals tested
+statistically. Four download features are four constructions of *one* signal,
+so Signal 2 had to go through the identical pipeline: same as-of construction,
+same expanding walk-forward, same five baselines, same DM + bootstrap, its own
+matched control.
+
+**Extraction.** Segment revenue is not in XBRL (D15). Values come from the
+Item 2.02 press releases, cached and audited. Coverage is uneven and reported:
+
+| series | coverage | role |
+|---|---|---|
+| `azure_ic_yoy` Microsoft Intelligent Cloud | **28/28** | signal |
+| `msft_pbp_yoy` Microsoft Productivity & Business Processes | **28/28** | matched control, *same filing* |
+| `amzn_total_yoy` Amazon total net sales | **28/28** | matched control, same filing |
+| `aws_yoy` | 16/28 | signal, partial |
+| `gcp_yoy` | 8/28 | signal, partial |
+
+The same `[^.]` decimal-point trap from D6 struck again — `"Intelligent Cloud
+was $39.3 billion and increased 32%"` was being truncated at `$39.`, giving
+0/28 coverage. Fixed with the same `(?:[^.]|\.\d)` idiom, which took Azure to
+28/28. Third occurrence of this bug class; it is now a named idiom in the code.
+The audit for quarter-on-quarter jumps above 25pp flags nothing.
+
+**Result — Signal 2 fails, and more decisively than the download signals.**
+
+| target | feature | vs strongest baseline | ratio | boot 95% CI | DM p |
+|---|---|---|---|---|---|
+| `rev_yoy` | `azure_ic_yoy` | ARIMA(1,1,0) | **2.912** | [1.671, 5.970] | 0.025 |
+| `rev_yoy` | `msft_pbp_yoy` (control) | ARIMA(1,1,0) | 1.738 | [1.138, 3.636] | 0.025 |
+| `beat_vs_guide` | `azure_ic_yoy` | random walk | **1.945** | [1.212, 3.593] | 0.020 |
+| `beat_vs_guide` | `msft_pbp_yoy` (control) | random walk | 1.520 | [0.885, 2.549] | 0.166 |
+
+Intelligent Cloud growth is **significantly worse** than the naive baseline —
+the CI excludes 1.0 on the wrong side. Adding it actively degrades the forecast.
+
+`aws_yoy` shows ratio 0.981 on `rev_yoy` against ARIMA(1,1,0), but **n_oos = 4**
+(16 quarters of coverage minus 12 training) with CI [0.319, 3.694]. That is not
+evidence of anything and is reported as insufficient coverage, not as a result.
+
+One nuance worth a line in the report: `azure_ic_yoy` achieves a **0.846
+directional hit rate** on `rev_yoy` while its RMSE is nearly 3x the baseline.
+It gets the direction of the cloud cycle right and the magnitude badly wrong —
+which is consistent with it tracking a common cycle rather than Datadog's own
+consumption, and is a good illustration of why hit rate alone is a poor metric.
+
+### D30. The 112% vs 36% gap — the coupling has degraded, and it is not CI re-pulls
+Part 1's economic argument is that instrumentation downloads proxy the billable
+unit. The constant-composition basket grew ~112% YoY in the live quarter
+against ~36% revenue growth. That factor of three attacks the core of Part 1
+and belongs in the main body, not in Limitations.
+
+**The leading hypothesis fails.** If a rising share of downloads were CI/CD
+re-pulls, weekday concentration should rise (CI runs on working days). It does
+not: the weekday/weekend ratio is **6.39 → 5.61** over the sample, slope
+−0.006/quarter, p=0.77, Spearman rho −0.108. Flat to slightly *falling* — the
+opposite direction. The CI-inflation story is not supported by the data I have.
+
+**The release-window test is underpowered and is reported as such**, not as a
+null: dd-trace publishes so frequently that a 7-day post-release window covers
+most of the calendar, so the concentration index sits at ~1.0 by construction
+and cannot discriminate. Stated rather than quietly dropped.
+
+**The direct measure is unambiguous.** Downloads per $m of revenue, which is
+exactly what "download inflation relative to billing" means and which needs no
+mechanism to interpret:
+
+    19,534 (first 4 quarters)  ->  97,228 (last 4 quarters)   +398%
+    slope +2,667 per quarter, p < 0.0001, Spearman rho = +0.927, p < 0.0001
+
+Near-monotonic over 27 quarters. **The download-to-revenue relationship has not
+been stable; it has decayed by roughly a factor of five.**
+
+This is the mechanism-level explanation for D28. A model mapping download growth
+to revenue growth assumes a stable coupling. That coupling demonstrably does not
+hold in this sample, so the walk-forward failure is not a small-sample accident —
+it is what a decaying proxy relationship should produce.
+
+**Honest position for the report:** the gap is real, the most plausible
+mechanical explanation (CI re-pulls) is not supported, and I cannot attribute
+the decay to a specific cause with public data. Candidates that remain untested:
+mirror and proxy traffic growth, container image rebuilds, AI coding agents
+generating repeated installs, and the structural point already in the brief —
+downloads are unweighted while revenue is dollar-weighted, so one enterprise and
+one hobbyist count the same. Part 1's rationale must be rewritten to state that
+the proxy's validity is time-varying, with this measurement as the evidence.

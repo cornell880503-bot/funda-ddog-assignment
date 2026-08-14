@@ -1,0 +1,169 @@
+quarter,ticker,series,yoy,available_from,ddog_earnings_date,lead_days,accession,snippet
+2019Q3,AMZN,aws_yoy,,2019-10-24,2019-11-12,19,0001018724-19-000087,
+2019Q3,AMZN,amzn_total_yoy,0.24,2019-10-24,2019-11-12,19,0001018724-19-000087,"eptember 30, 2019 , compared with 507 million one year ago. Net sales increased 24% to $70.0 billion in the third quarter, compared with $56.6 "
+2019Q3,GOOGL,gcp_yoy,,2019-10-28,2019-11-12,15,0001652044-19-000030,
+2019Q3,GOOGL,goog_search_yoy,,2019-10-28,2019-11-12,15,0001652044-19-000030,
+2019Q3,MSFT,azure_ic_yoy,0.27,2019-10-23,2019-11-12,20,0001193125-19-272562,"enue growth of 41% (up 44% in constant currency) Revenue in Intelligent Cloud was $10.8 billion and increased 27% (up 29% in constant currency), with the following business "
+2019Q3,MSFT,msft_pbp_yoy,0.13,2019-10-23,2019-11-12,20,0001193125-19-272562,"sident and chief financial officer of Microsoft. Revenue in Productivity and Business Processes was $11.1 billion and increased 13% (up 15% in constant currency), with the following business "
+2019Q4,AMZN,aws_yoy,,2020-01-30,2020-02-13,14,0001018724-20-000002,
+2019Q4,AMZN,amzn_total_yoy,0.21,2020-01-30,2020-02-13,14,0001018724-20-000002,"compared with 507 million one year ago. Fourth Quarter 2019 Net sales increased 21% to $87.4 billion in the fourth quarter, compared with $72.4"
+2019Q4,GOOGL,gcp_yoy,,2020-02-03,2020-02-13,10,0001652044-20-000004,
+2019Q4,GOOGL,goog_search_yoy,,2020-02-03,2020-02-13,10,0001652044-20-000004,
+2019Q4,MSFT,azure_ic_yoy,0.27,2020-01-29,2020-02-13,15,0001193125-20-018383,"enue growth of 42% (up 45% in constant currency) Revenue in Intelligent Cloud was $11.9 billion and increased 27% (up 28% in constant currency), with the following business "
+2019Q4,MSFT,msft_pbp_yoy,0.17,2020-01-29,2020-02-13,15,0001193125-20-018383,"sident and chief financial officer of Microsoft. Revenue in Productivity and Business Processes was $11.8 billion and increased 17% (up 19% in constant currency), with the following business "
+2020Q1,AMZN,aws_yoy,,2020-04-30,2020-05-11,11,0001018724-20-000008,
+2020Q1,AMZN,amzn_total_yoy,0.26,2020-04-30,2020-05-11,11,0001018724-20-000008," March 31, 2020 , compared with 507 million one year ago. • Net sales increased 26% to $75.5 billion in the first quarter, compared with $59.7 "
+2020Q1,GOOGL,gcp_yoy,,2020-04-28,2020-05-11,13,0001652044-20-000018,
+2020Q1,GOOGL,goog_search_yoy,,2020-04-28,2020-05-11,13,0001652044-20-000018,
+2020Q1,MSFT,azure_ic_yoy,0.27,2020-04-29,2020-05-11,12,0001193125-20-126089,"enue growth of 47% (up 49% in constant currency) Revenue in Intelligent Cloud was $12.3 billion and increased 27% (up 29% in constant currency), with the following business "
+2020Q1,MSFT,msft_pbp_yoy,0.15,2020-04-29,2020-05-11,12,0001193125-20-126089,"results until future periods. Segment Highlights Revenue in Productivity and Business Processes was $11.7 billion and increased 15% (up 16% in constant currency), with the following business "
+2020Q2,AMZN,aws_yoy,,2020-07-30,2020-08-06,7,0001018724-20-000019,
+2020Q2,AMZN,amzn_total_yoy,0.4,2020-07-30,2020-08-06,7,0001018724-20-000019,"on June 30, 2020, compared with 510 million one year ago. • Net sales increased 40% to $88.9 billion in the second quarter, compared with $63.4"
+2020Q2,GOOGL,gcp_yoy,,2020-07-30,2020-08-06,7,0001652044-20-000031,
+2020Q2,GOOGL,goog_search_yoy,,2020-07-30,2020-08-06,7,0001652044-20-000031,
+2020Q2,MSFT,azure_ic_yoy,0.17,2020-07-22,2020-08-06,15,0001193125-20-197109,"enue growth of 38% (up 40% in constant currency) Revenue in Intelligent Cloud was $13.4 billion and increased 17% (up 19% in constant currency), with the following business "
+2020Q2,MSFT,msft_pbp_yoy,0.06,2020-07-22,2020-08-06,15,0001193125-20-197109,"ctions in advertising spend. Business Highlights Revenue in Productivity and Business Processes was $11.8 billion and increased 6% (up 8% in constant currency), with the following business h"
+2020Q3,AMZN,aws_yoy,,2020-10-29,2020-11-10,12,0001018724-20-000028,
+2020Q3,AMZN,amzn_total_yoy,0.37,2020-10-29,2020-11-10,12,0001018724-20-000028,"ptember 30, 2020, compared with 511 million one year ago. • Net sales increased 37% to $96.1 billion in the third quarter, compared with $70.0 "
+2020Q3,GOOGL,gcp_yoy,,2020-10-29,2020-11-10,12,0001652044-20-000046,
+2020Q3,GOOGL,goog_search_yoy,,2020-10-29,2020-11-10,12,0001652044-20-000046,
+2020Q3,MSFT,azure_ic_yoy,0.2,2020-10-27,2020-11-10,14,0001193125-20-278410,"enue growth of 38% (up 37% in constant currency) Revenue in Intelligent Cloud was $13.0 billion and increased 20% (up 19% in constant currency), with the following business "
+2020Q3,MSFT,msft_pbp_yoy,0.11,2020-10-27,2020-11-10,14,0001193125-20-278410," to drive long-term growth.” Business Highlights Revenue in Productivity and Business Processes was $12.3 billion and increased 11%, with the following business highlights: • Office Commercia"
+2020Q4,AMZN,aws_yoy,,2021-02-02,2021-02-11,9,0001018724-21-000002,
+2020Q4,AMZN,amzn_total_yoy,0.44,2021-02-02,2021-02-11,9,0001018724-21-000002,"mpared with 512 million one year ago. Fourth Quarter 2020 • Net sales increased 44% to $125.6 billion in the fourth quarter, compared with $87."
+2020Q4,GOOGL,gcp_yoy,,2021-02-02,2021-02-11,9,0001652044-21-000006,
+2020Q4,GOOGL,goog_search_yoy,,2021-02-02,2021-02-11,9,0001652044-21-000006,
+2020Q4,MSFT,azure_ic_yoy,0.23,2021-01-26,2021-02-11,16,0001193125-21-017683,"enue growth of 39% (up 37% in constant currency) Revenue in Intelligent Cloud was $14.6 billion and increased 23% (up 22% in constant currency), with the following business "
+2020Q4,MSFT,msft_pbp_yoy,0.13,2021-01-26,2021-02-11,16,0001193125-21-017683,"rategic, high-growth areas.” Business Highlights Revenue in Productivity and Business Processes was $13.4 billion and increased 13% (up 11% in constant currency), with the following business "
+2021Q1,AMZN,aws_yoy,,2021-04-29,2021-05-06,7,0001018724-21-000008,
+2021Q1,AMZN,amzn_total_yoy,0.44,2021-04-29,2021-05-06,7,0001018724-21-000008,"n March 31, 2021, compared with 513 million one year ago. • Net sales increased 44% to $108.5 billion in the first quarter, compared with $75.5"
+2021Q1,GOOGL,gcp_yoy,,2021-04-27,2021-05-06,9,0001652044-21-000018,
+2021Q1,GOOGL,goog_search_yoy,,2021-04-27,2021-05-06,9,0001652044-21-000018,
+2021Q1,MSFT,azure_ic_yoy,0.23,2021-04-27,2021-05-06,9,0001193125-21-134213,"enue growth of 45% (up 40% in constant currency) Revenue in Intelligent Cloud was $15.1 billion and increased 23% (up 20% in constant currency), with the following business "
+2021Q1,MSFT,msft_pbp_yoy,0.15,2021-04-27,2021-05-06,9,0001193125-21-134213,"ant Currency 16% 27% 32% 34% Business Highlights Revenue in Productivity and Business Processes was $13.6 billion and increased 15% (up 12% in constant currency), with the following business "
+2021Q2,AMZN,aws_yoy,,2021-07-29,2021-08-05,7,0001018724-21-000018,
+2021Q2,AMZN,amzn_total_yoy,0.27,2021-07-29,2021-08-05,7,0001018724-21-000018,"on June 30, 2021, compared with 517 million one year ago. • Net sales increased 27% to $113.1 billion in the second quarter, compared with $88."
+2021Q2,GOOGL,gcp_yoy,,2021-07-27,2021-08-05,9,0001652044-21-000041,
+2021Q2,GOOGL,goog_search_yoy,,2021-07-27,2021-08-05,9,0001652044-21-000041,
+2021Q2,MSFT,azure_ic_yoy,0.3,2021-07-27,2021-08-05,9,0001193125-21-225746,"enue growth of 49% (up 42% in constant currency) Revenue in Intelligent Cloud was $17.4 billion and increased 30% (up 26% in constant currency), with the following business "
+2021Q2,MSFT,msft_pbp_yoy,0.25,2021-07-27,2021-08-05,9,0001193125-21-225746,"over year to $19.5 billion.” Business Highlights Revenue in Productivity and Business Processes was $14.7 billion and increased 25% (up 21% in constant currency), with the following business "
+2021Q3,AMZN,aws_yoy,,2021-10-28,2021-11-04,7,0001018724-21-000026,
+2021Q3,AMZN,amzn_total_yoy,0.15,2021-10-28,2021-11-04,7,0001018724-21-000026,"ptember 30, 2021, compared with 518 million one year ago. • Net sales increased 15% to $110.8 billion in the third quarter, compared with $96.1"
+2021Q3,GOOGL,gcp_yoy,,2021-10-26,2021-11-04,9,0001652044-21-000054,
+2021Q3,GOOGL,goog_search_yoy,,2021-10-26,2021-11-04,9,0001652044-21-000054,
+2021Q3,MSFT,azure_ic_yoy,0.31,2021-10-26,2021-11-04,9,0001193125-21-307941,"enue growth of 48% (up 45% in constant currency) Revenue in Intelligent Cloud was $17.0 billion and increased 31% (up 29% in constant currency), with the following business "
+2021Q3,MSFT,msft_pbp_yoy,0.22,2021-10-26,2021-11-04,9,0001193125-21-307941,"ant Currency 20% 24% 22% 23% Business Highlights Revenue in Productivity and Business Processes was $15.0 billion and increased 22% (up 20% in constant currency), with the following business "
+2021Q4,AMZN,aws_yoy,,2022-02-03,2022-02-10,7,0001018724-22-000002,
+2021Q4,AMZN,amzn_total_yoy,0.09,2022-02-03,2022-02-10,7,0001018724-22-000002,"mpared with 518 million one year ago. Fourth Quarter 2021 • Net sales increased 9% to $137.4 billion in the fourth quarter, compared with $125"
+2021Q4,GOOGL,gcp_yoy,,2022-02-01,2022-02-10,9,0001652044-22-000015,
+2021Q4,GOOGL,goog_search_yoy,,2022-02-01,2022-02-10,9,0001652044-22-000015,
+2021Q4,MSFT,azure_ic_yoy,0.26,2022-01-25,2022-02-10,16,0001193125-22-017041,"enue growth of 45% (up 44% in constant currency) Revenue in Intelligent Cloud was $18.3 billion and increased 26%, with the following business highlights: • Server products "
+2021Q4,MSFT,msft_pbp_yoy,0.19,2022-01-25,2022-02-10,16,0001193125-22-017041,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $15.9 billion and increased 19%, with the following business highlights: • Office Commercia"
+2022Q1,AMZN,aws_yoy,,2022-04-28,2022-05-05,7,0001018724-22-000011,
+2022Q1,AMZN,amzn_total_yoy,0.07,2022-04-28,2022-05-05,7,0001018724-22-000011,"n March 31, 2022, compared with 519 million one year ago. • Net sales increased 7% to $116.4 billion in the first quarter, compared with $108."
+2022Q1,GOOGL,gcp_yoy,,2022-04-26,2022-05-05,9,0001652044-22-000025,
+2022Q1,GOOGL,goog_search_yoy,,2022-04-26,2022-05-05,9,0001652044-22-000025,
+2022Q1,MSFT,azure_ic_yoy,0.26,2022-04-26,2022-05-05,9,0001193125-22-120207,"y Dynamics 365 revenue growth of 35% (up 38% CC) Revenue in Intelligent Cloud was $19.1 billion and increased 26%, with the following business highlights: • Server products "
+2022Q1,MSFT,msft_pbp_yoy,0.17,2022-04-26,2022-05-05,9,0001193125-22-120207,"ant Currency 21% 23% 17% 18% Business Highlights Revenue in Productivity and Business Processes was $15.8 billion and increased 17%, with the following business highlights: • Office Commercia"
+2022Q2,AMZN,aws_yoy,,2022-07-28,2022-08-04,7,0001018724-22-000017,
+2022Q2,AMZN,amzn_total_yoy,0.07,2022-07-28,2022-08-04,7,0001018724-22-000017,"eflect the 20-for-1 stock split effected on May 27, 2022. • Net sales increased 7% to $121.2 billion in the second quarter, compared with $113"
+2022Q2,GOOGL,gcp_yoy,,2022-07-26,2022-08-04,9,0001652044-22-000068,
+2022Q2,GOOGL,goog_search_yoy,,2022-07-26,2022-08-04,9,0001652044-22-000068,
+2022Q2,MSFT,azure_ic_yoy,0.2,2022-07-26,2022-08-04,9,0001193125-22-202034,"enue growth of 31% (up 36% in constant currency) Revenue in Intelligent Cloud was $20.9 billion and increased 20% (up 25% in constant currency), with the following business "
+2022Q2,MSFT,msft_pbp_yoy,0.13,2022-07-26,2022-08-04,9,0001193125-22-202034,"13 million, excluding Russia Business Highlights Revenue in Productivity and Business Processes was $16.6 billion and increased 13% (up 17% in constant currency), with the following business "
+2022Q3,AMZN,aws_yoy,0.27,2022-10-27,2022-11-03,7,0001018724-22-000021,"ncreased 12% excluding changes in foreign exchange rates. • AWS segment sales increased 27% year-over-year to $20.5 billion, or increased 28% excluding"
+2022Q3,AMZN,amzn_total_yoy,0.15,2022-10-27,2022-11-03,7,0001018724-22-000021,"l results for its third quarter ended September 30, 2022. • Net sales increased 15% to $127.1 billion in the third quarter, compared with $110."
+2022Q3,GOOGL,gcp_yoy,,2022-10-25,2022-11-03,9,0001652044-22-000085,
+2022Q3,GOOGL,goog_search_yoy,,2022-10-25,2022-11-03,9,0001652044-22-000085,
+2022Q3,MSFT,azure_ic_yoy,0.2,2022-10-25,2022-11-03,9,0001193125-22-268356,"enue growth of 24% (up 32% in constant currency) Revenue in Intelligent Cloud was $20.3 billion and increased 20% (up 26% in constant currency), with the following business "
+2022Q3,MSFT,msft_pbp_yoy,0.09,2022-10-25,2022-11-03,9,0001193125-22-268356,"ant Currency 16% 15% 10% 11% Business Highlights Revenue in Productivity and Business Processes was $16.5 billion and increased 9% (up 15% in constant currency), with the following business "
+2022Q4,AMZN,aws_yoy,0.2,2023-02-02,2023-02-16,14,0001018724-23-000002,increased 5% excluding changes in foreign exchange rates. • AWS segment sales increased 20% year-over-year to $21.4 billion. • Operating income decreas
+2022Q4,AMZN,amzn_total_yoy,0.09,2023-02-02,2023-02-16,14,0001018724-23-000002,"urth quarter ended December 31, 2022. Fourth Quarter 2022 • Net sales increased 9% to $149.2 billion in the fourth quarter, compared with $137"
+2022Q4,GOOGL,gcp_yoy,,2023-02-02,2023-02-16,14,0001652044-23-000013,
+2022Q4,GOOGL,goog_search_yoy,,2023-02-02,2023-02-16,14,0001652044-23-000013,
+2022Q4,MSFT,azure_ic_yoy,0.18,2023-01-24,2023-02-16,23,0001193125-23-014230,"enue growth of 21% (up 29% in constant currency) Revenue in Intelligent Cloud was $21.5 billion and increased 18% (up 24% in constant currency), with the following business "
+2022Q4,MSFT,msft_pbp_yoy,0.07,2023-01-24,2023-02-16,23,0001193125-23-014230,"onstant Currency 7% 6% 1% 2% Business Highlights Revenue in Productivity and Business Processes was $17.0 billion and increased 7% (up 13% in constant currency), with the following business "
+2023Q1,AMZN,aws_yoy,0.16,2023-04-27,2023-05-04,7,0001018724-23-000006,increased 9% excluding changes in foreign exchange rates. • AWS segment sales increased 16% year-over-year to $21.4 billion. • Operating income increas
+2023Q1,AMZN,amzn_total_yoy,0.09,2023-04-27,2023-05-04,7,0001018724-23-000006,"ncial results for its first quarter ended March 31, 2023. • Net sales increased 9% to $127.4 billion in the first quarter, compared with $116."
+2023Q1,GOOGL,gcp_yoy,,2023-04-20,2023-05-04,14,0001652044-23-000034,
+2023Q1,GOOGL,goog_search_yoy,,2023-04-20,2023-05-04,14,0001652044-23-000034,
+2023Q1,MSFT,azure_ic_yoy,0.16,2023-04-25,2023-05-04,9,0001193125-23-115280,"enue growth of 25% (up 29% in constant currency) Revenue in Intelligent Cloud was $22.1 billion and increased 16% (up 19% in constant currency), with the following business "
+2023Q1,MSFT,msft_pbp_yoy,0.11,2023-04-25,2023-05-04,9,0001193125-23-115280,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $17.5 billion and increased 11% (up 15% in constant currency), with the following business "
+2023Q2,AMZN,aws_yoy,0.12,2023-08-03,2023-08-08,5,0001018724-23-000010,ment sales increased 10% year-over-year to $29.7 billion. • AWS segment sales increased 12% year-over-year to $22.1 billion. • Operating income increas
+2023Q2,AMZN,amzn_total_yoy,0.11,2023-08-03,2023-08-08,5,0001018724-23-000010,"ncial results for its second quarter ended June 30, 2023. • Net sales increased 11% to $134.4 billion in the second quarter, compared with $121"
+2023Q2,GOOGL,gcp_yoy,,2023-07-25,2023-08-08,14,0001652044-23-000067,
+2023Q2,GOOGL,goog_search_yoy,,2023-07-25,2023-08-08,14,0001652044-23-000067,
+2023Q2,MSFT,azure_ic_yoy,0.15,2023-07-25,2023-08-08,14,0000950170-23-034400,"enue growth of 26% (up 28% in constant currency) Revenue in Intelligent Cloud was $24.0 billion and increased 15% (up 17% in constant currency), with the following business "
+2023Q2,MSFT,msft_pbp_yoy,0.1,2023-07-25,2023-08-08,14,0000950170-23-034400,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $18.3 billion and increased 10% (up 12% in constant currency), with the following business "
+2023Q3,AMZN,aws_yoy,0.12,2023-10-26,2023-11-07,12,0001018724-23-000016,ncreased 11% excluding changes in foreign exchange rates. • AWS segment sales increased 12% year-over-year to $23.1 billion. • Operating income increas
+2023Q3,AMZN,amzn_total_yoy,0.13,2023-10-26,2023-11-07,12,0001018724-23-000016,"l results for its third quarter ended September 30, 2023. • Net sales increased 13% to $143.1 billion in the third quarter, compared with $127."
+2023Q3,GOOGL,gcp_yoy,,2023-10-24,2023-11-07,14,0001652044-23-000088,
+2023Q3,GOOGL,goog_search_yoy,,2023-10-24,2023-11-07,14,0001652044-23-000088,
+2023Q3,MSFT,azure_ic_yoy,0.19,2023-10-24,2023-11-07,14,0000950170-23-054848,"enue growth of 28% (up 26% in constant currency) Revenue in Intelligent Cloud was $24.3 billion and increased 19%, with the following business highlights: • Server products "
+2023Q3,MSFT,msft_pbp_yoy,0.13,2023-10-24,2023-11-07,14,0000950170-23-054848,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $18.6 billion and increased 13% (up 12% in constant currency), with the following business "
+2023Q4,AMZN,aws_yoy,0.13,2024-02-01,2024-02-13,12,0001018724-24-000006,ncreased 13% excluding changes in foreign exchange rates. • AWS segment sales increased 13% year-over-year to $24.2 billion. • Operating income increas
+2023Q4,AMZN,amzn_total_yoy,0.14,2024-02-01,2024-02-13,12,0001018724-24-000006,"urth quarter ended December 31, 2023. Fourth Quarter 2023 • Net sales increased 14% to $170.0 billion in the fourth quarter, compared with $149"
+2023Q4,GOOGL,gcp_yoy,,2024-01-30,2024-02-13,14,0001652044-24-000014,
+2023Q4,GOOGL,goog_search_yoy,,2024-01-30,2024-02-13,14,0001652044-24-000014,
+2023Q4,MSFT,azure_ic_yoy,0.2,2024-01-30,2024-02-13,14,0000950170-24-008809,"enue growth of 27% (up 24% in constant currency) Revenue in Intelligent Cloud was $25.9 billion and increased 20% (up 19% in constant currency), with the following business "
+2023Q4,MSFT,msft_pbp_yoy,0.13,2024-01-30,2024-02-13,14,0000950170-24-008809,"ant Currency 16% 23% 23% 23% Business Highlights Revenue in Productivity and Business Processes was $19.2 billion and increased 13% (up 12% in constant currency), with the following business "
+2024Q1,AMZN,aws_yoy,0.17,2024-04-30,2024-05-07,7,0001018724-24-000081,ncreased 11% excluding changes in foreign exchange rates. • AWS segment sales increased 17% year-over-year to $25.0 billion. • Operating income increas
+2024Q1,AMZN,amzn_total_yoy,0.13,2024-04-30,2024-05-07,7,0001018724-24-000081,"ncial results for its first quarter ended March 31, 2024. • Net sales increased 13% to $143.3 billion in the first quarter, compared with $127."
+2024Q1,GOOGL,gcp_yoy,,2024-04-25,2024-05-07,12,0001652044-24-000047,
+2024Q1,GOOGL,goog_search_yoy,,2024-04-25,2024-05-07,12,0001652044-24-000047,
+2024Q1,MSFT,azure_ic_yoy,0.21,2024-04-25,2024-05-07,12,0000950170-24-048268,"enue growth of 23% (up 22% in constant currency) Revenue in Intelligent Cloud was $26.7 billion and increased 21%, with the following business highlights: • Server products "
+2024Q1,MSFT,msft_pbp_yoy,0.12,2024-04-25,2024-05-07,12,0000950170-24-048268,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $19.6 billion and increased 12% (up 11% in constant currency), with the following business "
+2024Q2,AMZN,aws_yoy,0.19,2024-08-01,2024-08-08,7,0001018724-24-000128,ncreased 10% excluding changes in foreign exchange rates. • AWS segment sales increased 19% year-over-year to $26.3 billion. • Operating income increas
+2024Q2,AMZN,amzn_total_yoy,0.1,2024-08-01,2024-08-08,7,0001018724-24-000128,"ncial results for its second quarter ended June 30, 2024. • Net sales increased 10% to $148.0 billion in the second quarter, compared with $134"
+2024Q2,GOOGL,gcp_yoy,,2024-07-23,2024-08-08,16,0001652044-24-000076,
+2024Q2,GOOGL,goog_search_yoy,,2024-07-23,2024-08-08,16,0001652044-24-000076,
+2024Q2,MSFT,azure_ic_yoy,0.19,2024-07-30,2024-08-08,9,0000950170-24-087835,"enue growth of 19% (up 20% in constant currency) Revenue in Intelligent Cloud was $28.5 billion and increased 19% (up 20% in constant currency), with the following business "
+2024Q2,MSFT,msft_pbp_yoy,0.11,2024-07-30,2024-08-08,9,0000950170-24-087835,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $20.3 billion and increased 11% (up 12% in constant currency), with the following business "
+2024Q3,AMZN,aws_yoy,0.19,2024-10-31,2024-11-07,7,0001018724-24-000158,ment sales increased 12% year-over-year to $35.9 billion. • AWS segment sales increased 19% year-over-year to $27.5 billion. • Operating income increas
+2024Q3,AMZN,amzn_total_yoy,0.11,2024-10-31,2024-11-07,7,0001018724-24-000158,"l results for its third quarter ended September 30, 2024. • Net sales increased 11% to $158.9 billion in the third quarter, compared with $143."
+2024Q3,GOOGL,gcp_yoy,0.35,2024-10-29,2024-11-07,9,0001652044-24-000115,"e subscriptions, platforms, and devices, and YouTube ads. • Google Cloud revenues increased 35% to $11.4 billion led by accelerated growth in Google Cloud "
+2024Q3,GOOGL,goog_search_yoy,,2024-10-29,2024-11-07,9,0001652044-24-000115,
+2024Q3,MSFT,azure_ic_yoy,0.2,2024-10-30,2024-11-07,8,0000950170-24-118955,"enue growth of 18% (up 19% in constant currency) Revenue in Intelligent Cloud was $24.1 billion and increased 20% (up 21% in constant currency), with the following business "
+2024Q3,MSFT,msft_pbp_yoy,0.12,2024-10-30,2024-11-07,8,0000950170-24-118955,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $28.3 billion and increased 12% (up 13% in constant currency), with the following business "
+2024Q4,AMZN,aws_yoy,0.19,2025-02-06,2025-02-13,7,0001018724-25-000002,increased 9% excluding changes in foreign exchange rates. • AWS segment sales increased 19% year-over-year to $28.8 billion. • Operating income increas
+2024Q4,AMZN,amzn_total_yoy,0.1,2025-02-06,2025-02-13,7,0001018724-25-000002,"urth quarter ended December 31, 2024. Fourth Quarter 2024 • Net sales increased 10% to $187.8 billion in the fourth quarter, compared with $170"
+2024Q4,GOOGL,gcp_yoy,0.3,2025-02-04,2025-02-13,9,0001652044-25-000010,ng momentum across Google Search & other and YouTube ads. • Google Cloud revenues increased 30% to $12.0 billion led by growth in Google Cloud Platform (GC
+2024Q4,GOOGL,goog_search_yoy,,2025-02-04,2025-02-13,9,0001652044-25-000010,
+2024Q4,MSFT,azure_ic_yoy,0.19,2025-01-29,2025-02-13,15,0000950170-25-010484,"enue growth of 19% (up 18% in constant currency) Revenue in Intelligent Cloud was $25.5 billion and increased 19%, with the following business highlights: • Server products "
+2024Q4,MSFT,msft_pbp_yoy,0.14,2025-01-29,2025-02-13,15,0000950170-25-010484,"loud and AI infrastructure.” Business Highlights Revenue in Productivity and Business Processes was $29.4 billion and increased 14% (up 13% in constant currency), with the following business "
+2025Q1,AMZN,aws_yoy,0.17,2025-05-01,2025-05-06,5,0001018724-25-000034,increased 8% excluding changes in foreign exchange rates. • AWS segment sales increased 17% year-over-year to $29.3 billion. • Operating income increas
+2025Q1,AMZN,amzn_total_yoy,0.09,2025-05-01,2025-05-06,5,0001018724-25-000034,"ncial results for its first quarter ended March 31, 2025. • Net sales increased 9% to $155.7 billion in the first quarter, compared with $143."
+2025Q1,GOOGL,gcp_yoy,0.28,2025-04-24,2025-05-06,12,0001652044-25-000040,"e subscriptions, platforms, and devices, and YouTube ads. • Google Cloud revenues increased 28% to $12.3 billion, led by growth in Google Cloud Platform (G"
+2025Q1,GOOGL,goog_search_yoy,,2025-04-24,2025-05-06,12,0001652044-25-000040,
+2025Q1,MSFT,azure_ic_yoy,0.21,2025-04-30,2025-05-06,6,0000950170-25-061032,"enue growth of 16% (up 18% in constant currency) Revenue in Intelligent Cloud was $26.8 billion and increased 21% (up 22% in constant currency), with the following business "
+2025Q1,MSFT,msft_pbp_yoy,0.1,2025-04-30,2025-05-06,6,0000950170-25-061032,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $29.9 billion and increased 10% (up 13% in constant currency), with the following business "
+2025Q2,AMZN,aws_yoy,0.175,2025-07-31,2025-08-07,7,0001018724-25-000084,ncreased 11% excluding changes in foreign exchange rates. • AWS segment sales increased 17.5% year-over-year to $30.9 billion. • Operating income increas
+2025Q2,AMZN,amzn_total_yoy,0.13,2025-07-31,2025-08-07,7,0001018724-25-000084,"ncial results for its second quarter ended June 30, 2025. • Net sales increased 13% to $167.7 billion in the second quarter, compared with $148"
+2025Q2,GOOGL,gcp_yoy,0.32,2025-07-23,2025-08-07,15,0001652044-25-000056,"e subscriptions, platforms, and devices, and YouTube ads. • Google Cloud revenues increased 32% to $13.6 billion, led by growth in Google Cloud Platform (G"
+2025Q2,GOOGL,goog_search_yoy,,2025-07-23,2025-08-07,15,0001652044-25-000056,
+2025Q2,MSFT,azure_ic_yoy,0.26,2025-07-30,2025-08-07,8,0000950170-25-100226,"enue growth of 23% (up 21% in constant currency) Revenue in Intelligent Cloud was $29.9 billion and increased 26% (up 25% in constant currency), with the following business "
+2025Q2,MSFT,msft_pbp_yoy,0.16,2025-07-30,2025-08-07,8,0000950170-25-100226,"ancial officer of Microsoft. Business Highlights Revenue in Productivity and Business Processes was $33.1 billion and increased 16% (up 14% in constant currency), with the following business "
+2025Q3,AMZN,aws_yoy,0.2,2025-10-30,2025-11-06,7,0001018724-25-000121,ncreased 10% excluding changes in foreign exchange rates. • AWS segment sales increased 20% year-over-year to $33.0 billion. • Operating income was $17
+2025Q3,AMZN,amzn_total_yoy,0.13,2025-10-30,2025-11-06,7,0001018724-25-000121,"l results for its third quarter ended September 30, 2025. • Net sales increased 13% to $180.2 billion in the third quarter, compared with $158."
+2025Q3,GOOGL,gcp_yoy,0.34,2025-10-29,2025-11-06,8,0001652044-25-000087,"e subscriptions, platforms, and devices, and YouTube ads. • Google Cloud revenues increased 34% to $15.2 billion, led by growth in Google Cloud Platform (G"
+2025Q3,GOOGL,goog_search_yoy,,2025-10-29,2025-11-06,8,0001652044-25-000087,
+2025Q3,MSFT,azure_ic_yoy,0.28,2025-10-29,2025-11-06,8,0001193125-25-256310,"enue increased 18% (up 16% in constant currency) Revenue in Intelligent Cloud was $30.9 billion and increased 28% (up 27% in constant currency), with the following business "
+2025Q3,MSFT,msft_pbp_yoy,0.17,2025-10-29,2025-11-06,8,0001193125-25-256310,"rmance obligation increased 51% to $392 billion. Revenue in Productivity and Business Processes was $33.0 billion and increased 17% (up 14% in constant currency), with the following business "
+2025Q4,AMZN,aws_yoy,0.24,2026-02-05,2026-02-10,5,0001018724-26-000002,ncreased 11% excluding changes in foreign exchange rates. • AWS segment sales increased 24% year-over-year to $35.6 billion. • Operating income increas
+2025Q4,AMZN,amzn_total_yoy,0.14,2026-02-05,2026-02-10,5,0001018724-26-000002,"urth quarter ended December 31, 2025. Fourth Quarter 2025 • Net sales increased 14% to $213.4 billion in the fourth quarter, compared with $187"
+2025Q4,GOOGL,gcp_yoy,0.48,2026-02-04,2026-02-10,6,0001652044-26-000012,"ubscriptions exceeded $60 billion for the full year 2025. • Google Cloud saw a continued increase in customer demand as revenues increased 48% to $17.7 billion, led by an increase in Google Cloud Plat"
+2025Q4,GOOGL,goog_search_yoy,0.17,2026-02-04,2026-02-10,6,0001652044-26-000012,"le Services revenues increased 14% to $95.9 billion, led by 17% growth in Google Search & other, 17% in Google subscriptions, platforms, and devices, and 9"
+2025Q4,MSFT,azure_ic_yoy,0.29,2026-01-28,2026-02-10,13,0001193125-26-027198,"enue increased 19% (up 17% in constant currency) Revenue in Intelligent Cloud was $32.9 billion and increased 29% (up 28% in constant currency), with the following business "
+2025Q4,MSFT,msft_pbp_yoy,0.16,2026-01-28,2026-02-10,13,0001193125-26-027198,"mance obligation increased 110% to $625 billion. Revenue in Productivity and Business Processes was $34.1 billion and increased 16% (up 14% in constant currency), with the following business "
+2026Q1,AMZN,aws_yoy,0.28,2026-04-29,2026-05-07,8,0001018724-26-000012,ncreased 11% excluding changes in foreign exchange rates. • AWS segment sales increased 28% year-over-year to $37.6 billion. • Operating income increas
+2026Q1,AMZN,amzn_total_yoy,0.17,2026-04-29,2026-05-07,8,0001018724-26-000012,"ncial results for its first quarter ended March 31, 2026. • Net sales increased 17% to $181.5 billion in the first quarter, compared with $155."
+2026Q1,GOOGL,gcp_yoy,0.63,2026-04-29,2026-05-07,8,0001652044-26-000043,"riptions, platforms, and devices, and 11% in YouTube ads. • Google Cloud saw a meaningful acceleration in growth as revenues increased 63% to $20.0 billion, led by an increase in Google Cloud Platfo"
+2026Q1,GOOGL,goog_search_yoy,0.19,2026-04-29,2026-05-07,8,0001652044-26-000043,"le Services revenues increased 16% to $89.6 billion, led by 19% growth in Google Search & other, 19% in Google subscriptions, platforms, and devices, and 1"
+2026Q1,MSFT,azure_ic_yoy,0.3,2026-04-29,2026-05-07,8,0001193125-26-191457,"enue increased 22% (up 17% in constant currency) Revenue in Intelligent Cloud was $34.7 billion and increased 30% (up 28% in constant currency), with the following business "
+2026Q1,MSFT,msft_pbp_yoy,0.17,2026-04-29,2026-05-07,8,0001193125-26-191457,"rmance obligation increased 99% to $627 billion. Revenue in Productivity and Business Processes was $35.0 billion and increased 17% (up 13% in constant currency), with the following business "
+2026Q2,AMZN,aws_yoy,0.37,2026-07-30,2026-08-06,7,0001018724-26-000024,"r Operating income was $27.5 billion, up 43% year-over-year AWS net sales increased 37%—its fastest growth in 18 quarters—to a $169 billion annuali"
+2026Q2,AMZN,amzn_total_yoy,0.2,2026-07-30,2026-08-06,7,0001018724-26-000024,"nt Exhibit 99.1 AMAZON.COM ANNOUNCES SECOND QUARTER RESULTS Net sales increased 20% year-over-year Operating income was $27.5 billion, up 43% y"
+2026Q2,GOOGL,gcp_yoy,0.82,2026-07-22,2026-08-06,15,0001652044-26-000066,"riptions, platforms, and devices, and 13% in YouTube ads. • Google Cloud saw a meaningful acceleration in growth as revenues increased 82% to $24.8 billion, led by an increase in Google Cloud Platfo"
+2026Q2,GOOGL,goog_search_yoy,0.17,2026-07-22,2026-08-06,15,0001652044-26-000066,"le Services revenues increased 15% to $94.5 billion, led by 17% growth in Google Search & other, 15% in Google subscriptions, platforms, and devices, and 1"
+2026Q2,MSFT,azure_ic_yoy,0.32,2026-07-29,2026-08-06,8,0001193125-26-323632,"enue increased 13% (up 12% in constant currency) Revenue in Intelligent Cloud was $39.3 billion and increased 32% (up 31% in constant currency), with the following business "
+2026Q2,MSFT,msft_pbp_yoy,0.14,2026-07-29,2026-08-06,8,0001193125-26-323632,"rmance obligation increased 84% to $678 billion. Revenue in Productivity and Business Processes was $37.8 billion and increased 14%, with the following business highlights: • Microsoft 365 Co"
