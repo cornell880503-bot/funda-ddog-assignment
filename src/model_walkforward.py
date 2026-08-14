@@ -95,6 +95,22 @@ def baseline_predict(name: str, train: pd.DataFrame, test: pd.Series, target: st
         beta = np.linalg.lstsq(X, dy[ok].values, rcond=None)[0]
         d_test = float(test[lag1] - test[lag2]) if pd.notna(test[lag2]) else 0.0
         return float(test[lag1] + beta[0] + beta[1] * d_test)
+    if name == "guidance + trailing beat (8q)":
+        # Same rule, but the mean beat is taken over the last 8 quarters only.
+        # The expanding-window version is contaminated by the 2020-21 regime,
+        # when beats ran to 12%; recent beats sit near 4.3%.
+        # NOTE: the 8-quarter window is a POST HOC choice, made after seeing
+        # that the full-sample mean is regime-contaminated. It is reported as a
+        # baseline variant, not as a pre-registered specification, and it makes
+        # the bar for the signals HIGHER, not lower.
+        recent = train[target].tail(8) if target == "beat_vs_guide" else None
+        if target == "beat_vs_guide":
+            return float(recent.mean())
+        mean_beat = train["beat_vs_guide"].tail(8).mean()
+        implied = test["guide_implied_yoy"]
+        if pd.isna(implied):
+            return float(train[target].tail(8).mean())
+        return float((1 + implied) * (1 + mean_beat) - 1)
     if name == "guidance + mean beat":
         if target == "beat_vs_guide":
             return float(train[target].mean())
@@ -107,7 +123,14 @@ def baseline_predict(name: str, train: pd.DataFrame, test: pd.Series, target: st
     raise ValueError(name)
 
 
-BASELINES = ["AR(1)", "AR(1)+trend", "random walk", "ARIMA(1,1,0)", "guidance + mean beat"]
+BASELINES = [
+    "AR(1)",
+    "AR(1)+trend",
+    "random walk",
+    "ARIMA(1,1,0)",
+    "guidance + mean beat",
+    "guidance + trailing beat (8q)",
+]
 
 
 # -------------------------------------------------------------- walk-forward

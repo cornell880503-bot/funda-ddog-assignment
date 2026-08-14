@@ -845,3 +845,36 @@ generating repeated installs, and the structural point already in the brief —
 downloads are unweighted while revenue is dollar-weighted, so one enterprise and
 one hobbyist count the same. Part 1's rationale must be rewritten to state that
 the proxy's validity is time-varying, with this measurement as the evidence.
+
+### D31. A sixth baseline — guidance plus the trailing 8-quarter beat
+The "guidance + mean beat" baseline used an **expanding** mean, which is
+contaminated by the 2020–21 regime when beats ran to 12.1% against a recent
+level near 4.3%. A trailing 8-quarter version is the rule an analyst would
+actually apply.
+
+| target | AR(1) | AR(1)+trend | random walk | ARIMA(1,1,0) | guidance + expanding beat | **guidance + trailing beat (8q)** |
+|---|---|---|---|---|---|---|
+| `rev_yoy` RMSE | 0.0309 | 0.0379 | 0.0263 | **0.0220** | 0.0306 | 0.0229 |
+| `rev_yoy` MAE | 0.0209 | 0.0350 | 0.0170 | 0.0157 | 0.0270 | **0.0145** |
+| `rev_yoy` MAPE % | 7.47 | 12.57 | 6.03 | 5.59 | 10.19 | **5.48** |
+| `rev_yoy` hit | 0.385 | 0.462 | 0.000* | 0.615 | 0.615 | **0.692** |
+| `beat_vs_guide` RMSE | 0.0183 | 0.0164 | **0.0119** | **0.0119** | 0.0298 | 0.0227 |
+
+\* the random walk's hit rate is 0.000 by construction (it predicts no change),
+so it is undefined rather than poor.
+
+**The 8-quarter window is a POST HOC choice** — made after observing that the
+expanding mean is regime-contaminated. It is reported as a baseline variant,
+never as a pre-registered specification. It moves the bar for the signals
+**up**, not down, so it cannot flatter the conclusion.
+
+Consequence worth stating plainly in the report: **on the assignment's own
+metrics (MAPE and directional hit rate), the best nowcast of `rev_yoy` is the
+company's guidance midpoint plus its trailing 8-quarter mean beat** — MAPE
+5.48%, hit rate 69.2% — a rule that uses no alternative data whatsoever.
+
+Live application, 2026Q3: guidance midpoint $1,140m, trailing-8 mean beat
++4.25% (sd 0.66pp, range +3.05% to +5.27%) → **$1,188m**, 95% band
+[$1,174m, $1,203m], implied YoY +34.2%, QoQ +6.0%. The band is narrow because
+the recent beat has been remarkably stable — which is itself why the
+alternative data has so little room to add value.
