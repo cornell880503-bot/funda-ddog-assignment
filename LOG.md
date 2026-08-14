@@ -655,3 +655,106 @@ full baseline set (guidance midpoint plus mean beat, random walk), a bootstrap
 CI on the error ratio, and the 2025–2026 structural break — or whether the
 honest headline is that no download-based feature beats a naive baseline on
 this sample.
+
+---
+
+## Phase 4 — Baselines and validation (2026-08-14)
+
+### D26. The grid was searched. Pricing it. (24 cells, window dimension not pre-registered)
+D24 pre-registered the ranking of three *features*. It did **not** pre-register
+the *window* (d30/d45/d60/full). So "`dd_abs` wins at d45" was, strictly, a
+selection from an unregistered dimension. Full grid = 3 features × 4 windows ×
+2 targets = 24 candidate cells, each with its matched control, reported in the
+appendix as `wf_grid.csv`.
+
+**Against AR(1): 15 of 24 candidate cells score below 0.9.**
+
+**Permutation null**, 1,000 draws, counting cells below 0.9:
+
+| null | mean cells | 95th pct | max | observed | p |
+|---|---|---|---|---|---|
+| permute feature, vs AR(1) | 0.58 | 5 | 24 | 15 | 0.002 |
+| permute target, vs AR(1) | 0.71 | 7 | 20 | 15 | 0.001 |
+| permute feature, vs strongest baseline | 0.01 | 0 | 5 | **0** | 1.000 |
+
+*Deviation from the literal instruction, with reason.* The primary null
+permutes the **feature** across quarters, not the target. Permuting the target
+destroys its autocorrelation, which cripples the AR(1) baseline and makes the
+ratio easier to beat for reasons having nothing to do with the feature —
+it tests the wrong null. Both are reported; they agree.
+
+Reading: against AR(1), 15 cells is far above chance (p=0.002), so the features
+**do** carry information AR(1) lacks. D28 shows what that information is.
+
+### D27. Trend-only baseline, and AR(1) was a weak opponent
+Baseline set completed. Expanding walk-forward, no alternative data:
+
+| target | AR(1) | AR(1)+trend | random walk | ARIMA(1,1,0) | guidance + mean beat |
+|---|---|---|---|---|---|
+| `rev_yoy` RMSE | 0.0309 | 0.0379 | 0.0263 | **0.0220** | 0.0306 |
+| `beat_vs_guide` RMSE | 0.0183 | 0.0164 | **0.0119** | **0.0119** | 0.0298 |
+
+**AR(1) is the worst or near-worst baseline on both targets.** On a
+non-stationary target it is a weak opponent, exactly as suspected.
+
+**Trend-only feature** — a pure time index pushed through the identical as-of,
+walk-forward and error pipeline, containing zero Datadog information:
+
+| target | vs AR(1) | vs strongest baseline |
+|---|---|---|
+| `rev_yoy` | 1.226 | 1.726 |
+| `beat_vs_guide` | **0.896** | 1.384 |
+
+On `beat_vs_guide` a bare time index beats AR(1). Any claim of the form "our
+signal beats AR(1)" has to clear that bar first.
+
+*Metric caveat:* the random walk's directional hit rate is 0.000 by
+construction — it predicts no change, so `sign(pred − prev)` is always 0 and
+can never match. Its hit rate is undefined rather than terrible, and is not
+used to rank it.
+
+### D28. THE RESULT — no candidate beats the strongest baseline, in any cell
+Same 24-cell grid, scored against the strongest baseline per target
+(ARIMA(1,1,0) for `rev_yoy`, random walk for `beat_vs_guide`):
+
+| target | candidate | d30 | d45 | d60 | full |
+|---|---|---|---|---|---|
+| `rev_yoy` vs ARIMA(1,1,0) | `dd_abs` | 1.032 | 1.210 | 1.259 | 1.372 |
+| | `dd_rel` | 1.911 | 1.928 | 2.078 | 2.409 |
+| | `dd_rel_plc` | 1.470 | 1.516 | 1.536 | 1.576 |
+| `beat_vs_guide` vs random walk | `dd_abs` | 1.105 | 1.108 | 1.075 | 1.108 |
+| | `dd_rel` | 1.347 | 1.295 | 1.254 | 1.294 |
+| | `dd_rel_plc` | 1.364 | 1.361 | 1.355 | 1.386 |
+
+**Candidate cells beating the strongest baseline: 0 of 24.** Not one, at any
+window, on either target. The permutation null agrees and is unable to
+manufacture even one (mean 0.01 cells, p=1.000).
+
+**Significance testing confirms it.** Of 24 rows in `wf_significance.csv`,
+exactly one candidate cell has a bootstrap CI excluding 1.0: `dd_abs_d45` on
+`beat_vs_guide`, ratio 0.718, CI [0.604, 0.834], DM p=0.070 — **against AR(1)
+only**. The same cell against the random walk is ratio 1.108, CI
+[0.534, 1.784], DM p=0.721. The one apparently significant result in the entire
+grid is significant only against the weakest of five baselines.
+
+**Synthesis, and the honest headline.** The permutation test (D26) shows the
+download features genuinely carry information AR(1) does not have — p=0.002 is
+not noise. D27 and D28 identify what that information is: **drift and
+persistence, which a correctly specified naive baseline already supplies for
+free.** A pure time index beats AR(1) on one target; the download features beat
+AR(1) on many cells; nothing beats a random walk or ARIMA(1,1,0) anywhere.
+
+This is consistent with every earlier warning sign and explains all of them:
+- both targets non-stationary (D25), so AR(1) systematically lags;
+- `plc_abs` correlating 0.72–0.76 flat across all lags (D25);
+- the negative controls Granger-causing revenue as readily as the signal (D25);
+- performance *degrading* as the window lengthens (D25) — trend-phase fitting;
+- the least drift-adjusted candidate winning and the cleanest one losing (D25),
+  which is the ordering trend-fitting predicts and a real signal does not.
+
+**Conclusion carried into the report:** on this sample, the apparent predictive
+power of npm download signals cannot be distinguished from common trend. The
+only construction that beat AR(1) is the one with the least drift adjustment,
+its advantage decays as the observation window lengthens, and it loses to a
+random walk. Because the targets are non-stationary, "beats AR(1)" is a
+substantially lower bar than it appears.
