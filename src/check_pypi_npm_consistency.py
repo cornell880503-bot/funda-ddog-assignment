@@ -59,25 +59,13 @@ def window_growth(s: pd.Series) -> float:
     return (ma.iloc[-1] / ma.iloc[0] - 1) * 100
 
 
-def main() -> None:
-    npm = npm_clean.load_clean()  # registry-wide bad days imputed, express dropped
-    pypi = pd.read_csv(sc.PROCESSED / "pypi_daily_180d.csv", parse_dates=["date"])
-
-    start = max(npm["date"].min(), pypi["date"].min())
-    end = min(npm["date"].max(), pypi["date"].max())
-    npm = npm[(npm["date"] >= start) & (npm["date"] <= end)]
-    pypi = pypi[(pypi["date"] >= start) & (pypi["date"] <= end)]
-    print(f"Overlapping window: {start.date()} .. {end.date()} "
-          f"({(end - start).days + 1} days)\n")
-
-    # ---------- Test 1: co-movement, with placebo ----------
-    target = weekly_log_change(daily(pypi, pypi["package"] == "ddtrace"))
-    placebo_rows = []
+def placebo_correlations(npm: pd.DataFrame, target: pd.Series) -> pd.DataFrame:
+    rows = []
     for pkg in ["dd-trace", "@datadog/browser-rum", "newrelic", "elastic-apm-node"]:
         x = weekly_log_change(daily(npm, npm["package"] == pkg))
         j = pd.concat([x, target], axis=1, join="inner").dropna()
         j.columns = ["npm", "pypi"]
-        placebo_rows.append(
+        rows.append(
             {
                 "npm package": pkg,
                 "cohort": "datadog" if "datadog" in pkg or pkg == "dd-trace" else "control",
@@ -86,50 +74,92 @@ def main() -> None:
                 "n_weeks": len(j),
             }
         )
-    placebo = pd.DataFrame(placebo_rows)
+    return pd.DataFrame(rows)
 
-    print("TEST 1 -- weekly log-change co-movement, with placebo")
-    print(placebo.round(3).to_string(index=False))
-    dd_corr = placebo.loc[placebo["npm package"] == "dd-trace", "corr_vs_pypi_ddtrace"].iloc[0]
-    best_ctrl_row = placebo[placebo["cohort"] == "control"].nlargest(
-        1, "corr_vs_pypi_ddtrace"
-    ).iloc[0]
-    best_ctrl = best_ctrl_row["corr_vs_pypi_ddtrace"]
 
-    # The ranking alone means nothing at n=26. Bootstrap the DIFFERENCE between
-    # the Datadog correlation and the best control correlation, resampling weeks
-    # jointly so the three series stay aligned. If the interval covers zero, the
-    # Datadog package is not distinguishable from a competitor placebo.
+def bootstrap_gap(npm: pd.DataFrame, target: pd.Series, ctrl_pkg: str) -> tuple:
+    """95% CI on corr(dd-trace, pypi) - corr(control, pypi).
+
+    Weeks are resampled jointly so the three series stay aligned. The ranking
+    on its own means nothing at n=26; the interval is the test.
+    """
     rng = np.random.default_rng(20260814)
     dd_w = weekly_log_change(daily(npm, npm["package"] == "dd-trace"))
-    ctrl_w = weekly_log_change(daily(npm, npm["package"] == best_ctrl_row["npm package"]))
+    ctrl_w = weekly_log_change(daily(npm, npm["package"] == ctrl_pkg))
     joint = pd.concat([dd_w, ctrl_w, target], axis=1, join="inner").dropna()
     joint.columns = ["dd", "ctrl", "pypi"]
     diffs = []
     for _ in range(10000):
-        idx = rng.integers(0, len(joint), len(joint))
-        s = joint.iloc[idx]
+        s = joint.iloc[rng.integers(0, len(joint), len(joint))]
         diffs.append(s["dd"].corr(s["pypi"]) - s["ctrl"].corr(s["pypi"]))
     lo, hi = np.percentile(diffs, [2.5, 97.5])
-    covers_zero = lo <= 0 <= hi
-    verdict = "INCONCLUSIVE" if covers_zero else ("passes" if dd_corr > best_ctrl else "FAILS")
+    return lo, hi, len(joint)
 
-    print(
-        f"\n  dd-trace {dd_corr:.3f} vs best control ({best_ctrl_row['npm package']}) "
-        f"{best_ctrl:.3f}"
-        f"\n  bootstrap 95% CI on the difference: [{lo:+.3f}, {hi:+.3f}]  (n={len(joint)} weeks)"
-        f"\n  Verdict: {verdict}."
-    )
-    if covers_zero:
-        print(
-            "  Every package tested -- Datadog's and its competitors' -- correlates with\n"
-            "  PyPI ddtrace in a narrow 0.93-0.98 band, and the gap between Datadog and\n"
-            "  the placebo is not distinguishable from zero. The level of correlation is\n"
-            "  a shared working-day and holiday calendar. This test cannot support a\n"
-            "  Datadog-specific claim in either direction, and is not used as evidence.\n"
+
+def main() -> None:
+    pypi = pd.read_csv(sc.PROCESSED / "pypi_daily_180d.csv", parse_dates=["date"])
+
+    # The as-of-legal variant is the one whose number goes in the report. The
+    # other two are run to size the sensitivity, not to choose a favourite.
+    treatments = {
+        "causal (as-of legal, REPORTED)": npm_clean.load_causal(),
+        "centered (descriptive only)": npm_clean.load_centered(),
+        "raw with outage zeros": npm_clean.load_raw_with_zeros(),
+    }
+
+    start = max(min(t["date"].min() for t in treatments.values()), pypi["date"].min())
+    end = min(min(t["date"].max() for t in treatments.values()), pypi["date"].max())
+    pypi = pypi[(pypi["date"] >= start) & (pypi["date"] <= end)]
+    print(f"Overlapping window: {start.date()} .. {end.date()} "
+          f"({(end - start).days + 1} days)\n")
+    target = weekly_log_change(daily(pypi, pypi["package"] == "ddtrace"))
+
+    # ---------- Test 1: co-movement, with placebo, under three treatments ----------
+    print("TEST 1 -- weekly log-change co-movement vs PyPI ddtrace, with placebo")
+    sens = []
+    for name, frame in treatments.items():
+        frame = frame[(frame["date"] >= start) & (frame["date"] <= end)]
+        tbl = placebo_correlations(frame, target)
+        dd_corr = tbl.loc[tbl["npm package"] == "dd-trace", "corr_vs_pypi_ddtrace"].iloc[0]
+        best = tbl[tbl["cohort"] == "control"].nlargest(1, "corr_vs_pypi_ddtrace").iloc[0]
+        lo, hi, n = bootstrap_gap(frame, target, best["npm package"])
+        sens.append(
+            {
+                "treatment": name,
+                "dd-trace": dd_corr,
+                "best control": best["corr_vs_pypi_ddtrace"],
+                "control pkg": best["npm package"],
+                "dd above placebo": "yes" if dd_corr > best["corr_vs_pypi_ddtrace"] else "NO",
+                "boot 95% CI on gap": f"[{lo:+.3f}, {hi:+.3f}]",
+                "covers zero": "yes" if lo <= 0 <= hi else "no",
+            }
         )
+        if name.startswith("causal"):
+            print("\nDetail, causal treatment (the reported one):")
+            print(tbl.round(3).to_string(index=False))
+
+    sens = pd.DataFrame(sens)
+    print("\nSensitivity across imputation treatments:")
+    print(sens.round(3).to_string(index=False))
+
+    causal_row = sens.iloc[0]
+    print(
+        f"\n  Verdict: INCONCLUSIVE. Removing 0.34% of observations (12 outage days)"
+        f"\n  moves the dd-trace correlation from "
+        f"{sens.iloc[2]['dd-trace']:.3f} (raw, {sens.iloc[2]['dd above placebo']} above placebo)"
+        f" to {causal_row['dd-trace']:.3f}"
+        f"\n  (causal, {causal_row['dd above placebo']} above placebo). A result that flips sign"
+        f"\n  on 0.34% of the data is not a result. The bootstrap CI on the gap,"
+        f"\n  {causal_row['boot 95% CI on gap']}, covers zero independently of that."
+        "\n  Every package tested -- Datadog's and its competitors' -- correlates with"
+        "\n  PyPI ddtrace in a narrow band, because all of them are dominated by the"
+        "\n  same working-day and holiday calendar. This test is reported as evidence"
+        "\n  FOR the inconclusive verdict, not as a repair that rescued the signal.\n"
+    )
 
     # ---------- Test 2: relative growth, calendar effect differenced out ----------
+    npm = treatments["causal (as-of legal, REPORTED)"]
+    npm = npm[(npm["date"] >= start) & (npm["date"] <= end)]
     rows = []
     for reg, df, ctrl in (("npm", npm, NPM_CONTROL), ("PyPI", pypi, PYPI_CONTROL)):
         dd = daily(df, df["cohort"] == "datadog")

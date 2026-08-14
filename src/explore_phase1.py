@@ -24,7 +24,7 @@ FIG = sc.REPO / "report" / "figures"
 def main() -> None:
     FIG.mkdir(parents=True, exist_ok=True)
     q = pd.read_csv(sc.PROCESSED / "ddog_quarters.csv", parse_dates=["end", "earnings_date"])
-    npm = npm_clean.load_clean()  # registry-wide bad days imputed, express dropped
+    npm = npm_clean.load_centered()  # descriptive charts only -- NOT a feature path
 
     rel = q[q["known_from_reliable"]]
 

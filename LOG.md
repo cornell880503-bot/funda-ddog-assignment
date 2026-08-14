@@ -187,16 +187,17 @@ plainly that PyPI long history requires BigQuery and was out of scope.
 Two tests were run over the 181-day overlap (2026-02-14 → 2026-08-13). Both
 fail, and both are reported.
 
-*All figures below are post-cleaning (see D16). The pre-cleaning run gave
-materially different numbers, which is itself the argument for D16.*
+*All figures below use the causal (as-of legal) imputation of D16. The raw and
+centred variants give materially different numbers; that spread is reported as
+a sensitivity finding in D16b rather than resolved silently.*
 
 **Test 1, co-movement of weekly log changes: inconclusive, and dropped.**
-`dd-trace` (npm) correlates with `ddtrace` (PyPI) at 0.975 on weekly log
-changes. The placebo: `newrelic` reaches 0.961 and `elastic-apm-node` 0.934 —
+`dd-trace` (npm) correlates with `ddtrace` (PyPI) at 0.972 on weekly log
+changes. The placebo: `newrelic` reaches 0.961 and `elastic-apm-node` 0.932 —
 every package tested, competitor or not, sits in a narrow 0.93–0.98 band.
 A bootstrap on the *difference* between the Datadog correlation and the best
 control correlation (10,000 resamples of the 26 aligned weeks, seed 20260814)
-gives a 95% CI of **[−0.006, +0.782]**, which covers zero.
+gives a 95% CI of **[−0.010, +0.726]**, which covers zero.
 Note also that sign agreement is only 54–62% despite correlations above 0.93 —
 the tell that a large shared seasonal component is inflating the correlation
 while the residual direction is near a coin flip.
@@ -209,11 +210,11 @@ would have been a false positive; the ranking on its own is noise at n=26.**
 
 | registry | Datadog basket | substitute controls | excess |
 |---|---|---|---|
-| npm | +38.3% | +9.9% | **+28.4pp** |
+| npm | +37.8% | +9.9% | **+27.9pp** |
 | PyPI | +10.3% | +26.2% | **−15.8pp** |
 
 Like-for-like, tracer against New Relic's agent in the same registry: npm
-`dd-trace` +64.5% vs `newrelic` +10.1% (+54.3pp); PyPI `ddtrace` +21.4% vs
+`dd-trace` +63.5% vs `newrelic` +10.1% (+53.4pp); PyPI `ddtrace` +21.4% vs
 `newrelic` +40.8% (−19.5pp). Datadog outgrows its controls on npm and
 underperforms them on PyPI over the identical window.
 
@@ -280,22 +281,75 @@ available. Uncorrected, these would have dragged the live quarter-to-date pace
 down by roughly 9% of the quarter's observations and produced a spuriously
 bearish headline call.
 
-Imputation uses the same package's median volume on the same weekday within a
-±21-day neighbourhood. Downloads have a strong day-of-week profile (weekday CI
-builds dominate), so linear interpolation across a Monday gap would
-systematically under-fill it. Every correction is written to
-`data/processed/npm_data_quality.csv`.
+**Two imputation variants, and they are not interchangeable.**
 
-`express` is dropped from the placebo basket entirely: the API returns 1,734
-consecutive zero days before 2021-10-01 for a package that was in heavy use
-throughout. That is a package-specific defect, not a gap to patch.
+| variant | window | used by |
+|---|---|---|
+| `imputed_causal` | same weekday, **prior 42 days only** | as-of panel, walk-forward, live QTD estimate — the only variant on a feature path |
+| `imputed_centered` | same weekday, ±21 days | descriptive charts and the data-quality appendix **only** |
 
-**This changed published numbers.** Pre-cleaning, the npm Datadog basket grew
-+31.4% over the PyPI overlap window and `dd-trace` correlated with PyPI
-`ddtrace` at 0.932 (below the `newrelic` placebo at 0.951). Post-cleaning the
-same figures are +38.3% and 0.975 (above the placebo at 0.961). The Test 1
-verdict flipped from "fails" to "inconclusive" purely on data quality — which
-is the argument for doing this before any modelling rather than after.
+A centred fill uses days *after* the gap, so the value could not have been
+known on the date it occupies. That is look-ahead bias by construction, however
+small, and it is exactly the failure mode §4 of the brief exists to prevent.
+`load_centered()` tags its output with `forbidden_on_feature_path`, and
+`tests/test_asof.py` asserts that building the panel never touches it.
+
+Weekday matching (rather than plain interpolation) is used in both, because
+downloads have a strong day-of-week profile — weekday CI builds dominate — so
+interpolating across a Monday gap systematically under-fills it.
+
+Causal fills come in 2–12% **below** centred fills on the same days, because
+backward-only medians lag a growing series. That is the conservative direction
+for a live nowcast, which is the right way for the error to point.
+
+`express` is dropped entirely: the API returns 1,734 consecutive zero days
+before 2021-10-01 for a package that was in heavy use throughout. Package-level
+defect, not a gap to patch.
+
+### D16a. The outage rule was fixed before its effect was known — precisely what the git history does and does not establish
+This matters because "clean the data until the correlation improves" is exactly
+the failure the rule must not be suspected of. Stating the evidence exactly:
+
+**What the history proves.** Commit `0d4427f` records the *unfavourable*
+pre-cleaning result in LOG.md — `dd-trace` at 0.932, **below** the `newrelic`
+placebo at 0.951 — and contains no cleaning code at all (`src/` at that commit
+has no `npm_clean.py`). The result that cuts against the signal was committed
+first, before any cleaning existed.
+
+**What the history does not prove.** The detection rule and the recomputed
+correlation landed together in commit `a505a22`. So the commits alone do not
+independently establish that the 20% threshold was fixed *before* the flip was
+observed, even though that is the order in which the work happened.
+
+**What supports it beyond the ordering.** The threshold has a single value,
+`BAD_DAY_THRESHOLD = 0.20`, introduced once and never edited since
+(`git log -p src/npm_clean.py` shows no change to it). No alternative threshold
+was tried. The rule is also stated in terms that are independent of any
+correlation: a date is invalid if the *cross-package* total falls below 20% of
+its centred 7-day median, which is a statement about the registry API, not
+about Datadog.
+
+I will present it at this level of precision rather than claiming
+pre-registration I cannot demonstrate.
+
+### D16b. The before/after is a sensitivity finding, not a repair
+Correlation of `dd-trace` with PyPI `ddtrace`, weekly log changes, n=26:
+
+| treatment | dd-trace | best placebo (`newrelic`) | above placebo? |
+|---|---|---|---|
+| raw, outage zeros left in | 0.932 | 0.951 | **no** |
+| causal (as-of legal, **reported**) | **0.972** | 0.961 | yes |
+| centered (descriptive) | 0.975 | 0.961 | yes |
+
+**Removing 0.34% of observations moves the correlation from below placebo to
+above it.** That fragility is the finding. A result that flips sign on twelve
+days out of 3,512 cannot support a conclusion in either direction, and the
+report presents this as **evidence for the inconclusive verdict**, not as a
+repair that rescued the signal. The bootstrap CI on the Datadog-minus-placebo
+gap covers zero under all three treatments independently
+(causal: [−0.010, +0.726]; raw: [−0.048, +0.343]).
+
+The reported number is the causal one, **0.972**, not 0.975.
 
 ### D17. Placebo runs the full pipeline, not just a correlation
 A placebo that only appears in a correlation table, while the main body claims
@@ -335,3 +389,77 @@ tables go to the appendix.
   which is the relevant base rate. 2026Q2 beat the midpoint by +4.32%.
 - Live target: 2026Q3 guidance is $1.135bn–$1.145bn (midpoint $1.140bn),
   issued 2026-08-06.
+
+---
+
+## Phase 2 — As-of panel (2026-08-14)
+
+### D18. Features are stored as vintages, not as a wide table
+The panel is `(quarter, feature, value, available_from)`, one row per vintage,
+and `features_asof(quarter, asof)` is a filter over `available_from`. Asking
+"what could I have known" is then a query, not a judgement call made per model.
+1,106 vintage rows, 34 features, 35 quarters.
+
+`available_from` by source:
+- npm: `quarter_start + h days + 1 day` of API latency. The one-day latency is
+  verified, not assumed — the API's most recent available day is D−1.
+- DDOG revenue: `known_from` (the earnings 8-K date, per D1).
+- DDOG guidance: `issued_on` (the prior quarter's earnings call, per D12 check D).
+- hyperscalers: the peer's own Item 2.02 8-K date (per D15).
+
+Three decision rules are supported: `day30/45/60` (mid-quarter, still
+actionable), `quarter_end`, and `pre_earnings` (the day before Datadog
+reports). Feature counts per quarter: 19 at day 45, 31 at quarter end, 34
+pre-earnings — the panel gets richer as the quarter progresses, which is the
+whole point of the partial-quarter design.
+
+### D19. 13 as-of tests, and what each one would have caught
+`tests/test_asof.py`, all passing. Beyond the headline assertion, each test
+targets a specific way the bias gets in:
+- **no feature dated after its as-of** — the core guarantee, checked across
+  every quarter × all five decision rules.
+- **monotonicity** — a later as-of date may add features but never change a
+  value already visible. Catches silent restatement of a feature.
+- **partial-quarter timing** — `dd_rel_d45` must not exist on day 44, and must
+  exist on day 46.
+- **full-quarter feature at quarter close** — must still be illegal on the
+  closing day itself, because of the one-day API latency.
+- **guidance not available the day before it was issued** — checked for all 28
+  guidance rows individually.
+- **lagged revenue dated by the 8-K** — asserts `rev_yoy_lag1`'s
+  `available_from` equals the prior quarter's `known_from` exactly, and that it
+  is strictly after the prior quarter's period end. This is the test that would
+  have caught the original `filed`-vs-8-K error in D1.
+- **centred imputation never on a feature path** — two tests: a static check
+  that `build_panel` does not name `load_centered`, and a dynamic one that
+  monkeypatches `load_centered` to raise and then rebuilds the entire panel and
+  the live-quarter treatments.
+- **causal fills reproducible from prior data only** — recomputes a fill from
+  raw history strictly before the gap and asserts equality.
+
+### D20. Two findings that fell out of the panel before any model was fitted
+
+**(a) The denominator choice flips the sign of the signal.** At 2026Q3 day 30:
+`dd_rel_d30` (competitor-only denominator) is **+0.513**, while
+`dd_rel_wide_d30` (OTel-inclusive) is **−0.340**. Same data, same construction,
+opposite conclusion. This retrospectively vindicates deciding the denominator
+a priori on economic grounds (D11): had the choice been made on out-of-sample
+score, the selection would have been between two features with *opposite
+signs*, and whichever won would have been noise fitted to ~10 test points.
+
+**(b) The placebo is not near zero.** `plc_rel` runs +0.14 to +0.22 across
+recent quarters — the unrelated-utility basket also shows strong "excess growth"
+against the shrinking control basket. The real feature is larger
+(`dd_rel` +0.42 to +0.51), but the placebo is clearly not measuring nothing.
+This is an early warning that part of `dd_rel` may be common ecosystem trend
+rather than Datadog adoption. It is **not** conclusive — the question is
+whether the placebo predicts *revenue* out of sample, which is Phase 4's job
+per D17. Recording it now so the Phase 4 result cannot be framed after the fact.
+
+### D21. The relative feature is far more robust to the outage treatment
+Live-quarter spread across the three treatments (causal / dropped-rescaled /
+raw-with-zeros): the absolute feature `dd_abs` moves 0.0623 log points, the
+relative feature `dd_rel` moves **0.0048** — roughly an order of magnitude less.
+An API outage suppresses the Datadog and control baskets together, so the
+difference cancels it. This is a second, independent argument for the relative
+construction, separate from the ecosystem-trend argument in D11.
