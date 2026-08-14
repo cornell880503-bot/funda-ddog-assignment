@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DDOG 即時預測監控台</title>
+<style>
+:root {
+  --bg: #0d1117; --panel: #161b22; --panel2: #1c2129; --line: #30363d;
+  --text: #e6edf3; --muted: #8b949e; --dim: #6e7681;
+  --accent: #58a6ff; --good: #3fb950; --warn: #d29922; --bad: #f85149;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 20px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+header { border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; }
+h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -0.01em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
+     color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 13px; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.badge { font-size: 11.5px; padding: 3px 9px; border-radius: 20px;
+         border: 1px solid var(--line); color: var(--muted); background: var(--panel); }
+.badge.warn { border-color: #6b4d16; color: var(--warn); }
+.badge.good { border-color: #1c4b26; color: var(--good); }
+.grid { display: grid; gap: 16px; }
+.cols2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.panel { background: var(--panel); border: 1px solid var(--line);
+         border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+.big { font-size: 42px; font-weight: 650; letter-spacing: -0.025em;
+       font-family: var(--mono); line-height: 1.05; }
+.band { color: var(--muted); font-family: var(--mono); font-size: 14px; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 600; padding: 6px 8px;
+     border-bottom: 1px solid var(--line); font-size: 11.5px;
+     text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 6px 8px; border-bottom: 1px solid #21262d; }
+td.num, th.num { text-align: right; font-family: var(--mono); }
+tr:last-child td { border-bottom: none; }
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); }
+.t-good { background: #12261a; color: var(--good); }
+.t-warn { background: #2b2113; color: var(--warn); }
+.t-bad  { background: #2d1618; color: var(--bad); }
+.t-dim  { background: #1c2129; color: var(--muted); }
+.note { color: var(--muted); font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
+.note strong { color: var(--text); font-weight: 600; }
+.callout { border-left: 3px solid var(--accent); padding: 10px 0 10px 14px;
+           background: var(--panel2); border-radius: 0 6px 6px 0; margin: 12px 0; }
+.callout.bad { border-left-color: var(--bad); }
+.kv { display: flex; justify-content: space-between; padding: 5px 0;
+      border-bottom: 1px solid #21262d; font-size: 13px; }
+.kv:last-child { border-bottom: none; }
+.kv span:last-child { font-family: var(--mono); }
+svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;
+          font-size: 11.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 2px; margin-right: 5px;
+            vertical-align: middle; }
+footer { color: var(--dim); font-size: 12px; border-top: 1px solid var(--line);
+         padding-top: 14px; margin-top: 8px; }
+code { font-family: var(--mono); font-size: 12px; background: var(--panel2);
+       padding: 1px 5px; border-radius: 3px; }
+@media (max-width: 640px) { body { padding: 12px; } .big { font-size: 32px; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ===================================================================
+   CONFIG -- everything ticker-specific lives here.
+   Pointing this page at SNOW or MDB means changing this object and
+   supplying a payload with the same shape. Nothing below reads a
+   Datadog-specific field by name.
+   =================================================================== */
+const CONFIG = {
+  ticker: "DDOG",
+  headlineMethod: "guidance midpoint x (1 + trailing N-quarter mean beat)",
+  // Divergence thresholds, in standard deviations of the signal's own
+  // history at the same day-of-quarter. Conventional 1/2 sigma, NOT fitted:
+  // fitting a threshold on 8 observations would repeat the error the
+  // validation rejected.
+  zThresholds: { leaning: 1.0, diverging: 2.0 },
+  // A signal is shown as a headline input only if it beat the strongest
+  // naive baseline out of sample. None currently qualify.
+  requireBaselineBeatForHeadline: true,
+  paceUnits: "單位：百萬次下載，累計",
+};
+
+const DATA = {"meta": {"ticker": "DDOG", "company": "Datadog, Inc.（DDOG）", "live_quarter": "2026Q3", "quarter_end": "2026-09-30", "expected_report": "2026 年 11 月初", "generated": "2026-08-14", "data_through": "2026-08-13", "days_elapsed": 45, "days_in_quarter": 92}, "headline": {"point": 1188.5, "lo": 1173.8, "hi": 1203.2, "guide_mid": 1140.0, "guide_low": 1135.0, "guide_high": 1145.0, "trailing_beat_mean_pct": 4.25, "trailing_beat_sd_pp": 0.66, "trailing_n": 8, "implied_yoy_pct": 34.2, "implied_qoq_pct": 6.0, "prior_year_rev": 885.7, "method": "指引中點 × (1 + 近八季平均超額)", "consensus": null, "consensus_note": "未納入賣方共識：找不到可引用的免費公開來源；該數字須來自付費資料商。", "guidance_verified": "agree", "guidance_accession": "0001628280-26-053829"}, "beat_history": [{"quarter": "2022Q3", "beat_pct": 5.95}, {"quarter": "2022Q4", "beat_pct": 5.01}, {"quarter": "2023Q1", "beat_pct": 2.93}, {"quarter": "2023Q2", "beat_pct": 1.89}, {"quarter": "2023Q3", "beat_pct": 4.69}, {"quarter": "2023Q4", "beat_pct": 4.18}, {"quarter": "2024Q1", "beat_pct": 3.78}, {"quarter": "2024Q2", "beat_pct": 3.74}, {"quarter": "2024Q3", "beat_pct": 4.23}, {"quarter": "2024Q4", "beat_pct": 3.76}, {"quarter": "2025Q1", "beat_pct": 3.05}, {"quarter": "2025Q2", "beat_pct": 4.79}, {"quarter": "2025Q3", "beat_pct": 4.32}, {"quarter": "2025Q4", "beat_pct": 4.29}, {"quarter": "2026Q1", "beat_pct": 5.27}, {"quarter": "2026Q2", "beat_pct": 4.32}], "treatments": [{"name": "因果插補（點估計）", "dd_rel_plc": 0.1984, "dd_rel": 0.3994, "dd_abs": 0.7493}, {"name": "丟棄 outage 日並重新標度", "dd_rel_plc": 0.2071, "dd_rel": 0.406, "dd_abs": 0.7755}, {"name": "原始值，保留 outage 零值", "dd_rel_plc": 0.2346, "dd_rel": 0.407, "dd_abs": 0.7177}], "imputation": {"share_pct": 9.1, "days": 4, "elapsed": 44}, "pace": {"2024Q2": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91], "cum": [0.473, 1.141, 1.834, 2.515, 3.075, 3.172, 3.277, 3.897, 4.542, 5.18, 5.841, 6.416, 6.503, 6.59, 7.224, 7.896, 8.559, 9.218, 9.778, 9.86, 9.947, 10.587, 11.267, 11.955, 12.632, 13.199, 13.285, 13.371, 14.01, 14.704, 15.193, 15.829, 16.365, 16.463, 16.56, 17.13, 17.807, 18.453, 19.06, 19.612, 19.713, 19.808, 20.471, 21.161, 21.855, 22.552, 23.142, 23.225, 23.312, 23.893, 24.609, 25.321, 25.993, 26.564, 26.645, 26.736, 27.152, 27.825, 28.538, 29.2, 29.789, 29.883, 29.978, 30.661, 31.367, 32.081, 32.784, 33.376, 33.466, 33.553, 34.212, 34.933, 35.643, 36.373, 36.987, 37.078, 37.169, 37.822, 38.551, 39.107, 39.788, 40.393, 40.49, 40.585, 41.263, 42.01, 42.757, 43.498, 44.089, 44.175, 44.267]}, "2024Q3": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92], "cum": [0.671, 1.428, 2.144, 2.611, 3.033, 3.109, 3.196, 3.876, 4.592, 5.328, 6.064, 6.684, 6.777, 6.868, 7.533, 8.271, 9.023, 9.745, 10.336, 10.425, 10.515, 11.208, 11.968, 12.703, 13.427, 14.021, 14.109, 14.203, 14.917, 15.666, 16.414, 17.164, 17.793, 17.889, 17.983, 18.686, 19.487, 20.298, 21.115, 21.774, 21.884, 21.994, 22.726, 23.548, 24.324, 24.973, 25.604, 25.701, 25.798, 26.516, 27.313, 28.069, 28.836, 29.493, 29.594, 29.699, 30.414, 31.244, 32.057, 32.854, 33.469, 33.57, 33.681, 34.154, 34.918, 35.742, 36.565, 37.211, 37.317, 37.428, 38.145, 38.923, 39.698, 40.512, 41.187, 41.284, 41.387, 42.109, 42.887, 43.697, 44.486, 45.159, 45.265, 45.378, 46.145, 46.961, 47.771, 48.572, 49.238, 49.347, 49.464, 50.216]}, "2024Q4": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92], "cum": [0.788, 1.562, 2.343, 3.062, 3.178, 3.292, 4.102, 5.017, 5.994, 6.964, 7.747, 7.876, 7.995, 8.737, 9.711, 10.629, 11.594, 12.394, 12.518, 12.641, 13.542, 14.516, 15.459, 16.289, 17.116, 17.251, 17.382, 18.278, 19.275, 20.181, 21.047, 21.67, 21.787, 21.908, 22.74, 23.596, 24.502, 25.424, 26.254, 26.38, 26.504, 27.205, 28.14, 29.137, 30.018, 30.852, 30.997, 31.123, 32.059, 33.056, 34.062, 35.125, 36.027, 36.174, 36.308, 37.205, 38.233, 39.037, 39.603, 40.062, 40.144, 40.255, 41.083, 42.038, 43.114, 44.134, 44.953, 45.073, 45.183, 46.115, 47.078, 47.989, 48.904, 49.622, 49.738, 49.855, 50.715, 51.668, 52.61, 53.581, 54.39, 54.506, 54.607, 55.059, 55.373, 55.533, 55.8, 56.095, 56.187, 56.312, 56.677, 56.958]}, "2025Q1": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90], "cum": [0.133, 0.656, 1.215, 1.333, 1.445, 2.164, 2.981, 3.864, 4.748, 5.581, 5.712, 5.829, 6.625, 7.531, 8.492, 9.433, 10.326, 10.465, 10.595, 11.258, 12.125, 13.075, 14.023, 14.837, 14.978, 15.107, 15.999, 16.959, 17.891, 18.785, 19.599, 19.761, 19.893, 20.843, 21.804, 22.808, 23.797, 24.655, 24.795, 24.935, 25.868, 26.884, 27.871, 28.87, 29.713, 29.85, 30.005, 30.731, 31.713, 32.756, 33.743, 34.628, 34.776, 34.922, 35.865, 36.933, 38.011, 39.059, 39.972, 40.176, 40.379, 41.339, 42.381, 43.389, 44.419, 45.291, 45.452, 45.616, 46.574, 47.669, 48.76, 49.828, 50.666, 50.809, 50.952, 51.926, 52.986, 54.037, 55.038, 55.876, 56.01, 56.16, 57.142, 58.187, 59.2, 60.215, 61.09, 61.217, 61.377, 62.351]}, "2025Q2": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91], "cum": [1.103, 2.133, 3.125, 3.934, 4.065, 4.208, 5.164, 6.219, 7.247, 8.255, 9.089, 9.227, 9.347, 10.318, 11.381, 12.453, 13.447, 14.045, 14.18, 14.322, 15.026, 16.059, 17.105, 18.153, 19.021, 19.153, 19.311, 20.288, 21.334, 22.346, 23.103, 23.883, 24.032, 24.196, 25.089, 26.124, 27.167, 28.131, 28.992, 29.137, 29.283, 30.274, 31.347, 32.429, 33.492, 34.383, 34.537, 34.701, 35.677, 36.773, 37.885, 38.946, 39.825, 39.98, 40.149, 40.749, 41.846, 42.937, 43.919, 44.82, 44.969, 45.125, 46.131, 47.233, 48.324, 49.379, 50.246, 50.397, 50.547, 51.425, 52.465, 53.538, 54.521, 55.442, 55.616, 55.797, 56.843, 57.972, 59.214, 59.948, 60.765, 60.955, 61.152, 62.212, 63.351, 64.438, 65.478, 66.397, 66.57, 66.745, 67.726]}, "2025Q3": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92], "cum": [1.031, 2.096, 3.047, 3.589, 3.71, 3.87, 4.835, 5.908, 6.933, 7.946, 8.822, 8.959, 9.11, 10.051, 11.115, 12.174, 13.221, 14.088, 14.236, 14.393, 15.392, 16.51, 17.626, 18.709, 19.606, 19.745, 19.908, 20.907, 21.983, 23.053, 24.094, 24.959, 25.109, 25.278, 26.237, 27.279, 28.363, 29.406, 30.296, 30.442, 30.629, 31.613, 32.681, 33.749, 34.773, 35.557, 35.696, 35.85, 36.847, 37.925, 39.021, 40.1, 41.026, 41.171, 41.344, 42.298, 43.369, 44.461, 45.52, 46.381, 46.521, 46.696, 47.337, 48.361, 49.47, 50.557, 51.466, 51.628, 51.811, 52.86, 53.988, 55.123, 56.218, 57.115, 57.283, 57.468, 58.497, 59.614, 60.74, 61.834, 62.798, 62.957, 63.125, 64.165, 65.226, 66.303, 67.469, 68.437, 68.6, 68.79, 69.906, 71.078]}, "2025Q4": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92], "cum": [1.114, 2.178, 3.119, 3.281, 3.454, 4.517, 5.661, 6.843, 7.958, 8.925, 9.099, 9.263, 10.166, 11.308, 12.498, 13.695, 14.713, 14.889, 15.086, 16.023, 17.156, 18.43, 19.615, 20.664, 20.848, 21.053, 22.248, 23.523, 24.755, 25.986, 27.03, 27.216, 27.42, 28.591, 29.863, 31.142, 32.425, 33.523, 33.725, 33.952, 35.16, 36.276, 37.62, 38.974, 40.139, 40.362, 40.605, 41.927, 43.275, 44.732, 46.09, 47.218, 47.449, 47.692, 48.892, 50.204, 51.418, 52.317, 52.987, 53.131, 53.343, 54.53, 55.89, 57.239, 58.608, 59.714, 59.924, 60.182, 61.423, 62.836, 64.266, 65.655, 66.796, 66.998, 67.216, 68.558, 70.002, 71.383, 72.699, 73.757, 73.977, 74.205, 75.143, 76.009, 76.525, 76.765, 77.068, 77.187, 77.363, 77.981, 78.614, 79.083]}, "2026Q1": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90], "cum": [0.222, 0.72, 0.88, 1.102, 2.308, 3.602, 4.96, 6.391, 7.638, 7.88, 8.126, 9.488, 11.129, 12.725, 14.281, 15.653, 15.919, 16.192, 17.296, 18.87, 20.589, 22.25, 23.669, 23.936, 24.224, 25.664, 27.362, 29.113, 30.782, 32.225, 32.536, 32.879, 34.35, 36.107, 37.878, 39.596, 41.03, 41.334, 41.64, 43.167, 44.994, 46.801, 48.576, 50.054, 50.353, 50.669, 51.832, 53.381, 55.105, 56.895, 58.372, 58.698, 59.058, 60.647, 62.491, 64.322, 66.124, 67.658, 67.983, 68.325, 69.996, 71.802, 73.659, 75.522, 77.242, 77.594, 77.94, 79.735, 81.7, 83.64, 85.529, 87.195, 87.536, 87.907, 89.772, 91.851, 93.912, 95.876, 97.523, 97.904, 98.305, 100.161, 102.178, 104.241, 106.317, 108.139, 108.543, 108.95, 110.893, 112.813]}, "2026Q2": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91], "cum": [2.033, 3.911, 5.14, 5.456, 5.775, 7.144, 9.15, 11.2, 13.324, 15.084, 15.438, 15.82, 17.627, 19.479, 21.36, 23.199, 24.761, 25.087, 25.433, 27.142, 29.014, 30.859, 32.674, 34.211, 34.533, 34.886, 36.617, 38.577, 40.511, 42.412, 43.704, 44.051, 44.42, 46.098, 48.027, 50.002, 51.987, 53.66, 53.983, 54.359, 56.295, 58.328, 60.339, 62.138, 63.703, 64.034, 64.371, 66.151, 68.156, 70.154, 72.067, 73.67, 74.014, 74.367, 75.337, 77.073, 78.952, 80.825, 82.447, 82.788, 83.112, 84.883, 86.875, 88.836, 90.737, 92.386, 92.75, 93.093, 94.828, 96.85, 98.387, 100.495, 102.287, 102.642, 102.989, 104.897, 107.008, 109.067, 111.125, 112.445, 112.776, 113.13, 115.034, 117.13, 119.209, 120.798, 122.591, 122.98, 123.355, 125.21, 127.314]}, "2026Q3": {"day": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], "cum": [1.924, 3.819, 4.932, 5.222, 5.549, 7.464, 9.637, 11.872, 13.844, 15.622, 15.991, 16.337, 18.276, 20.406, 22.57, 24.664, 26.538, 26.99, 27.373, 29.316, 31.598, 33.944, 36.277, 38.301, 38.795, 39.149, 41.289, 43.779, 46.184, 48.692, 50.802, 51.281, 51.71, 53.741, 56.125, 58.549, 60.489, 62.833, 63.427, 63.99, 66.315, 66.842, 69.3, 71.395]}}, "divergence": [{"feature": "dd_rel_plc_d30", "label": "Datadog 相對生態系 (d30)", "note": "先驗排序第 1", "current": 0.2372, "hist_mean": 0.189, "hist_sd": 0.1278, "z": 0.38, "state": "符合"}, {"feature": "dd_rel_d30", "label": "Datadog 相對競品 (d30)", "note": "先驗排序第 2", "current": 0.3935, "hist_mean": 0.2638, "hist_sd": 0.1194, "z": 1.09, "state": "傾向"}, {"feature": "dd_abs_d30", "label": "Datadog 絕對值 (d30)", "note": "先驗排序第 3", "current": 0.7477, "hist_mean": 0.4103, "hist_sd": 0.143, "z": 2.36, "state": "背離"}, {"feature": "plc_rel_d30", "label": "安慰劑 相對競品 (d30)", "note": "負對照組", "current": 0.1562, "hist_mean": 0.0748, "hist_sd": 0.0875, "z": 0.93, "state": "符合"}], "baselines": [{"target": "rev_yoy", "baseline": "AR(1)", "rmse": 0.0309, "mape": 7.47, "hit": 0.385}, {"target": "rev_yoy", "baseline": "AR(1)+趨勢", "rmse": 0.0379, "mape": 12.57, "hit": 0.462}, {"target": "rev_yoy", "baseline": "隨機漫步", "rmse": 0.0263, "mape": 6.03, "hit": 0.0}, {"target": "rev_yoy", "baseline": "ARIMA(1,1,0)", "rmse": 0.022, "mape": 5.59, "hit": 0.615}, {"target": "rev_yoy", "baseline": "指引 + 展開式平均超額", "rmse": 0.0306, "mape": 10.19, "hit": 0.615}, {"target": "rev_yoy", "baseline": "指引 + 近八季平均超額", "rmse": 0.0229, "mape": 5.48, "hit": 0.692}, {"target": "beat_vs_guide", "baseline": "AR(1)", "rmse": 0.0183, "mape": 45.76, "hit": 0.286}, {"target": "beat_vs_guide", "baseline": "AR(1)+趨勢", "rmse": 0.0164, "mape": 35.94, "hit": 0.643}, {"target": "beat_vs_guide", "baseline": "隨機漫步", "rmse": 0.0119, "mape": 24.66, "hit": 0.0}, {"target": "beat_vs_guide", "baseline": "ARIMA(1,1,0)", "rmse": 0.0119, "mape": 24.66, "hit": 0.0}, {"target": "beat_vs_guide", "baseline": "指引 + 展開式平均超額", "rmse": 0.0298, "mape": 81.61, "hit": 0.286}, {"target": "beat_vs_guide", "baseline": "指引 + 近八季平均超額", "rmse": 0.0227, "mape": 50.43, "hit": 0.571}], "diagnostics": {"grid_cells": 24, "cells_beating_best": 0, "cells_below_09_vs_ar1": 15, "perm_mean_vs_ar1": 0.58, "perm_mean_vs_best": 0.01, "best_cell_ratio": 1.032, "grid": [{"target": "rev_yoy", "candidate": "dd_rel_plc", "window": "d30", "ratio": 1.47}, {"target": "rev_yoy", "candidate": "dd_rel_plc", "window": "d45", "ratio": 1.516}, {"target": "rev_yoy", "candidate": "dd_rel_plc", "window": "d60", "ratio": 1.536}, {"target": "rev_yoy", "candidate": "dd_rel_plc", "window": "full", "ratio": 1.576}, {"target": "rev_yoy", "candidate": "dd_rel", "window": "d30", "ratio": 1.911}, {"target": "rev_yoy", "candidate": "dd_rel", "window": "d45", "ratio": 1.928}, {"target": "rev_yoy", "candidate": "dd_rel", "window": "d60", "ratio": 2.078}, {"target": "rev_yoy", "candidate": "dd_rel", "window": "full", "ratio": 2.409}, {"target": "rev_yoy", "candidate": "dd_abs", "window": "d30", "ratio": 1.032}, {"target": "rev_yoy", "candidate": "dd_abs", "window": "d45", "ratio": 1.21}, {"target": "rev_yoy", "candidate": "dd_abs", "window": "d60", "ratio": 1.259}, {"target": "rev_yoy", "candidate": "dd_abs", "window": "full", "ratio": 1.372}, {"target": "beat_vs_guide", "candidate": "dd_rel_plc", "window": "d30", "ratio": 1.364}, {"target": "beat_vs_guide", "candidate": "dd_rel_plc", "window": "d45", "ratio": 1.361}, {"target": "beat_vs_guide", "candidate": "dd_rel_plc", "window": "d60", "ratio": 1.355}, {"target": "beat_vs_guide", "candidate": "dd_rel_plc", "window": "full", "ratio": 1.386}, {"target": "beat_vs_guide", "candidate": "dd_rel", "window": "d30", "ratio": 1.347}, {"target": "beat_vs_guide", "candidate": "dd_rel", "window": "d45", "ratio": 1.295}, {"target": "beat_vs_guide", "candidate": "dd_rel", "window": "d60", "ratio": 1.254}, {"target": "beat_vs_guide", "candidate": "dd_rel", "window": "full", "ratio": 1.294}, {"target": "beat_vs_guide", "candidate": "dd_abs", "window": "d30", "ratio": 1.105}, {"target": "beat_vs_guide", "candidate": "dd_abs", "window": "d45", "ratio": 1.108}, {"target": "beat_vs_guide", "candidate": "dd_abs", "window": "d60", "ratio": 1.075}, {"target": "beat_vs_guide", "candidate": "dd_abs", "window": "full", "ratio": 1.108}], "hyperscaler": [{"target": "rev_yoy", "feature": "azure_ic_yoy", "role": "訊號", "ratio": 2.912, "ci": [1.671, 5.97], "dm_p": 0.025}, {"target": "rev_yoy", "feature": "msft_pbp_yoy", "role": "對照組", "ratio": 1.738, "ci": [1.138, 3.636], "dm_p": 0.025}, {"target": "rev_yoy", "feature": "aws_yoy", "role": "訊號", "ratio": 0.981, "ci": [0.319, 3.694], "dm_p": 0.973}, {"target": "rev_yoy", "feature": "amzn_total_yoy", "role": "對照組", "ratio": 1.554, "ci": [0.634, 3.558], "dm_p": 0.416}, {"target": "beat_vs_guide", "feature": "azure_ic_yoy", "role": "訊號", "ratio": 1.945, "ci": [1.212, 3.593], "dm_p": 0.02}, {"target": "beat_vs_guide", "feature": "msft_pbp_yoy", "role": "對照組", "ratio": 1.52, "ci": [0.885, 2.549], "dm_p": 0.166}, {"target": "beat_vs_guide", "feature": "aws_yoy", "role": "訊號", "ratio": 1.568, "ci": [0.097, 2.644], "dm_p": 0.503}, {"target": "beat_vs_guide", "feature": "amzn_total_yoy", "role": "對照組", "ratio": 1.59, "ci": [0.739, 2.526], "dm_p": 0.249}], "residuals": [{"quarter": "2023Q2", "resid": -7.06}, {"quarter": "2023Q3", "resid": -2.27}, {"quarter": "2023Q4", "resid": -2.18}, {"quarter": "2024Q1", "resid": -1.49}, {"quarter": "2024Q2", "resid": -0.91}, {"quarter": "2024Q3", "resid": 0.25}, {"quarter": "2024Q4", "resid": -0.06}, {"quarter": "2025Q1", "resid": -0.72}, {"quarter": "2025Q2", "resid": 1.37}, {"quarter": "2025Q3", "resid": 0.36}, {"quarter": "2025Q4", "resid": 0.38}, {"quarter": "2026Q1", "resid": 1.61}, {"quarter": "2026Q2", "resid": 0.18}]}, "decoupling": {"first4": 21818, "last4": 97228, "rho": 0.927, "p": "<0.0001"}, "cadence": [{"signal": "npm 下載配速（Datadog 籃）", "freq": "每日", "latency": "1 天", "role": "背離監控器"}, {"signal": "npm 對照籃 + 安慰劑籃", "freq": "每日", "latency": "1 天", "role": "負對照組"}, {"signal": "Hyperscaler 雲端部門成長", "freq": "每季", "latency": "早於 DDOG 發布 5–19 天", "role": "背離監控器"}, {"signal": "DDOG 指引（8-K EX-99.1）", "freq": "每季", "latency": "當日", "role": "頭條輸入"}, {"signal": "DDOG 公布營收（8-K Item 2.02）", "freq": "每季", "latency": "季末後 34–47 天", "role": "目標／超額歷史"}, {"signal": "PyPI 下載量", "freq": "每日", "latency": "1 天", "role": "僅交叉檢查，歷史 181 天"}]};
+
+/* ------------------------------------------------------------------ utils */
+const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; };
+const fmt = (v, d = 1) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 1) => (v >= 0 ? "+" : "") + v.toFixed(d) + "%";
+const app = document.getElementById("app");
+function panel(title, inner) {
+  return `<section class="panel"><h2>${title}</h2>${inner}</section>`;
+}
+function stateTag(state) {
+  const cls = state === "背離" ? "t-bad" : state === "傾向" ? "t-warn" : "t-good";
+  return `<span class="tag ${cls}">${state}</span>`;
+}
+
+/* ------------------------------------------------------------------ header */
+const M = DATA.meta, H = DATA.headline, IMP = DATA.imputation;
+app.appendChild(el(`
+<header>
+  <h1>${M.ticker} &middot; ${M.live_quarter} 即時預測監控台</h1>
+  <div class="sub">${M.company} &middot; 本季結束於 ${M.quarter_end} &middot;
+    預計發布 ${M.expected_report} &middot; 本季第 ${M.days_elapsed} 天／共 ${M.days_in_quarter} 天</div>
+  <div class="badges">
+    <span class="badge">產生於 ${M.generated}</span>
+    <span class="badge">訊號資料截至 ${M.data_through}</span>
+    <span class="badge ${IMP.share_pct > 5 ? "warn" : ""}">
+      本季至今 ${IMP.share_pct}% 的觀測值為插補
+      （已發布資料 ${IMP.elapsed} 天中的 ${IMP.days} 天）</span>
+    <span class="badge good">指引已核對 8-K ${H.guidance_accession}</span>
+  </div>
+</header>`));
+
+/* ---------------------------------------------------------------- headline */
+const width = H.hi - H.lo;
+app.appendChild(el(panel("頭條即時預測 &mdash; 2026Q3 營收", `
+  <div class="grid cols2">
+    <div>
+      <div class="big">$${fmt(H.point)}m</div>
+      <div class="band">95% 區間 $${fmt(H.lo)}m &ndash; $${fmt(H.hi)}m &nbsp;(&plusmn;$${fmt(width / 2)}m)</div>
+      <div class="note">
+        <strong>方法：</strong>${H.method}。<br>
+        指引中點 <code>$${fmt(H.guide_mid, 0)}m</code>
+        （區間 $${fmt(H.guide_low, 0)}m&ndash;$${fmt(H.guide_high, 0)}m），
+        近 ${H.trailing_n} 季平均超額
+        <code>${pct(H.trailing_beat_mean_pct, 2)}</code>
+        （標準差 ${H.trailing_beat_sd_pp.toFixed(2)}pp）。
+      </div>
+    </div>
+    <div>
+      <div class="kv"><span>隱含年增率</span><span>${pct(H.implied_yoy_pct)}</span></div>
+      <div class="kv"><span>隱含季增率</span><span>${pct(H.implied_qoq_pct)}</span></div>
+      <div class="kv"><span>指引中點</span><span>$${fmt(H.guide_mid, 0)}m</span></div>
+      <div class="kv"><span>隱含超額（對中點）</span><span>${pct(H.trailing_beat_mean_pct, 2)}</span></div>
+      <div class="kv"><span>去年同季</span><span>$${fmt(H.prior_year_rev)}m</span></div>
+      <div class="kv"><span>賣方共識</span><span style="color:var(--dim)">無可引用來源</span></div>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>為什麼頭條數字不是用另類數據建的。</strong>
+    沒有任何下載量或 hyperscaler 構造在樣本外勝過最強的樸素基準 &mdash;
+    ${DATA.diagnostics.grid_cells} 格中 0 格（見模型診斷）。呈現訊號加權的估計值，
+    等於呈現一個被驗證推翻的關係。下方訊號的角色是<em>背離監控器</em>：
+    它們不決定數字，只標示背後那條規則何時可能失效。
+  </div>
+  <div class="note">${H.consensus_note}
+  本區間僅反映超額的歷史變異，且<strong>條件於超額分布維持定態</strong> &mdash;
+  該條件在近 16 季獲支持（ADF p=0.007、KPSS p=0.100），在近 8 季略顯緊張
+  （Spearman &rho;=+0.69、p=0.058）。區間不涵蓋指引哲學改變、客戶集中度事件與併購。</div>
+`)));
+
+/* ------------------------------------------------------- tracking ahead/behind */
+const rows = DATA.divergence.map(d => `
+  <tr>
+    <td>${d.label}<div style="color:var(--dim);font-size:11px">${d.note}</div></td>
+    <td class="num">${d.current.toFixed(3)}</td>
+    <td class="num">${d.hist_mean.toFixed(3)}</td>
+    <td class="num">${d.hist_sd.toFixed(3)}</td>
+    <td class="num">${d.z >= 0 ? "+" : ""}${d.z.toFixed(2)}</td>
+    <td>${stateTag(d.state)}</td>
+  </tr>`).join("");
+app.appendChild(el(panel("領先／落後追蹤 &mdash; 背離監控器", `
+  <table>
+    <thead><tr><th>訊號</th><th class="num">目前值</th><th class="num">歷史均值</th>
+    <th class="num">歷史標準差</th><th class="num">z</th><th>狀態</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="note">
+    <strong>怎麼讀這張表。</strong> 每個訊號都以近 ${H.trailing_n} 季<em>同一個季內天數</em>的自身數值做 z 分數標準化，
+    因此季節性與季度長度被固定住。門檻：
+    |z| &lt; ${CONFIG.zThresholds.leaning} 為符合，
+    ${CONFIG.zThresholds.leaning} &le; |z| &lt; ${CONFIG.zThresholds.diverging} 為傾向，
+    |z| &ge; ${CONFIG.zThresholds.diverging} 為背離。這是慣例的
+    1&sigma;/2&sigma; 切點，刻意<strong>不做擬合</strong> &mdash;
+    在 8 個觀測值上校準門檻，等於重演驗證剛剛否決的那個過度配適。
+    <br><br>
+    <strong>亮旗代表什麼，不代表什麼。</strong> 「背離」代表本季在該指標上不像過去八季。它<em>不能</em>轉換成營收：
+    這些訊號到營收的映射在樣本外驗證中失敗了。看目前的讀數 &mdash;
+    Datadog 絕對值指標呈背離，但經生態系調整後的指標是符合，而<em>安慰劑</em>
+    位在 z=+0.93。這個組合說的是生態系在發燙，不是 Datadog。
+  </div>
+`)));
+
+/* ------------------------------------------------------------- pace chart */
+(function () {
+  const W = 1000, Hh = 380, P = { l: 56, r: 130, t: 16, b: 34 };
+  const quarters = Object.keys(DATA.pace);
+  const live = M.live_quarter;
+  let maxY = 0, maxX = 0;
+  quarters.forEach(q => {
+    const s = DATA.pace[q];
+    maxY = Math.max(maxY, ...s.cum); maxX = Math.max(maxX, ...s.day);
+  });
+  const x = d => P.l + (d / maxX) * (W - P.l - P.r);
+  const y = v => Hh - P.b - (v / maxY) * (Hh - P.t - P.b);
+  let paths = "", labels = "", legend = "";
+  quarters.forEach((q, i) => {
+    const s = DATA.pace[q];
+    const isLive = q === live;
+    const shade = 20 + Math.round((i / quarters.length) * 45);
+    const col = isLive ? "#58a6ff" : `hsl(215 12% ${shade + 22}%)`;
+    const w = isLive ? 2.6 : 1.2;
+    const pts = s.day.map((d, k) => `${x(d).toFixed(1)},${y(s.cum[k]).toFixed(1)}`).join(" ");
+    paths += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
+    const lastD = s.day[s.day.length - 1], lastV = s.cum[s.cum.length - 1];
+    if (isLive || i % 2 === 0) {
+      labels += `<text x="${x(lastD) + 6}" y="${y(lastV) + 3.5}" fill="${col}"
+        font-size="11" font-family="ui-monospace,monospace">${q}</text>`;
+    }
+    if (isLive) legend += `<span><i style="background:${col}"></i>${q}（進行中）</span>`;
+  });
+  let gridlines = "";
+  for (let i = 0; i <= 4; i++) {
+    const v = (maxY / 4) * i;
+    gridlines += `<line x1="${P.l}" y1="${y(v)}" x2="${W - P.r}" y2="${y(v)}"
+      stroke="#21262d" stroke-width="1"/>
+      <text x="${P.l - 8}" y="${y(v) + 4}" fill="#6e7681" font-size="11"
+      text-anchor="end" font-family="ui-monospace,monospace">${v.toFixed(0)}</text>`;
+  }
+  let xticks = "";
+  [1, 15, 30, 45, 60, 75, 92].forEach(d => {
+    if (d > maxX) return;
+    xticks += `<text x="${x(d)}" y="${Hh - 12}" fill="#6e7681" font-size="11"
+      text-anchor="middle" font-family="ui-monospace,monospace">d${d}</text>`;
+  });
+  const today = x(M.days_elapsed - 1);
+  app.appendChild(el(panel("本季至今配速 &mdash; Datadog 籃累計下載量", `
+    <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="cumulative downloads by day of quarter">
+      ${gridlines}${xticks}
+      <line x1="${today}" y1="${P.t}" x2="${today}" y2="${Hh - P.b}"
+        stroke="#d29922" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="${today + 5}" y="${P.t + 12}" fill="#d29922" font-size="11"
+        font-family="ui-monospace,monospace">第 ${M.days_elapsed} 天</text>
+      ${paths}${labels}
+    </svg>
+    <div class="legend">${legend}
+      <span><i style="background:hsl(215 12% 50%)"></i>過去各季</span>
+      <span><i style="background:#d29922"></i>今天</span>
+      <span>${CONFIG.paceUnits}</span></div>
+    <div class="note">常數組成籃（<code>dd-trace</code> +
+      <code>datadog-metrics</code>）&mdash; 樣本起點尚不存在的套件已排除，
+      因為套件進入籃子會造成永久性的人為跳升。Outage 日以<strong>只回看</strong>的
+      方式估計填補（同星期幾、前 42 天），因此圖上每一個點在它所在的那一天都是可計算的。</div>
+  `)));
+})();
+
+/* ------------------------------------------------ imputation treatment spread */
+const tr = DATA.treatments.map(t => `
+  <tr><td>${t.name}</td>
+    <td class="num">${t.dd_rel_plc.toFixed(4)}</td>
+    <td class="num">${t.dd_rel.toFixed(4)}</td>
+    <td class="num">${t.dd_abs.toFixed(4)}</td></tr>`).join("");
+app.appendChild(el(panel("Outage 處理方式敏感度", `
+  <table>
+    <thead><tr><th>處理方式</th><th class="num">相對生態系</th>
+    <th class="num">相對競品</th><th class="num">絕對值</th></tr></thead>
+    <tbody>${tr}</tbody>
+  </table>
+  <div class="note">本季已發布資料 <strong>${IMP.elapsed} 天中有 ${IMP.days} 天</strong>
+    （${IMP.share_pct}%）npm API 回傳全站零值。三種處理方式全部呈現，因為這個選擇
+    是真實的不確定性來源：因果插補列是點估計，丟棄重標與原始帶零則界定其上下界。
+    相對構造對處理方式的敏感度比絕對值低一個數量級 &mdash;
+    outage 會同時壓低所有籃子，因此在差分中大致抵消。</div>
+`)));
+
+/* ------------------------------------------------------------- risk flags */
+const flags = [
+  { name: "全生態系下載量膨脹", state: "背離",
+    detail: "2026 年對照籃與安慰劑籃年增 +102% / +184%。Datadog 絕對下載成長並非 Datadog 專屬現象。" },
+  { name: "下載量與營收脫鉤", state: "背離",
+    detail: `每百萬美元營收對應的下載量從 ${DATA.decoupling.first4.toLocaleString()} 升到 ${DATA.decoupling.last4.toLocaleString()}（Spearman &rho;=${DATA.decoupling.rho}、p${DATA.decoupling.p}）。代理關係在樣本期內衰減約 4.5 倍。` },
+  { name: "Hyperscaler 背離", state: "傾向",
+    detail: "由 AI 資本支出驅動的雲端成長（2026Q2 Google Cloud +82%、AWS +37%）與 DDOG 計費的應用監控工作負載相關性弱。" },
+  { name: "超額分布漂移", state: "傾向",
+    detail: "近八季超額呈輕微走闊傾向（Spearman &rho;=+0.69、p=0.058），不顯著但不是沒有。趨勢外推的預估為 $1,195m，平坦法為 $1,188m。" },
+  { name: "模型殘差漂移", state: "符合",
+    detail: "頭條規則的殘差從 −1.96pp（2025 年前）轉為 +0.53pp（2025 年起）；2026Q2 儘管是樣本內最大加速，殘差僅 +0.18pp。指引吸收了 regime change。" },
+  { name: "訊號集有效性", state: "背離",
+    detail: `${DATA.diagnostics.grid_cells} 格另類數據中 0 格勝過最強樸素基準。本頁每個訊號都應視為監控用途，而非預測用途。` },
+];
+app.appendChild(el(panel("風險旗標", `
+  <table><tbody>${flags.map(f => `
+    <tr><td style="width:34%">${f.name}</td><td>${stateTag(f.state)}</td>
+    <td style="color:var(--muted);font-size:12.5px">${f.detail}</td></tr>`).join("")}
+  </tbody></table>
+`)));
+
+/* ------------------------------------------------------- model diagnostics */
+(function () {
+  const D = DATA.diagnostics;
+  const byTarget = {};
+  D.grid.forEach(g => { (byTarget[g.target] = byTarget[g.target] || []).push(g); });
+  let gridHtml = "";
+  Object.keys(byTarget).forEach(t => {
+    const cands = [...new Set(byTarget[t].map(g => g.candidate))];
+    const wins = [...new Set(byTarget[t].map(g => g.window))];
+    let body = "";
+    cands.forEach(c => {
+      body += `<tr><td>${c}</td>` + wins.map(w => {
+        const cell = byTarget[t].find(g => g.candidate === c && g.window === w);
+        const v = cell ? cell.ratio : NaN;
+        const cls = v < 1 ? "t-good" : v < 1.3 ? "t-warn" : "t-bad";
+        return `<td class="num"><span class="tag ${cls}">${v.toFixed(3)}</span></td>`;
+      }).join("") + "</tr>";
+    });
+    gridHtml += `<div style="margin-bottom:14px"><div class="sub" style="margin-bottom:6px">
+      目標：<code>${t}</code> &mdash; 相對最強基準的 RMSE 比值（&lt;1 才算勝過）</div>
+      <table><thead><tr><th>特徵</th>${wins.map(w => `<th class="num">${w}</th>`).join("")}</tr></thead>
+      <tbody>${body}</tbody></table></div>`;
+  });
+
+  const bl = DATA.baselines.map(b => `<tr><td>${b.target}</td><td>${b.baseline}</td>
+    <td class="num">${b.rmse.toFixed(4)}</td><td class="num">${b.mape.toFixed(2)}</td>
+    <td class="num">${b.baseline === "random walk" ? "n/a" : b.hit.toFixed(3)}</td></tr>`).join("");
+
+  const hy = D.hyperscaler.map(h => `<tr><td>${h.target}</td><td>${h.feature}
+    <span class="tag ${h.role === "對照組" ? "t-dim" : "t-warn"}">${h.role}</span></td>
+    <td class="num">${h.ratio.toFixed(3)}</td>
+    <td class="num">[${h.ci[0].toFixed(2)}, ${h.ci[1].toFixed(2)}]</td>
+    <td class="num">${h.dm_p.toFixed(3)}</td></tr>`).join("");
+
+  app.appendChild(el(panel("模型診斷 &mdash; 該對頭條數字信任到什麼程度", `
+    <div class="callout bad"><strong>${D.cells_beating_best} of ${D.grid_cells}</strong>
+      個另類數據格勝過最強樸素基準。最佳格：
+      ${D.best_cell_ratio}. 對較弱的 AR(1) 基準，
+      ${D.grid_cells} 格中有 ${D.cells_below_09_vs_ar1} 格低於 0.9 &mdash;
+      置換虛無分布平均只產生 ${D.perm_mean_vs_ar1} 格（p=0.002），
+      所以這些特徵確實帶有 AR(1) 缺乏的資訊。那個資訊是漂移，
+      而設定正確的樸素基準本來就提供它：對最強基準，同一虛無分布產生
+      ${D.perm_mean_vs_best} 格，而實際觀測值是 ${D.cells_beating_best} 格。</div>
+    ${gridHtml}
+    <div class="sub" style="margin:16px 0 6px">基準模型，擴張視窗 walk-forward，未使用另類數據</div>
+    <table><thead><tr><th>目標</th><th>基準</th><th class="num">RMSE</th>
+      <th class="num">MAPE %</th><th class="num">命中率</th></tr></thead><tbody>${bl}</tbody></table>
+    <div class="sub" style="margin:16px 0 6px">訊號 2 &mdash; hyperscaler 雲端成長，完全相同的管線</div>
+    <table><thead><tr><th>目標</th><th>特徵</th><th class="num">比值</th>
+      <th class="num">Bootstrap 95% CI</th><th class="num">DM p</th></tr></thead><tbody>${hy}</tbody></table>
+    <div class="note">Intelligent Cloud 成長<strong>顯著劣於</strong>樸素基準 &mdash;
+      信賴區間排除 1.0，但落在錯誤的那一側。它在營收成長上確實達到 0.846 的方向命中率，
+      誤差卻是基準的約 3 倍，這清楚說明了為什麼單看命中率是壞指標：
+      方向對、幅度大錯。</div>
+  `)));
+})();
+
+/* --------------------------------------------------------- update cadence */
+app.appendChild(el(panel("更新頻率", `
+  <table><thead><tr><th>訊號</th><th>頻率</th><th>延遲</th><th>角色</th></tr></thead>
+  <tbody>${DATA.cadence.map(c => `<tr><td>${c.signal}</td><td>${c.freq}</td>
+    <td>${c.latency}</td><td>${c.role === "頭條輸入"
+      ? `<span class="tag t-good">${c.role}</span>` : c.role}</td></tr>`).join("")}
+  </tbody></table>
+`)));
+
+/* ------------------------------------------------------------- templating */
+app.appendChild(el(panel("把這套指向另一檔標的", `
+  <div class="note">
+  所有與標的相關的設定都在本檔頂端的 <code>CONFIG</code> 物件與 <code>DATA</code>
+  payload 中。要改指向 SNOW 或 MDB 需要：(1) CIK 與 XBRL 營收標籤 &mdash;
+  SEC 抓取器本身是通用的；(2) 一組訊號籃、其替代品對照籃，以及一個經濟上無關的
+  安慰劑籃 &mdash; 常數組成規則與 outage 偵測器原封不動適用；
+  (3) 指引抽取器重新指向該發行人 8-K 的 outlook 措辭。時點 vintage 層、基準集、
+  walk-forward、置換虛無與安慰劑管線都與標的無關，不需要修改。
+  <br><br>
+  <em>不能</em>移轉的是結論。本 dashboard 的頭條數字建立在指引之上，
+  是因為那是在 ${CONFIG.ticker} 上通過驗證的東西。對一家指引可靠度較低的公司，
+  同一條管線很可能拱出不同的輸入 &mdash; 而那正是「先跑基準與安慰劑再做選擇」的意義。</div>
+`)));
+
+app.appendChild(el(`<footer>
+  資料來源：SEC EDGAR XBRL company facts 與 Item 2.02 8-K 附件；npm registry
+  downloads API；pypistats.org。所有數字均可追溯至快取的原始回應或引用的
+  accession number。指引數字已由獨立解析路徑對主文件重新核對。未使用重大非公開資訊。
+  於 ${M.generated} 由版本控管的程式碼產生；本頁每個數字都可用
+  <code>python src/build_dashboard.py</code> 重現。
+</footer>`));
+</script>
+</body>
+</html>

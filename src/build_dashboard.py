@@ -262,8 +262,8 @@ def main() -> None:
             ],
         },
         "decoupling": {
-            "first4": int(mech["downloads_per_musd"].dropna().head(4).mean()),
-            "last4": int(mech["downloads_per_musd"].dropna().tail(4).mean()),
+            "first4": round(mech["downloads_per_musd"].dropna().head(4).mean()),
+            "last4": round(mech["downloads_per_musd"].dropna().tail(4).mean()),
             "rho": 0.927,
             "p": "<0.0001",
         },
