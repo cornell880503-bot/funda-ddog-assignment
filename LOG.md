@@ -463,3 +463,119 @@ relative feature `dd_rel` moves **0.0048** — roughly an order of magnitude les
 An API outage suppresses the Datadog and control baskets together, so the
 difference cancels it. This is a second, independent argument for the relative
 construction, separate from the ecosystem-trend argument in D11.
+
+---
+
+## Pre-Phase-3 checks (2026-08-14)
+
+### D22. Basket composition drift — material, and differencing does NOT fix it
+Composition drift is the mirror image of the outage problem (D16): a package
+*entering existence* adds a permanent artificial jump to a "sum of packages
+that exist today" basket, where an outage subtracted a temporary one.
+
+Presence is defined by **existence** (first date with a 28-day mean above
+1,000/day), not by crossing a volume threshold. A package that existed
+throughout and merely grew is signal; a package that did not exist is drift.
+A first pass used a 10,000/day floor and wrongly emptied the Datadog basket —
+it was conflating "hadn't grown yet" with "didn't exist".
+
+The sample's first modellable target quarter is 2020Q1, so a YoY feature needs
+history from 2019-01-01. Applying that rule identically to all three baskets:
+
+| basket | kept (constant composition) | dropped |
+|---|---|---|
+| Datadog | `dd-trace`, `datadog-metrics` | `@datadog/browser-rum` (2019-12), `@datadog/browser-logs` (2019-12), `@datadog/datadog-ci` (2020-03) |
+| control | `newrelic`, `elastic-apm-node` | none |
+| placebo | `lodash`, `chalk`, `axios`, `react` | none |
+
+The rule binds only on the Datadog basket, because only Datadog launched
+packages mid-sample. That asymmetry is in the data, not in the treatment.
+
+**Magnitude.** `basket_all` minus `basket_common`, quarterly YoY log growth:
+mean |difference| **0.1215 log points**, max **0.3079** (2022Q1), correlation
+0.984. The distortion is concentrated in 2021Q4–2022Q3 (+0.24 to +0.31),
+exactly when the three newer packages were ramping, and is still +0.13 in
+2026Q2. On a feature whose sample mean is ~0.52, a 0.12 mean distortion is
+material. **`basket_common` becomes primary; `basket_all` moves to the
+appendix** as `dd_abs_all_*` / `dd_rel_all_*`.
+
+**Correction to the expected mitigation.** The hope was that differencing would
+absorb part of this, as it did for outages (D21). It does not: |all − common|
+is **0.1215 for all three of** `dd_abs`, `dd_rel` and `dd_rel_plc`, identically.
+Differencing cancels a distortion only when it is *common across baskets*. An
+outage hits every basket at once, so it cancels. Composition drift here hits
+only the numerator, so it passes through the difference untouched. The two
+problems look alike and behave oppositely under the same fix.
+
+**Effect on the headline number.** Live 2026Q3 `dd_abs` falls from 0.7493
+(constant composition) versus 0.8629 (basket_all) at day 44 — and note the log
+scale: 0.7493 is **+112% YoY**, not +86%. The gap against ~36% revenue growth
+is therefore wider than a linear reading of the log value suggests, and
+composition drift explains only part of it.
+
+**Considered and deferred:** a chain-linked index (per-package YoY aggregated
+with prior-year volume weights), which would keep all five packages without
+level jumps. It is the textbook answer, but it adds a weighting scheme that
+would itself need defending, and the two-package constant basket still covers
+~1.70m downloads/day. Noted as the natural extension if this productises.
+
+### D23. OpenTelemetry is in dd-trace's dependency *closure*, not merely its manifest
+Direct-dependency evidence was recorded in D11. The transitive check requested
+is stronger and is now done — resolving the full dependency closure from the
+npm registry:
+
+| dd-trace version | closure size | OpenTelemetry packages in closure |
+|---|---|---|
+| **v5.60.0** (the line carrying **82.6%** of current installs) | 49 packages | `@opentelemetry/api` (depth 1), `@opentelemetry/core` (depth 1), `@opentelemetry/semantic-conventions` (depth 2) |
+| v6 latest | 7 packages | **none** |
+
+This is the sentence for Methodology, and it is a fact rather than an argument:
+*for the dd-trace version representing 82.6% of installs, `@opentelemetry/api`
+is inside the dependency closure, so putting OpenTelemetry in the denominator
+puts the numerator's own dependency traffic in the denominator.*
+"OTel is a complement" is an economic argument and can be contested. This
+cannot. It is the answer to "how do you know your prior was right", which the
+sign flip in D20(a) guarantees will be asked.
+
+### D24. Three candidate features, ranked a priori, BEFORE any Phase 4 result exists
+`dd_rel` decomposes **exactly**:
+
+    dd_rel  =  dd_rel_plc  +  plc_rel
+    (verified numerically, identity holds to floating point)
+
+Sample means, full-quarter, 2021Q1–2026Q2:
+
+| term | mean (log points) | reading |
+|---|---|---|
+| `dd_abs` | 0.5216 | Datadog basket growth, no drift adjustment |
+| `dd_rel` | 0.3851 | Datadog minus shrinking competitors |
+| `dd_rel_plc` | 0.2052 | Datadog minus the unrelated ecosystem |
+| `plc_rel` | 0.1799 | **pure mechanical term: ecosystem minus shrinking competitors** |
+
+**47% of `dd_rel`'s mean is the `plc_rel` term** — that is, nearly half of the
+apparent Datadog-over-competitor outperformance is the competitor basket
+shrinking relative to the general ecosystem, with no Datadog content at all.
+The placebo did not merely flag this qualitatively; the decomposition measures
+it exactly.
+
+**A priori ranking, fixed now:**
+
+1. **`dd_rel_plc`** — Datadog minus placebo. The placebo basket is large
+   (~130m downloads/day), stable, and economically unrelated to Datadog, which
+   makes it the cleanest available proxy for ecosystem-wide drift. Removes the
+   `plc_rel` mechanical term by construction.
+2. **`dd_rel`** — Datadog minus competitors. Retains a defensible
+   share-of-substitutes reading, but its denominator is small, shrinking, and
+   therefore mechanically inflates the feature.
+3. **`dd_abs`** — no drift adjustment at all, and 2026 ecosystem inflation is
+   enormous (controls +102%/+184% YoY). Kept because it depends on no benchmark
+   choice.
+
+**The headline model uses rank 1 regardless of out-of-sample outcome.** Ranks 2
+and 3 are reported alongside as pre-registered alternatives, with their metrics
+shown. Selecting among three candidates on ~10 out-of-sample points is the
+exact trap identified in D11 and D20(a); the ranking is committed here so that
+it cannot be re-derived after the results are visible.
+
+Each candidate carries its own negative control through the identical pipeline:
+`dd_rel_plc` → `ctrl_rel_plc`, `dd_rel` → `plc_rel`, `dd_abs` → `plc_abs`.

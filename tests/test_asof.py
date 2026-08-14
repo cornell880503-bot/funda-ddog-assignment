@@ -168,4 +168,5 @@ def test_live_quarter_reports_all_three_treatments():
     treat = build_panel.live_quarter_treatments()
     assert len(treat) == 3
     assert treat["imputed_share_%"].nunique() == 1  # same denominator for all
-    assert treat["dd_rel_yoy_log"].notna().all()
+    for col in ("dd_rel_plc", "dd_rel", "dd_abs"):
+        assert treat[col].notna().all(), f"{col} missing under some treatment"

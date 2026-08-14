@@ -45,22 +45,36 @@ NPM_LATENCY_DAYS = 1  # verified: most recent day available from the API is D-1
 # Baskets. Composition is fixed a priori on economic grounds (LOG D11):
 # OpenTelemetry is excluded from the control basket because dd-trace v5
 # declares it as a direct dependency, so it carries Datadog-induced traffic.
+#
+# Composition is ALSO fixed by the constant-composition rule (LOG D22): a
+# basket may only contain packages present from 2019-01-01, one year before the
+# first target quarter, so that no package *entering existence* creates an
+# artificial jump inside the sample. The rule is applied identically to all
+# three baskets; it happens to bind only on the Datadog basket, because only
+# Datadog launched packages mid-sample.
 BASKETS = {
-    "dd": [
+    # PRIMARY: constant composition across the sample.
+    "dd": ["dd-trace", "datadog-metrics"],
+    "ctrl": ["newrelic", "elastic-apm-node"],  # substitutes; unchanged by the rule
+    "placebo": ["lodash", "chalk", "axios", "react"],  # unchanged by the rule
+    # APPENDIX: every Datadog package that exists today. Three of these did not
+    # exist at the start of the sample, so this basket's early history contains
+    # composition jumps of up to 0.31 log points (LOG D22).
+    "dd_all": [
         "dd-trace",
         "@datadog/browser-rum",
         "@datadog/browser-logs",
         "datadog-metrics",
         "@datadog/datadog-ci",
     ],
-    "ctrl": ["newrelic", "elastic-apm-node"],  # substitutes
-    "ctrl_wide": [  # robustness only: adds complements
+    # ROBUSTNESS: OTel-inclusive denominator, disqualified a priori (LOG D11/D23)
+    # because @opentelemetry/api sits in dd-trace v5's dependency closure.
+    "ctrl_wide": [
         "newrelic",
         "elastic-apm-node",
         "@opentelemetry/api",
         "@sentry/node",
     ],
-    "placebo": ["lodash", "chalk", "axios", "react"],  # no link to DDOG revenue
 }
 
 HORIZONS = [30, 45, 60, 0]  # 0 means the full quarter
@@ -148,18 +162,33 @@ def build_npm_vintages(daily: pd.DataFrame, bad: pd.DatetimeIndex) -> pd.DataFra
     quarters = sorted(
         {str(p) for p in pd.PeriodIndex(daily["date"].dt.to_period("Q").unique())}
     )
+    last_date = daily["date"].max()
     rows = []
     for q in quarters:
         for h in HORIZONS:
+            # Do not emit a feature whose window extends past the data we hold:
+            # a "full quarter" computed from 44 of 92 days is not a truncated
+            # estimate, it is a wrong number. The as-of filter would withhold it
+            # anyway, but a wrong value should not exist in the table at all.
+            if _window(q, h)[1] > last_date:
+                continue
             avail = _available_from(q, h)
             tag = "full" if h == 0 else f"d{h}"
             vals = {b: yoy_log(daily, b, q, h, bad) for b in BASKETS}
             feats = {
-                f"dd_abs_{tag}": vals["dd"],
-                f"ctrl_abs_{tag}": vals["ctrl"],
-                f"dd_rel_{tag}": vals["dd"] - vals["ctrl"],
-                f"plc_abs_{tag}": vals["placebo"],
+                # --- the three pre-registered candidates (LOG D24) ---
+                f"dd_rel_plc_{tag}": vals["dd"] - vals["placebo"],  # rank 1
+                f"dd_rel_{tag}": vals["dd"] - vals["ctrl"],  # rank 2
+                f"dd_abs_{tag}": vals["dd"],  # rank 3
+                # --- negative controls, one per candidate construction ---
                 f"plc_rel_{tag}": vals["placebo"] - vals["ctrl"],
+                f"ctrl_rel_plc_{tag}": vals["ctrl"] - vals["placebo"],
+                f"plc_abs_{tag}": vals["placebo"],
+                # --- benchmark legs, kept for diagnostics ---
+                f"ctrl_abs_{tag}": vals["ctrl"],
+                # --- appendix / robustness ---
+                f"dd_abs_all_{tag}": vals["dd_all"],
+                f"dd_rel_all_{tag}": vals["dd_all"] - vals["ctrl"],
                 f"dd_rel_wide_{tag}": vals["dd"] - vals["ctrl_wide"],
             }
             for name, value in feats.items():
@@ -385,11 +414,12 @@ def live_quarter_treatments(quarter: str | None = None, asof: str | None = None)
                 "quarter": quarter,
                 "days_elapsed": elapsed,
                 "days_used": horizon,
-                "dd_abs_yoy_log": yoy_log(frame, "dd", quarter, horizon, bad, summer),
-                "ctrl_abs_yoy_log": yoy_log(frame, "ctrl", quarter, horizon, bad, summer),
-                "dd_rel_yoy_log": yoy_log(frame, "dd", quarter, horizon, bad, summer)
+                "dd_rel_plc": yoy_log(frame, "dd", quarter, horizon, bad, summer)
+                - yoy_log(frame, "placebo", quarter, horizon, bad, summer),
+                "dd_rel": yoy_log(frame, "dd", quarter, horizon, bad, summer)
                 - yoy_log(frame, "ctrl", quarter, horizon, bad, summer),
-                "plc_rel_yoy_log": yoy_log(frame, "placebo", quarter, horizon, bad, summer)
+                "dd_abs": yoy_log(frame, "dd", quarter, horizon, bad, summer),
+                "plc_rel": yoy_log(frame, "placebo", quarter, horizon, bad, summer)
                 - yoy_log(frame, "ctrl", quarter, horizon, bad, summer),
                 "imputed_days": n_bad_in_q,
                 "imputed_share_%": n_bad_in_q / elapsed * 100,
