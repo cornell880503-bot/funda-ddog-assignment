@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import npm_clean
 import sec_common as sc
 
 FIG = sc.REPO / "report" / "figures"
@@ -23,7 +24,7 @@ FIG = sc.REPO / "report" / "figures"
 def main() -> None:
     FIG.mkdir(parents=True, exist_ok=True)
     q = pd.read_csv(sc.PROCESSED / "ddog_quarters.csv", parse_dates=["end", "earnings_date"])
-    npm = pd.read_csv(sc.PROCESSED / "npm_daily.csv", parse_dates=["date"])
+    npm = npm_clean.load_clean()  # registry-wide bad days imputed, express dropped
 
     rel = q[q["known_from_reliable"]]
 

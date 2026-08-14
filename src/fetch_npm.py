@@ -42,6 +42,20 @@ CONTROL_PACKAGES = [
     "elastic-apm-node",  # direct competitor APM agent
     "@sentry/node",  # adjacent observability vendor
 ]
+# Negative control. These have no economic link to Datadog's revenue whatsoever
+# -- they are general-purpose JavaScript utilities. Identical features are built
+# from them and pushed through the identical as-of construction and
+# walk-forward validation. If a placebo feature predicts Datadog's results as
+# well as the Datadog feature does, the Datadog feature is measuring shared
+# ecosystem trend and not Datadog adoption. This is evidence design, not a
+# robustness afterthought.
+PLACEBO_PACKAGES = [
+    "lodash",
+    "express",
+    "chalk",
+    "axios",
+    "react",
+]
 
 START = date(2017, 1, 1)
 BASE = "https://api.npmjs.org/downloads/range"
@@ -113,7 +127,11 @@ def qtd_pace(panel: pd.DataFrame) -> pd.DataFrame:
 def main(force: bool = False, end: str | None = None) -> None:
     end_date = date.fromisoformat(end) if end else date.today() - timedelta(days=1)
     frames = []
-    for cohort, pkgs in (("datadog", DATADOG_PACKAGES), ("control", CONTROL_PACKAGES)):
+    for cohort, pkgs in (
+        ("datadog", DATADOG_PACKAGES),
+        ("control", CONTROL_PACKAGES),
+        ("placebo", PLACEBO_PACKAGES),
+    ):
         for pkg in pkgs:
             print(f"npm: {pkg}")
             df = fetch_package(pkg, START, end_date, force=force)

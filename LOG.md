@@ -187,27 +187,33 @@ plainly that PyPI long history requires BigQuery and was out of scope.
 Two tests were run over the 181-day overlap (2026-02-14 → 2026-08-13). Both
 fail, and both are reported.
 
-**Test 1, co-movement of weekly log changes: discarded as a calendar artefact.**
-`dd-trace` (npm) and `ddtrace` (PyPI) correlate at 0.932 on weekly log changes,
-which looks like strong confirmation. It is not. The placebo: `newrelic` (npm)
-correlates with PyPI `ddtrace` at **0.951** — higher than Datadog's own package
-does. `elastic-apm-node` reaches 0.919. Every package in both registries is
-dominated by CI/CD builds that follow the same working-day and holiday
-calendar. Note also that sign agreement is only 54–58% despite correlations
-above 0.9, which is the tell: a large shared seasonal component inflates the
-correlation while the residual direction is close to a coin flip.
-**Any cross-registry correlation reported without a placebo is meaningless, and
-this one is dropped.**
+*All figures below are post-cleaning (see D16). The pre-cleaning run gave
+materially different numbers, which is itself the argument for D16.*
+
+**Test 1, co-movement of weekly log changes: inconclusive, and dropped.**
+`dd-trace` (npm) correlates with `ddtrace` (PyPI) at 0.975 on weekly log
+changes. The placebo: `newrelic` reaches 0.961 and `elastic-apm-node` 0.934 —
+every package tested, competitor or not, sits in a narrow 0.93–0.98 band.
+A bootstrap on the *difference* between the Datadog correlation and the best
+control correlation (10,000 resamples of the 26 aligned weeks, seed 20260814)
+gives a 95% CI of **[−0.006, +0.782]**, which covers zero.
+Note also that sign agreement is only 54–62% despite correlations above 0.93 —
+the tell that a large shared seasonal component is inflating the correlation
+while the residual direction is near a coin flip.
+The correlation level measures a shared working-day and holiday calendar. The
+test cannot support a Datadog-specific claim in either direction and is not
+used as evidence. **Reporting a cross-registry correlation without a placebo
+would have been a false positive; the ranking on its own is noise at n=26.**
 
 **Test 2, relative growth (calendar effect differenced out): opposite signs.**
 
 | registry | Datadog basket | substitute controls | excess |
 |---|---|---|---|
-| npm | +31.4% | +5.0% | **+26.4pp** |
+| npm | +38.3% | +9.9% | **+28.4pp** |
 | PyPI | +10.3% | +26.2% | **−15.8pp** |
 
 Like-for-like, tracer against New Relic's agent in the same registry: npm
-`dd-trace` +56.4% vs `newrelic` +5.3% (+51.1pp); PyPI `ddtrace` +21.4% vs
+`dd-trace` +64.5% vs `newrelic` +10.1% (+54.3pp); PyPI `ddtrace` +21.4% vs
 `newrelic` +40.8% (−19.5pp). Datadog outgrows its controls on npm and
 underperforms them on PyPI over the identical window.
 
@@ -218,10 +224,15 @@ growth rate is volatile; the largest PyPI "Datadog" package by volume is
 `datadog` (2.27m/day), an API/metrics client rather than instrumentation, which
 drags the basket; and 181 days is one short window with no YoY available.
 
-**This is a failed confirmation, not a refutation.** It does not show the npm
-signal is wrong; it shows the npm signal is not independently corroborated by
-the only other ecosystem observable for free. The honest position is that
-Signal 1's evidence rests on npm alone, and the report says so.
+**This is a failed confirmation, not a refutation, and it is a low-power one.**
+With 181 days there is no YoY available and the test had little power to begin
+with. It does not show the npm signal is wrong; it shows the npm signal is not
+independently corroborated by the only other ecosystem observable for free.
+**Reporting treatment:** one line in the Part 1 data table — cross-ecosystem
+confirmation was attempted, the available window was underpowered, and Signal 1
+therefore rests on the npm ecosystem alone. A low-power null is not inflated
+into evidence against the signal, and it does not go in the headline. This is a
+different and much smaller issue than the placebo design in D17.
 
 ### D15. Hyperscaler timing verified — and the assumed lead is wrong
 The brief states Amazon reports "roughly two weeks" before Datadog. Checked
@@ -246,6 +257,75 @@ returns **consolidated facts only** and drops the dimensional (segment) axis, so
 AWS / Intelligent Cloud / Google Cloud revenue cannot be pulled from it. Those
 values have to come from the press releases, handled the same way as Datadog's
 guidance (auto-extract, cache, verify against the primary document).
+
+### D16. npm data quality — 12 registry-wide missing days, 4 of them in the live quarter
+The npm downloads API returns 0, or a small fraction of normal volume, for
+*every* package on certain dates. These are API gaps, not days on which nobody
+installed software. 12 such days in 3,512, found by flagging any date whose
+cross-package total falls below 20% of its centred 7-day median.
+
+| date | packages affected | raw total | imputed total |
+|---|---|---|---|
+| 2026-08-13 | 13 | 0 | 181.5m |
+| 2026-07-26 | 13 | 36.0m | 78.7m |
+| 2026-07-12 | 13 | 0 | 78.2m |
+| 2026-07-09 | 13 | 29.8m | 174.9m |
+
+…plus 8 earlier dates (2018-05-26/27, 2020-06-22, 2022-05-08, 2022-07-22,
+2023-11-03, 2025-10-21, 2026-06-03).
+
+**Four of the twelve fall inside 2026Q3 — the quarter being nowcast — out of
+roughly 44 elapsed days.** 2026-08-13, a total zero, is the most recent day
+available. Uncorrected, these would have dragged the live quarter-to-date pace
+down by roughly 9% of the quarter's observations and produced a spuriously
+bearish headline call.
+
+Imputation uses the same package's median volume on the same weekday within a
+±21-day neighbourhood. Downloads have a strong day-of-week profile (weekday CI
+builds dominate), so linear interpolation across a Monday gap would
+systematically under-fill it. Every correction is written to
+`data/processed/npm_data_quality.csv`.
+
+`express` is dropped from the placebo basket entirely: the API returns 1,734
+consecutive zero days before 2021-10-01 for a package that was in heavy use
+throughout. That is a package-specific defect, not a gap to patch.
+
+**This changed published numbers.** Pre-cleaning, the npm Datadog basket grew
++31.4% over the PyPI overlap window and `dd-trace` correlated with PyPI
+`ddtrace` at 0.932 (below the `newrelic` placebo at 0.951). Post-cleaning the
+same figures are +38.3% and 0.975 (above the placebo at 0.961). The Test 1
+verdict flipped from "fails" to "inconclusive" purely on data quality — which
+is the argument for doing this before any modelling rather than after.
+
+### D17. Placebo runs the full pipeline, not just a correlation
+A placebo that only appears in a correlation table, while the main body claims
+a working signal, is internally inconsistent. So the negative control gets
+identical treatment to the real signal: same feature construction, same as-of
+vintage rules, same walk-forward, same error metrics against the same
+baselines.
+
+Placebo basket: `lodash`, `chalk`, `axios`, `react` — general-purpose
+JavaScript utilities with **no economic link to Datadog's revenue**. (`express`
+dropped per D16.) Features built from them:
+`placebo_abs` = YoY log growth of the placebo basket, and
+`placebo_rel` = `placebo_abs` − control-basket YoY log growth — the exact
+construction used for the real feature.
+
+The two outcomes are pre-committed here so the framing is not chosen after
+seeing the result:
+- **If the placebo also beats AR(1) out of sample** → the signal is not real.
+  That goes in the page-1 conclusion, not an appendix. The deliverable becomes
+  "a signal with a plausible economic story that does not survive validation,
+  and the method that established it" — a legitimate result given the
+  assignment's explicit request for honest interpretation.
+- **If the placebo fails out of sample while the Datadog feature survives** →
+  the placebo has strengthened the case, by showing the raw correlation was
+  trend-driven and that the difference-in-log-growth construction removes the
+  spurious component. That goes in **Methodology as evidence design**, not in
+  Limitations.
+
+Either way the placebo design and its result appear in the main body; detailed
+tables go to the appendix.
 
 ### Target variables as of Phase 1
 - `rev_yoy`: 24.6% (2025Q1) → 35.6% (2026Q2). The structural break in §5.5 of

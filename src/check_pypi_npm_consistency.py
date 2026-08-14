@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import npm_clean
 import sec_common as sc
 
 # Substitute cohorts, consistent with the denominator decision in LOG.md D11:
@@ -59,7 +60,7 @@ def window_growth(s: pd.Series) -> float:
 
 
 def main() -> None:
-    npm = pd.read_csv(sc.PROCESSED / "npm_daily.csv", parse_dates=["date"])
+    npm = npm_clean.load_clean()  # registry-wide bad days imputed, express dropped
     pypi = pd.read_csv(sc.PROCESSED / "pypi_daily_180d.csv", parse_dates=["date"])
 
     start = max(npm["date"].min(), pypi["date"].min())
@@ -90,14 +91,43 @@ def main() -> None:
     print("TEST 1 -- weekly log-change co-movement, with placebo")
     print(placebo.round(3).to_string(index=False))
     dd_corr = placebo.loc[placebo["npm package"] == "dd-trace", "corr_vs_pypi_ddtrace"].iloc[0]
-    best_ctrl = placebo[placebo["cohort"] == "control"]["corr_vs_pypi_ddtrace"].max()
-    verdict = "FAILS" if best_ctrl >= dd_corr else "passes"
+    best_ctrl_row = placebo[placebo["cohort"] == "control"].nlargest(
+        1, "corr_vs_pypi_ddtrace"
+    ).iloc[0]
+    best_ctrl = best_ctrl_row["corr_vs_pypi_ddtrace"]
+
+    # The ranking alone means nothing at n=26. Bootstrap the DIFFERENCE between
+    # the Datadog correlation and the best control correlation, resampling weeks
+    # jointly so the three series stay aligned. If the interval covers zero, the
+    # Datadog package is not distinguishable from a competitor placebo.
+    rng = np.random.default_rng(20260814)
+    dd_w = weekly_log_change(daily(npm, npm["package"] == "dd-trace"))
+    ctrl_w = weekly_log_change(daily(npm, npm["package"] == best_ctrl_row["npm package"]))
+    joint = pd.concat([dd_w, ctrl_w, target], axis=1, join="inner").dropna()
+    joint.columns = ["dd", "ctrl", "pypi"]
+    diffs = []
+    for _ in range(10000):
+        idx = rng.integers(0, len(joint), len(joint))
+        s = joint.iloc[idx]
+        diffs.append(s["dd"].corr(s["pypi"]) - s["ctrl"].corr(s["pypi"]))
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    covers_zero = lo <= 0 <= hi
+    verdict = "INCONCLUSIVE" if covers_zero else ("passes" if dd_corr > best_ctrl else "FAILS")
+
     print(
-        f"\n  Verdict: {verdict}. A competitor package correlates with PyPI ddtrace at "
-        f"{best_ctrl:.3f}\n  versus {dd_corr:.3f} for dd-trace itself. The cross-registry "
-        "correlation is a shared\n  working-day and holiday calendar, not Datadog-specific "
-        "information. Discarded.\n"
+        f"\n  dd-trace {dd_corr:.3f} vs best control ({best_ctrl_row['npm package']}) "
+        f"{best_ctrl:.3f}"
+        f"\n  bootstrap 95% CI on the difference: [{lo:+.3f}, {hi:+.3f}]  (n={len(joint)} weeks)"
+        f"\n  Verdict: {verdict}."
     )
+    if covers_zero:
+        print(
+            "  Every package tested -- Datadog's and its competitors' -- correlates with\n"
+            "  PyPI ddtrace in a narrow 0.93-0.98 band, and the gap between Datadog and\n"
+            "  the placebo is not distinguishable from zero. The level of correlation is\n"
+            "  a shared working-day and holiday calendar. This test cannot support a\n"
+            "  Datadog-specific claim in either direction, and is not used as evidence.\n"
+        )
 
     # ---------- Test 2: relative growth, calendar effect differenced out ----------
     rows = []
