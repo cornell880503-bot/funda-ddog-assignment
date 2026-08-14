@@ -12,11 +12,11 @@ Data through 2026-08-13 · all figures reproducible from committed code · no MN
 
 Built from Datadog's guidance midpoint of $1,140m — verified verbatim against 8-K Exhibit 99.1, accession 0001628280-26-053829, *"Third Quarter 2026 Outlook: Revenue between $1.135 billion and $1.145 billion"* — times the mean beat over a trailing window **whose length is selected by nested walk-forward on training data only**. That rule delivers MAPE 4.10% and a 76.9% hit rate out of sample, using no alternative data.
 
-**The alternative data did not survive validation, and the precise scope of that claim matters.** Across two signals, three feature constructions, four horizons and four target metrics — with matched negative controls, a permutation null, and Diebold–Mariano tests throughout — **no cell beat the strongest naive baseline**. But the honest statement is narrower than "alternative data cannot predict Datadog":
+**The alternative data did not survive validation, and the scope of that claim matters.** Across two signals, three constructions, four horizons and four target metrics — with matched controls, a permutation null and Diebold–Mariano tests throughout — **no cell beat the strongest naive baseline**. But the honest statement is narrower than "alternative data cannot predict Datadog":
 
 > The **freely and historically observable** slice of Datadog's telemetry footprint is the wrong slice, and the right slice is **not retrospectively observable at all**.
 
-Datadog's core billable unit is the Go agent, shipped via Docker Hub, APT/YUM, Helm and cloud marketplaces. `datadog/agent` has 11.25bn cumulative Docker pulls against 1.13bn lifetime downloads for the npm basket this study could measure — **10× the volume, and Docker Hub publishes only a lifetime counter with no history**. What was testable was the Node.js SDK of one product line; what matters is a channel that cannot be backfilled.
+Datadog's core billable unit is the Go agent, shipped via Docker Hub, APT/YUM, Helm and cloud marketplaces. `datadog/agent` has 11.25bn cumulative Docker pulls against 1.13bn lifetime npm downloads for the basket this study could measure — **10× the volume, and Docker Hub publishes only a lifetime counter with no history**. What was testable is one product line's SDK; what matters cannot be backfilled.
 
 Three things the call rests on:
 
@@ -38,10 +38,10 @@ Three things the call rests on:
 
 | Source | What it measures / origin | Economic logic and evidence | Freq · latency · history · coverage | Cost | Limitations → mitigations | Status |
 |---|---|---|---|---|---|---|
-| **1. npm instrumentation downloads** — `dd-trace`, `datadog-metrics`; controls `newrelic`, `elastic-apm-node`; placebo `lodash`, `chalk`, `axios`, `react` | Daily downloads, public npm registry API | Datadog bills on hosts, custom metrics, ingested spans and logs. Customers emit telemetry by installing instrumentation, so downloads proxy the billable unit. Contemporaneous corr with `rev_yoy` 0.79 (n=27) | Daily · 1-day latency · 2015+ · **Node.js APM only, ~10% of the observable install channel** | Free | CI re-pulls ≠ installs; mirrors; no revenue weighting; **covers one SDK of a multi-product platform** → YoY log differences, mandatory control and placebo baskets, constant composition, outage imputation, and count-type targets tested | **Tested** |
-| **2. Hyperscaler cloud segment growth** — MSFT Intelligent Cloud (28/28), AWS (16/28), GCP (8/28); controls MSFT Productivity & Business Processes, AMZN total net sales | Item 2.02 8-K press releases. Not in XBRL — `companyfacts` drops the segment axis | Datadog monitors workloads on AWS/Azure/GCP. **Timing verified**: all three peers reported before Datadog in all 28 quarters (AMZN median lead 7 days, not the two weeks assumed) | Quarterly · 5–19 days before DDOG · 28 quarters | Free | AI-capex-driven growth correlates weakly with application monitoring → matched non-cloud control from the *same filing* | **Tested** |
+| **1. npm instrumentation downloads** — `dd-trace`, `datadog-metrics`; controls `newrelic`, `elastic-apm-node`; placebo `lodash`, `chalk`, `axios`, `react` | Daily downloads, npm registry API | Datadog bills on hosts, metrics, spans and logs; customers emit telemetry by installing instrumentation, so downloads proxy the billable unit. Contemporaneous corr with `rev_yoy` 0.79 (n=27) | Daily · 1-day latency · 2015+ · **Node.js APM only, ~10% of observable install volume** | Free | CI re-pulls ≠ installs; mirrors; no revenue weighting; **one SDK of a multi-product platform** → YoY log differences, mandatory control and placebo baskets, constant composition, outage imputation, count-type targets | **Tested** |
+| **2. Hyperscaler cloud segment growth** — MSFT Intelligent Cloud (28/28), AWS (16/28), GCP (8/28); controls MSFT Productivity & Business Processes, AMZN net sales | Item 2.02 8-K press releases; not in XBRL — `companyfacts` drops the segment axis | Datadog monitors workloads on AWS/Azure/GCP. **Timing verified**: all three reported before Datadog in all 28 quarters (AMZN median lead 7 days, not two weeks) | Quarterly · 5–19 days before DDOG · 28 quarters | Free | AI-capex growth correlates weakly with application monitoring → matched non-cloud control from the *same filing* | **Tested** |
 | **3. PyPI downloads** — `ddtrace`, `datadog`, `datadog-api-client` | pypistats.org, `without_mirrors` | Same logic in the Python ecosystem; intended as cross-ecosystem confirmation | Daily · 1 day · **181 days** | Free (history needs BigQuery, out of scope) | No YoY computable, so underpowered by construction; failed to confirm, and that null is not used as evidence against the signal | **Cross-check — underpowered** |
-| **4. Hiring / job postings** — postings requiring "Datadog"; sales headcount | Revelio, LinkUp, Coresignal | Adoption breadth plausibly leads bookings 2–3 quarters; headcount is future capacity | Daily/weekly · days · vendor-dependent · US-skewed | **Vendor, paid** | No free source with usable history; postings over-weight large employers → de-seasonalise, employer fixed effects | **Proposed, not tested** |
+| **4. Hiring / job postings** — postings requiring "Datadog"; sales headcount | Revelio, LinkUp, Coresignal | Adoption breadth plausibly leads bookings 2–3 quarters; headcount is future capacity | Daily/weekly · days · vendor-dependent · US-skewed | **Vendor, paid** | No free source with usable history; over-weights large employers → de-seasonalise, employer fixed effects | **Proposed, not tested** |
 | **5. Competitive displacement / cost sentiment** — Stack Exchange tags; GitHub activity vs `grafana/grafana`, OpenTelemetry | Public APIs | **Downside-risk proxy for NRR, not a revenue predictor.** Bill shock is a documented churn vector | Daily · days · 2010+ | Free | Volume tracks community size, not spend → share-of-tag construction, matched competitor baseline. **Deliberately not forced into the revenue model** | **Proposed, not tested** |
 
 **A dependency-graph fact that fixed the control basket.** `dd-trace` v5 — **82.6%** of current installs — carries `@opentelemetry/api` in its dependency closure at depth 1 (v6 drops it). A control containing OpenTelemetry would contain numerator-generated traffic. This is why the denominator excludes OTel: a fact, not a judgement.
@@ -103,6 +103,21 @@ The Objective names billings/RPO, NRR and $100k+ ARR customer growth. Testing th
 
 **The count-vs-dollars hypothesis is directionally supported and still insufficient.** Against customer growth the best cell is **1.049** — the closest any signal came to a baseline in this project, and better than the 1.137 against revenue growth. Matched controls fail on all of those cells (1.69–1.83), so the residual edge is attributable rather than shared. But 1.049 is a loss, at n=11.
 
+### 3.6 One unstructured signal, and the sharpest placebo result in the project
+
+Management tone is the one "qualitative" signal that is cleanly backfillable: the 8-K press release is free, official, cached for all 28 quarters, and timestamped *at the guidance-issuance moment*. Hypothesis: heavier hedging when guidance is issued implies a lower bar, so a larger subsequent beat.
+
+The design point is the placebo — every release carries a forward-looking-statements disclaimer written by counsel, not management, and tone measured there should predict nothing.
+
+| Measure | corr with subsequent beat | best walk-forward cell |
+|---|---|---|
+| management body, net tone | +0.211 (p=0.291) | 1.551 |
+| **counsel's boilerplate, net tone** | **−0.808 (p<0.001)** | **0.968** |
+
+**The legal disclaimer outperforms management's own words on every comparison**, and against AR(1) it yields ratio 0.627, CI [0.533, 0.835], DM p=0.088 — a "significant" result from text written to convey no information at all. Boilerplate wording drifts as counsel updates the template, so it proxies time, and the beat fell from 12% to 4% across the sample. It is the same trend-fitting trap, in unstructured text.
+
+The implication for an LLM-based research pipeline is the opposite of the intuition: text features are **more** exposed to spurious trend-fitting than structured ones, because text drifts on many slow dimensions an extractor will happily quantify. Control discipline matters more than extraction quality. *(Compact hand-specified lexicon, not full Loughran-McDonald; a better lexicon moves the point estimates, not the placebo comparison.)*
+
 ---
 
 ## 4. Why it fails: the observable channel has decoupled from billings
@@ -132,9 +147,7 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **The interval is conditional.** ±$14.7m reflects only the historical variance of the beat. Guidance extraction error is zero — every figure re-fetched from EDGAR and matched to its verbatim outlook sentence. Regime risk is second-order here: flat trailing-mean gives $1,188m, trend-extrapolation $1,195m, a $7m spread inside the band. Not covered: guidance-philosophy change, customer-concentration events, M&A (Datadog acquired Adaptive ML in the reported quarter). Formally, the band is *conditional on the beat distribution remaining stationary* — supported over 16 quarters, mildly strained over 8 (ρ=+0.69, p=0.058).
 
-**Sample size.** 27 usable quarters, 7–14 out-of-sample points depending on target. Every hit rate here is indistinguishable from chance (binomial p ≥ 0.18). Granger tests are descriptive only; the negative controls "cause" revenue about as readily as the signals. This is also why the models are OLS with at most two predictors.
-
-**A result that flips on 0.34% of the data is not a result.** Removing 12 registry-wide outage days out of 3,512 moves the cross-registry correlation from below its placebo (0.932 vs 0.951) to above it (0.972 vs 0.961). That fragility is reported as grounds for the inconclusive verdict, not as a repair.
+**Sample size.** 27 usable quarters, 7–14 out-of-sample points depending on target. Every hit rate here is indistinguishable from chance (binomial p ≥ 0.18). Granger tests are descriptive only. This is also why the models are OLS with at most two predictors. Relatedly, a result that flips on 0.34% of the data is not a result: removing 12 outage days out of 3,512 moves the cross-registry correlation from below its placebo (0.932 vs 0.951) to above it (0.972 vs 0.961), and that fragility is grounds for the inconclusive verdict, not a repair.
 
 ---
 
@@ -142,15 +155,15 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **The headline result is the product insight.** The best nowcast used the company's own guidance and no alternative data — so the value is not in finding more signals but in the discipline that stops trend being mistaken for signal. Four components, each needed here:
 
-**Observability triage, before modelling.** The single largest error in the first pass was spending the analysis on the channel that was *easy* to observe rather than the one that *matters*. A signal registry should record, per candidate, which share of the economic quantity it can see and whether history exists — `datadog/agent` would have been flagged immediately as high-relevance, zero-history. That check costs one API call and would have reframed the project on day one.
+**Observability triage, before modelling.** The largest error in the first pass was analysing the channel that was *easy* to observe rather than the one that *matters*. A registry should record, per candidate, what share of the economic quantity it sees and whether history exists — `datadog/agent` would have been flagged immediately as high-relevance, zero-history. One API call, and it would have reframed the project on day one.
 
-**Matched controls as mandatory metadata.** The control is what turned a 0.79 correlation into a rejected hypothesis. A registry that stores a signal without its control ships false positives by default.
+**Matched controls as mandatory metadata.** The control is what turned a 0.79 correlation into a rejected hypothesis — and §3.6 shows the stakes rise with unstructured data, where a legal disclaimer "predicted" earnings surprises at r=−0.81. A registry that stores a signal without its control ships false positives by default; for an LLM extraction pipeline that is not a nicety but the primary safeguard.
 
-**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth up to 18 days on Q4 here, and it forced a split between backward-only and centred imputation. The unit test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
+**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth up to 18 days on Q4 here. The unit test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
 
 **An automated evaluator that includes a power report.** Baselines (with un-snoopable selection), placebo, permutation null, DM with bootstrap intervals are all mechanical. The addition this revision forces: every negative result should ship with its **minimum detectable effect**, so "no edge found" is never confused with "no edge exists".
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with control and placebo baskets, and the guidance extractor re-pointed at that issuer's wording. The conclusion is what does not transfer: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running the baselines first.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo baskets, and the guidance extractor re-pointed. The conclusion is what does not transfer: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running the baselines first.
 
 ---
 

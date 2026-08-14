@@ -1151,3 +1151,61 @@ still a loss, at n=11.
 
 `billings_yoy` has only 7 out-of-sample points and is reported as underpowered
 rather than as a result. `rpo_yoy` cannot support a walk-forward at all.
+
+### D44. Level 2 / unstructured data — the one backfillable variant, tested. The lawyer's boilerplate wins.
+A reviewer proposed adding "Level 2" data: vendor blog previews scraped via the
+Wayback Machine, sell-side consensus revision momentum, and earnings-call
+transcript tone. Assessment, then a test.
+
+**Two of the three routes have the disease this project already diagnosed.**
+Vendor blogs are captured sporadically by the Internet Archive and — the
+reviewer's own sharpest point — are written only when the vendor's data looks
+interesting, which is survivorship bias baked into the sample. Transcripts are
+vendor-licensed. Consensus *revision* momentum needs point-in-time consensus
+vintages; `yfinance` exposes current estimates and a short earnings history,
+not a historical revision series, so backtesting it needs the paid feed the
+proposal was trying to avoid. *(I attempted to verify Wayback coverage
+empirically; the CDX API returned 504 throughout, so the coverage claim is
+neither confirmed nor refuted here and is not asserted either way.)*
+
+**One route is genuinely clean, and it was testable immediately.** The 8-K
+Exhibit 99.1 press release is free, official, cached here for all 28 quarters,
+and timestamped exactly at the guidance-issuance moment — a perfect as-of
+vintage by construction. Hypothesis: if management hedges more when issuing
+guidance, they are setting a lower bar and the subsequent beat should be larger
+(sandbagging).
+
+**The design that made it worth running: a placebo inside the same document.**
+Every release contains a forward-looking-statements disclaimer written by
+counsel, not management. Tone measured there should predict nothing.
+
+| Measure | corr with subsequent beat | best walk-forward cell |
+|---|---|---|
+| management body, net tone | r = +0.211 (p=0.291) | 1.551 / 1.608 |
+| management body, hedge rate | r = +0.060 (p=0.767) | 1.593 / 2.207 |
+| **counsel's boilerplate, net tone** | **r = −0.808 (p<0.001)** | **0.968 / 1.372** |
+
+**The legal disclaimer beats management's own words on every comparison**, and
+against AR(1) on `beat_vs_guide` it produces ratio 0.627, CI [0.533, 0.835]
+excluding 1.0, DM p=0.088 — a "significant" result from text nobody wrote to
+convey information. The mechanism is transparent: boilerplate wording drifts
+slowly as counsel updates the template, so it proxies *time*, and the beat fell
+from 12% to 4% over the sample. Same trend-fitting trap as Signal 1, in
+unstructured text.
+
+**Conclusion carried into the report.** Unstructured/LLM-extracted features are
+*more* exposed to spurious trend-fitting than structured ones, not less,
+because text drifts on many slow-moving dimensions an extractor will happily
+quantify. The control discipline therefore matters more in an LLM pipeline than
+the extraction quality. This is the strongest single argument in the project
+for the placebo path being infrastructure rather than an analyst's good habit.
+
+Lexicon caveat: a compact hand-specified word list, not the full
+Loughran-McDonald dictionary. A better lexicon would change the point estimates
+and would not change the placebo comparison, which is the finding.
+
+**Rejected from the proposal:** a fixed "80% guidance / 20% Level 2" ensemble
+weight. Weights should come from validation; asserting them is the error this
+report exists to argue against. The proposal's own fallback — route extreme
+Level 2 readings to an analyst alert rather than into the number — is exactly
+the divergence-monitor design already implemented, and is kept.
