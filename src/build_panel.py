@@ -401,7 +401,11 @@ def live_quarter_treatments(quarter: str | None = None, asof: str | None = None)
     causal = npm_clean.load_causal()
     raw = npm_clean.load_raw_with_zeros()
 
-    n_bad_in_q = sum(1 for d in bad if p.start_time <= d <= asof_ts)
+    # Count outages inside the window that actually feeds the feature (through
+    # the last published day), not through today: the final day has no data yet
+    # and is not an outage.
+    last_published = p.start_time + pd.Timedelta(days=horizon - 1)
+    n_bad_in_q = sum(1 for d in bad if p.start_time <= d <= last_published)
     rows = []
     for name, frame, summer in (
         ("causal-imputed (point estimate)", causal, basket_sum),
@@ -422,7 +426,7 @@ def live_quarter_treatments(quarter: str | None = None, asof: str | None = None)
                 "plc_rel": yoy_log(frame, "placebo", quarter, horizon, bad, summer)
                 - yoy_log(frame, "ctrl", quarter, horizon, bad, summer),
                 "imputed_days": n_bad_in_q,
-                "imputed_share_%": n_bad_in_q / elapsed * 100,
+                "imputed_share_%": n_bad_in_q / horizon * 100,
             }
         )
     return pd.DataFrame(rows)
