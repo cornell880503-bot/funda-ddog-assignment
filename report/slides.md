@@ -1,5 +1,5 @@
 # Alternative Data Nowcasting — Datadog (DDOG)
-### 8 slides · 15 minutes · speaker notes below each
+### 10 slides · 15 minutes · speaker notes below each
 
 ---
 
@@ -149,18 +149,55 @@ Also on the page: observability table · QTD pace vs prior quarters at the same 
 
 ---
 
-## Slide 8 — Templating, and what this means for a research-agent product
+## Slide 8 — Templating: pointing this at another ticker
 
-**Repointing at SNOW or MDB:** CIK + revenue tag · signal basket with control and placebo baskets · guidance extractor re-pointed. Everything else is ticker-agnostic. **The conclusion is what doesn't transfer.**
+**Three changes:** CIK + revenue tag · signal basket with its control and placebo · guidance extractor re-pointed at that issuer's outlook wording.
 
-| Component | Why, from this project |
-|---|---|
-| **Observability triage first** | The biggest error here was analysing the easy channel, not the right one. One API call flags "high relevance, zero history" before any modelling. |
-| **Matched control as mandatory metadata** | The control turned a 0.79 correlation into a rejected hypothesis — and in text, a legal disclaimer "predicted" earnings surprises at r=−0.81. For an LLM extraction pipeline this is the primary safeguard, not a nicety. |
-| **As-of vintage as infrastructure** | Asked for "Q2 revenue", an agent fetches *today's* value. Worth 18 days on Q4 here. Test belongs in CI. |
-| **Evaluator loop that reports power** | Every negative result should ship with its minimum detectable effect, so "no edge found" is never read as "no edge exists". |
+**Unchanged:** as-of vintage layer · outage detection · constant-composition rule · baseline suite · walk-forward · permutation null · placebo path · DM/bootstrap.
 
-**The deliverable isn't a signal — it's a method that can tell you when you don't have one.**
+**What does not transfer is the conclusion.** For an issuer that guides less reliably, the same pipeline could well promote a different input — which is exactly the point of running baselines and placebo *before* choosing.
 
-> **Notes.** Land here. That's harder to fake than a backtest, and it's what a
-> research platform has to get right to be trusted with capital.
+> **Notes.** Keep this short, ~45 seconds. The credible version of "reusable"
+> names the three things that change, not a claim that everything is generic.
+
+---
+
+## Slide 9 — Fourteen near-misses, six requirements
+
+Every row is something that almost shipped as a result in *this* project.
+
+| Requirement | The incident | What it would have cost |
+|---|---|---|
+| **Point-in-time vintage as a service** | Used the 10-Q date as "public"; the market learns it from the 8-K, **18 days earlier** for Q4 | Every Q4 backtest look-ahead biased |
+| **No signal without a registered control** | Datadog downloads +112%; controls +184%. In text: a lawyer's disclaimer "predicted" beats at **r=−0.81** | A confident call on ecosystem inflation |
+| **Provenance checks on composition** | `@opentelemetry/api` sits inside `dd-trace` v5's dependency closure — **82.6%** of installs | Denominator containing its own numerator |
+| **Integrity checks at ingestion** | 12 registry-wide outage days; removing **0.34%** of data flipped a headline correlation | Spuriously bearish live nowcast |
+| **Evaluation harness, not analyst choice** | A **bare time index** beats AR(1). 15/24 "wins" → **0/24** against a drift-aware baseline | A trend, shipped with a real p-value |
+| **Coverage triage before modelling** | Analysed npm; the core agent's channel is **10×** larger with no history | Six phases on a tenth of the surface |
+
+**None of these are statistics errors.** They are places where the *default behaviour* of a careful analyst — or of an agent fetching the current version of a source — returns a confident wrong answer.
+
+> **Notes.** This is the slide for this role. Say it plainly: the research
+> output was a negative result; the reusable output is this table. Three of the
+> six are *characteristic* agent failures, not generic ones.
+
+---
+
+## Slide 10 — What I would build, in what order
+
+**V0 — the substrate.** Vintage service + coverage triage. Both are cheap (a schema decision plus a CI test; a checklist plus one API call), and everything shipped before them needs re-validating later.
+
+**V1 — the adversary.** Control registry + evaluation harness. A signal cannot enter the registry without its control. The harness returns a verdict card — *ratio vs strongest baseline, CI, control result, minimum detectable effect* — not a chart.
+
+**V2 — coverage.** Unstructured extraction, but only after V1, because the control requirement is what makes it safe.
+
+**Deliberately not on the list: more signals.** This project's finding is that signal count is not the constraint.
+
+**How we would know it works:** placebo pass-through rate *(shipped signals whose control also wins — the direct false-positive measure)* · signal survival at re-validation two quarters on · question-to-verdict latency · analyst override rate on flags.
+
+**The deliverable isn't a signal. It's a method that tells you when you don't have one.**
+
+> **Notes.** Close on the first metric — it is the one an institutional client
+> cannot verify themselves, and it only exists because controls are mandatory.
+> If asked what I would do first after joining: run the coverage triage against
+> the questions clients actually ask, and expect it to reorder this list.

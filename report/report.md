@@ -24,6 +24,8 @@ Three things the call rests on:
 2. **The beat distribution is stationary over the recent sample** (ADF p=0.007, KPSS p=0.100 on the last 16 quarters), sd 0.66pp over the last eight.
 3. **The signals run as a divergence monitor, not an estimator** — flagging when the quarter stops resembling the last eight, which is when a trailing-mean rule breaks.
 
+The methodology is the deliverable in a second sense: fourteen times a default behaviour — the kind an LLM research agent exhibits by construction — produced a confident wrong answer that only a specific control caught. §6 turns the three most important into product requirements.
+
 ---
 
 ## 2. Part 1 — Data selection and rationale
@@ -42,7 +44,7 @@ Three things the call rests on:
 | **2. Hyperscaler cloud segment growth** — MSFT Intelligent Cloud (28/28), AWS (16/28), GCP (8/28); controls MSFT Productivity & Business Processes, AMZN net sales | Item 2.02 8-K press releases; not in XBRL — `companyfacts` drops the segment axis | Datadog monitors workloads on AWS/Azure/GCP. **Timing verified**: all three reported before Datadog in all 28 quarters (AMZN median lead 7 days, not two weeks) | Quarterly · 5–19 days before DDOG · 28 quarters | Free | AI-capex growth correlates weakly with application monitoring → matched non-cloud control from the *same filing* | **Tested** |
 | **3. PyPI downloads** — `ddtrace`, `datadog`, `datadog-api-client` | pypistats.org, `without_mirrors` | Same logic in the Python ecosystem; intended as cross-ecosystem confirmation | Daily · 1 day · **181 days** | Free (history needs BigQuery, out of scope) | No YoY computable, so underpowered by construction; failed to confirm, and that null is not used as evidence against the signal | **Cross-check — underpowered** |
 | **4. Hiring / job postings** — postings requiring "Datadog"; sales headcount | Revelio, LinkUp, Coresignal | Adoption breadth plausibly leads bookings 2–3 quarters; headcount is future capacity | Daily/weekly · days · vendor-dependent · US-skewed | **Vendor, paid** | No free source with usable history; over-weights large employers → de-seasonalise, employer fixed effects | **Proposed, not tested** |
-| **5. Competitive displacement / cost sentiment** — Stack Exchange tags; GitHub activity vs `grafana/grafana`, OpenTelemetry | Public APIs | **Downside-risk proxy for NRR, not a revenue predictor.** Bill shock is a documented churn vector | Daily · days · 2010+ | Free | Volume tracks community size, not spend → share-of-tag construction, matched competitor baseline. **Deliberately not forced into the revenue model** | **Proposed, not tested** |
+| **5. Competitive displacement / cost sentiment** — Stack Exchange tags; GitHub vs `grafana/grafana`, OpenTelemetry | Public APIs | **Downside-risk proxy for NRR, not a revenue predictor.** Bill shock is a documented churn vector | Daily · days · 2010+ | Free | Volume tracks community size, not spend → share-of-tag construction, matched competitor baseline. **Not forced into the revenue model** | **Proposed, not tested** |
 
 **A dependency-graph fact that fixed the control basket.** `dd-trace` v5 — **82.6%** of current installs — carries `@opentelemetry/api` in its dependency closure at depth 1 (v6 drops it). A control containing OpenTelemetry would contain numerator-generated traffic. This is why the denominator excludes OTel: a fact, not a judgement.
 
@@ -52,11 +54,11 @@ Three things the call rests on:
 
 ### 3.1 As-of construction
 
-Features are stored as **vintages** — (quarter, feature, value, `available_from`) — so requesting a feature set is a filter, not a judgement. 1,666 rows, 50 features. `available_from` is the earnings 8-K date, not the 10-Q filing date (the 8-K leads by a median of 1 day, up to 18 for Q4). Reporting lag measured, not assumed: median 38 days, range 34–47, longer for Q4. Thirteen unit tests enforce this, including a static check that the feature builder never references the look-ahead-contaminated imputation variant, and a dynamic one that replaces that loader with a raising stub and rebuilds the entire panel.
+Features are stored as **vintages** — (quarter, feature, value, `available_from`) — so requesting a feature set is a filter, not a judgement. 1,666 rows, 50 features. `available_from` is the earnings 8-K date, not the 10-Q filing date (the 8-K leads by a median of 1 day, up to 18 for Q4). Reporting lag measured, not assumed: median 38 days, range 34–47. Thirteen unit tests enforce this, including a static check that the feature builder never references the look-ahead-contaminated imputation variant, and a dynamic one that replaces that loader with a raising stub and rebuilds the panel.
 
 ### 3.2 Lead–lag
 
-Both revenue targets are **non-stationary** (`rev_yoy` ADF p=0.063 / KPSS p=0.022). `dd_abs` correlates 0.86–0.89 with `rev_yoy`, peaking at lag −1 — apparently a leading indicator. But the **placebo basket** (`lodash`, `chalk`, `axios`, `react`) correlates **0.72, 0.76, 0.73, 0.73, 0.73 across lags −2 to +2**. A flat profile at that level, from packages that cannot contain Datadog information, is the signature of common trend. And partial-quarter performance *degrades* as observations accumulate — 0.734 (d30) → 0.975 (full) against AR(1). A real signal sharpens.
+Both revenue targets are **non-stationary** (`rev_yoy` ADF p=0.063 / KPSS p=0.022). `dd_abs` correlates 0.86–0.89 with `rev_yoy`, peaking at lag −1 — apparently a leading indicator. But the **placebo basket** correlates **0.72–0.76 at every lag from −2 to +2**. A flat profile at that level, from packages that cannot contain Datadog information, is the signature of common trend. And partial-quarter performance *degrades* as observations accumulate — 0.734 (d30) → 0.975 (full) against AR(1). A real signal sharpens.
 
 ### 3.3 Baselines — including one built to be un-snoopable
 
@@ -86,9 +88,9 @@ Orthogonalising makes the features *worse*: once what guidance already implies i
 
 **The chain that explains it.** Against AR(1), 15 of 24 cells score below 0.9 and a permutation null (1,000 draws, feature values shuffled across quarters) yields 0.58 such cells — **p = 0.002**, so the features do carry information AR(1) lacks. But a **bare time index** through the identical pipeline also beats AR(1) (0.896), containing zero Datadog content. Against the strongest baseline the same null yields 0.01 cells and the observed count is **0**. The information was drift, which a correctly specified naive model already supplies.
 
-Of 24 significance tests, exactly one candidate cell has a bootstrap CI excluding 1.0: `dd_abs_d45` on `beat_vs_guide`, ratio 0.718, CI [0.604, 0.834], DM p=0.070 — **against AR(1) only**. The same cell against a random walk is 1.108, CI [0.534, 1.784], p=0.721.
+Of 24 significance tests, exactly one cell has a bootstrap CI excluding 1.0: `dd_abs_d45` on `beat_vs_guide`, ratio 0.718, CI [0.604, 0.834], DM p=0.070 — **against AR(1) only**; against a random walk it is 1.108, CI [0.534, 1.784].
 
-**Signal 2 fails harder.** Intelligent Cloud growth scores 2.912 on `rev_yoy` vs ARIMA(1,1,0), CI [1.671, 5.970], DM p=0.025 — significantly *worse*. It hits 0.846 on direction while carrying ~3× the error: right direction, wrong magnitude, and a clean demonstration of why hit rate alone is a poor metric.
+**Signal 2 fails harder.** Intelligent Cloud growth scores 2.912 vs ARIMA(1,1,0), CI [1.671, 5.970], DM p=0.025 — significantly *worse*. It hits 0.846 on direction while carrying ~3× the error: right direction, wrong magnitude, and a clean demonstration of why hit rate alone is a poor metric.
 
 ### 3.5 The assignment's other target metrics
 
@@ -101,22 +103,18 @@ The Objective names billings/RPO, NRR and $100k+ ARR customer growth. Testing th
 | `rpo_yoy` | XBRL | 20 | — | — | not testable | insufficient history |
 | NRR | — | — | — | — | **not disclosed numerically in 8-K exhibits** | excluded, not approximated |
 
-**The count-vs-dollars hypothesis is directionally supported and still insufficient.** Against customer growth the best cell is **1.049** — the closest any signal came to a baseline in this project, and better than the 1.137 against revenue growth. Matched controls fail on all of those cells (1.69–1.83), so the residual edge is attributable rather than shared. But 1.049 is a loss, at n=11.
+**Directionally supported, still insufficient.** Against customer growth the best cell is **1.049** — the closest any signal came to a baseline here, and better than 1.137 against revenue growth. Matched controls fail on those cells (1.69–1.83), so the residual edge is attributable. But 1.049 is a loss, at n=11.
 
 ### 3.6 One unstructured signal, and the sharpest placebo result in the project
 
-Management tone is the one "qualitative" signal that is cleanly backfillable: the 8-K press release is free, official, cached for all 28 quarters, and timestamped *at the guidance-issuance moment*. Hypothesis: heavier hedging when guidance is issued implies a lower bar, so a larger subsequent beat.
-
-The design point is the placebo — every release carries a forward-looking-statements disclaimer written by counsel, not management, and tone measured there should predict nothing.
+Management tone is the one qualitative signal that is cleanly backfillable — the 8-K press release is free, cached for 28 quarters, and timestamped *at the guidance-issuance moment*. Hypothesis: heavier hedging when guidance is issued means a lower bar, so a larger beat. The design point is the placebo: every release carries a forward-looking-statements disclaimer written by counsel, not management, and tone measured there should predict nothing.
 
 | Measure | corr with subsequent beat | best walk-forward cell |
 |---|---|---|
 | management body, net tone | +0.211 (p=0.291) | 1.551 |
 | **counsel's boilerplate, net tone** | **−0.808 (p<0.001)** | **0.968** |
 
-**The legal disclaimer outperforms management's own words on every comparison**, and against AR(1) it yields ratio 0.627, CI [0.533, 0.835], DM p=0.088 — a "significant" result from text written to convey no information at all. Boilerplate wording drifts as counsel updates the template, so it proxies time, and the beat fell from 12% to 4% across the sample. It is the same trend-fitting trap, in unstructured text.
-
-The implication for an LLM-based research pipeline is the opposite of the intuition: text features are **more** exposed to spurious trend-fitting than structured ones, because text drifts on many slow dimensions an extractor will happily quantify. Control discipline matters more than extraction quality. *(Compact hand-specified lexicon, not full Loughran-McDonald; a better lexicon moves the point estimates, not the placebo comparison.)*
+**The legal disclaimer outperforms management's own words on every comparison**, and against AR(1) yields 0.627, CI [0.533, 0.835], DM p=0.088 — a "significant" result from text written to convey no information. Boilerplate drifts as counsel updates the template, so it proxies time. Same trap, unstructured. The implication inverts the intuition: text features are **more** exposed to spurious trend-fitting than structured ones, so control discipline matters more than extraction quality. *(Compact lexicon, not full Loughran-McDonald; a better one moves the estimates, not the comparison.)*
 
 ---
 
@@ -141,11 +139,11 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 ## 5. Limitations and what the data does not support
 
-**Power, quantified rather than conceded.** Simulating a competing model against the observed baseline errors: at n=13, a Diebold–Mariano test detects an RMSE ratio of 0.95 only **6%** of the time, 0.90 **15%**, 0.80 **28%**. **A genuine 5–10% edge would have gone undetected roughly 85–90% of the time.** So "0 of 24" *bounds* the effect size; it does not establish that it is zero. What is not a power problem: the observed cells sit at **1.05 to 2.65** — consistent, large degradation on the wrong side of parity.
+**Power, quantified rather than conceded.** At n=13 a Diebold–Mariano test detects an RMSE ratio of 0.95 only **6%** of the time, 0.90 **15%**, 0.80 **28%**. **A genuine 5–10% edge would have gone undetected roughly 85–90% of the time.** So "0 of 24" *bounds* the effect size rather than showing it is zero. Not a power problem: the observed cells sit at **1.05 to 2.65**, consistent large degradation on the wrong side of parity.
 
-**Scope.** The conclusion applies to the freely observable channel. The core agent's distribution is ~10× larger and exposes no history, so the best-matched proxy was never testable. This is a statement about data availability, not about whether telemetry deployment tracks Datadog's business.
+**Scope.** The conclusion applies to the freely observable channel. The core agent's distribution is ~10× larger and exposes no history, so the best-matched proxy was never testable — a statement about data availability, not about whether telemetry deployment tracks Datadog's business.
 
-**The interval is conditional.** ±$14.7m reflects only the historical variance of the beat. Guidance extraction error is zero — every figure re-fetched from EDGAR and matched to its verbatim outlook sentence. Regime risk is second-order here: flat trailing-mean gives $1,188m, trend-extrapolation $1,195m, a $7m spread inside the band. Not covered: guidance-philosophy change, customer-concentration events, M&A (Datadog acquired Adaptive ML in the reported quarter). Formally, the band is *conditional on the beat distribution remaining stationary* — supported over 16 quarters, mildly strained over 8 (ρ=+0.69, p=0.058).
+**The interval is conditional.** ±$14.7m reflects only the historical variance of the beat. Guidance extraction error is zero — every figure re-fetched from EDGAR and matched to its verbatim outlook sentence. Regime risk is second-order: flat trailing-mean gives $1,188m, trend-extrapolation $1,195m, a $7m spread inside the band. Not covered: guidance-philosophy change, customer concentration, M&A (Datadog acquired Adaptive ML in the quarter). Formally the band is *conditional on the beat distribution remaining stationary* — supported over 16 quarters, mildly strained over 8 (ρ=+0.69, p=0.058).
 
 **Sample size.** 27 usable quarters, 7–14 out-of-sample points depending on target. Every hit rate here is indistinguishable from chance (binomial p ≥ 0.18). Granger tests are descriptive only. This is also why the models are OLS with at most two predictors. Relatedly, a result that flips on 0.34% of the data is not a result: removing 12 outage days out of 3,512 moves the cross-registry correlation from below its placebo (0.932 vs 0.951) to above it (0.972 vs 0.961), and that fragility is grounds for the inconclusive verdict, not a repair.
 
@@ -153,17 +151,17 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 ## 6. Productisation — what this becomes as an agent workflow
 
-**The headline result is the product insight.** The best nowcast used the company's own guidance and no alternative data — so the value is not in finding more signals but in the discipline that stops trend being mistaken for signal. Four components, each needed here:
+**The headline result is the product insight.** The best nowcast used the company's own guidance and no alternative data — so the constraint on research quality is not signal count, it is the ability to distinguish a signal from a trend. Every component below is specified from an incident in this project rather than from first principles, and each is a place where an LLM agent's *default* behaviour is the wrong one:
 
-**Observability triage, before modelling.** The largest error in the first pass was analysing the channel that was *easy* to observe rather than the one that *matters*. A registry should record, per candidate, what share of the economic quantity it sees and whether history exists — `datadog/agent` would have been flagged immediately as high-relevance, zero-history. One API call, and it would have reframed the project on day one.
+**Observability triage, before modelling.** The largest error here was analysing the channel that was *easy* to observe rather than the one that *matters*. A registry should record, per candidate, what share of the economic quantity it sees and whether history exists — `datadog/agent` would have been flagged instantly as high-relevance, zero-history. One API call, and it reframes the project on day one.
 
-**Matched controls as mandatory metadata.** The control is what turned a 0.79 correlation into a rejected hypothesis — and §3.6 shows the stakes rise with unstructured data, where a legal disclaimer "predicted" earnings surprises at r=−0.81. A registry that stores a signal without its control ships false positives by default; for an LLM extraction pipeline that is not a nicety but the primary safeguard.
+**Matched controls as mandatory metadata.** The control turned a 0.79 correlation into a rejected hypothesis, and §3.6 shows the stakes rise with text, where a legal disclaimer "predicted" earnings surprises at r=−0.81. A registry storing a signal without its control ships false positives by default; for an LLM extraction pipeline that is the primary safeguard, not a nicety.
 
-**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth up to 18 days on Q4 here. The unit test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
+**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth 18 days on Q4 here. The test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
 
-**An automated evaluator that includes a power report.** Baselines (with un-snoopable selection), placebo, permutation null, DM with bootstrap intervals are all mechanical. The addition this revision forces: every negative result should ship with its **minimum detectable effect**, so "no edge found" is never confused with "no edge exists".
+**An automated evaluator that reports power.** Baselines (with un-snoopable selection), placebo, permutation null and DM with bootstrap intervals are all mechanical, and a harness runs all of them at no marginal cost where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo baskets, and the guidance extractor re-pointed. The conclusion is what does not transfer: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running the baselines first.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, and the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running baselines first.
 
 ---
 
