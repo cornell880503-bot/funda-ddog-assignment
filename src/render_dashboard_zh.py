@@ -248,10 +248,19 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
      '<th>視窗</th>\n    <th class="num">方向判斷次數</th><th class="num">正確</th>\n    <th class="num">命中率</th><th class="num">對擲硬幣的 p</th>'),
     ("<strong>70% at ten calls is not a\n    result.</strong> The binomial p-value against a coin flip is 0.34. The\n    indicator is a monitoring aid with a measured and unimpressive reliability,\n    stated here rather than hidden &mdash; which is the only defensible way to put a\n    directional call on an analyst's screen. It does <em>not</em> feed the headline\n    number, and the signals do not combine into a revenue estimate, because no\n    construction beat a naive baseline out of sample.",
      '<strong>十次判斷 70% 不是結果。</strong>\n    對擲硬幣的 binomial p 值是 0.34。這個指標是一個可靠度經過量測、而且並不亮眼的\n    監控工具，數字放在這裡而不是藏起來 &mdash; 那是把方向判斷放上分析師螢幕\n    唯一站得住的做法。它<em>不</em>餵入頭條數字，而且訊號不會合成為營收估計，\n    因為沒有任何構造在樣本外勝過樸素基準。'),
-    ('guidance ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}',
-     '指引 ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}'),
-    ('Grey: company guidance. Blue: the 95%\n      interval. The forecast sits <strong>entirely above the guidance range</strong> —\n      which is what 27 consecutive beats implies, and the most consequential\n      assumption on this page.',
-     '灰色：公司指引。藍色：95% 區間。預估值<strong>完全落在指引區間之上</strong> —\n      那正是連續 27 季超額所隱含的結果，也是本頁最關鍵的假設。'),
+    ("""Both bars are on the same revenue axis.
+      The 95% interval does <strong>not overlap the guidance range at any point</strong> —
+      its floor sits $${fmt(H.lo-H.guide_high,0)}m above the top of guidance. That is what
+      27 consecutive beats implies, and it is the most consequential assumption on
+      this page.""",
+     """兩條都落在同一條營收軸上。95% 區間<strong>在任何一點都不與指引區間重疊</strong> ——
+      它的下緣比指引上緣高出 $${fmt(H.lo-H.guide_high,0)}m。那正是連續 27 季超額所隱含的結果，
+      也是本頁最關鍵的假設。"""),
+    ('guidance ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}</text>',
+     '指引 ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}</text>'),
+    ('95% interval ${fmt(H.lo,0)}&ndash;${fmt(H.hi,0)}</text>',
+     '95% 區間 ${fmt(H.lo,0)}&ndash;${fmt(H.hi,0)}</text>'),
+    ('gap ${fmt(H.lo-H.guide_high,0)}m</text>', '落差 ${fmt(H.lo-H.guide_high,0)}m</text>'),
     ('Beat vs guidance midpoint, last ${B.length} quarters',
      '相對指引中點的超額，近 ${B.length} 季'),
     ('trailing-${H.trailing_n} mean +${mean.toFixed(2)}%',

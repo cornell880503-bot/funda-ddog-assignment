@@ -150,32 +150,54 @@ app.appendChild(el(panel("Headline nowcast &mdash; Q3 2026 revenue", `
     </div>
   </div>
   ${(() => {
-    const W = 760, HH = 92, PADL = 14, PADR = 14;
-    const lo = Math.min(H.guide_low, H.lo) - 18, hi = Math.max(H.guide_high, H.hi) + 18;
+    // One shared axis. Both intervals sit on the SAME track at the same height,
+    // so the eye compares horizontal position instead of reading two unrelated
+    // objects stacked on top of each other.
+    const W = 760, HH = 112, PADL = 22, PADR = 22;
+    const AXIS = 76, TRACK_Y = 38, TRACK_H = 26;
+    const lo = Math.min(H.guide_low, H.lo) - 22, hi = Math.max(H.guide_high, H.hi) + 22;
     const x = v => PADL + (v - lo) / (hi - lo) * (W - PADL - PADR);
-    return `<svg viewBox="0 0 ${W} ${HH}" width="100%" height="${HH}" style="margin:12px 0 4px"
-      role="img" aria-label="Forecast interval against the guidance range">
-      <rect x="${x(H.guide_low)}" y="24" width="${Math.max(2, x(H.guide_high) - x(H.guide_low))}" height="18"
-        rx="3" fill="var(--dim)" opacity="0.6"/>
-      <text x="${x(H.guide_mid)}" y="18" text-anchor="middle" font-size="10"
+    const step = 20;
+    const ticks = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) ticks.push(v);
+    return `<svg viewBox="0 0 ${W} ${HH}" width="100%" height="${HH}" style="margin:14px 0 2px"
+      role="img" aria-label="Nowcast interval and guidance range on a shared revenue axis">
+      <line x1="${PADL}" y1="${AXIS}" x2="${W-PADR}" y2="${AXIS}" stroke="var(--line)" stroke-width="1"/>
+      ${ticks.map(v => `<line x1="${x(v)}" y1="${AXIS}" x2="${x(v)}" y2="${AXIS+5}" stroke="var(--line)"/>
+        <text x="${x(v)}" y="${AXIS+17}" text-anchor="middle" font-size="9.5" fill="var(--dim)"
+          font-family="var(--mono)">${fmt(v,0)}</text>`).join("")}
+      <line x1="${PADL}" y1="${TRACK_Y + TRACK_H/2}" x2="${W-PADR}" y2="${TRACK_Y + TRACK_H/2}"
+        stroke="var(--line)" stroke-dasharray="2 4" opacity="0.7"/>
+
+      <rect x="${x(H.guide_low)}" y="${TRACK_Y}" width="${Math.max(3, x(H.guide_high)-x(H.guide_low))}"
+        height="${TRACK_H}" rx="3" fill="var(--dim)" opacity="0.75"/>
+      <text x="${x(H.guide_mid)}" y="${TRACK_Y-9}" text-anchor="middle" font-size="10"
         fill="var(--muted)" font-family="var(--mono)">guidance ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}</text>
-      <rect x="${x(H.lo)}" y="48" width="${x(H.hi) - x(H.lo)}" height="18"
-        rx="3" fill="var(--accent)" opacity="0.32"/>
-      <line x1="${x(H.lo)}" y1="46" x2="${x(H.lo)}" y2="68" stroke="var(--accent)" stroke-width="1.5"/>
-      <line x1="${x(H.hi)}" y1="46" x2="${x(H.hi)}" y2="68" stroke="var(--accent)" stroke-width="1.5"/>
-      <text x="${x(H.lo)}" y="42" text-anchor="middle" font-size="9" fill="var(--accent)"
-        font-family="var(--mono)">${fmt(H.lo,0)}</text>
-      <text x="${x(H.hi)}" y="42" text-anchor="middle" font-size="9" fill="var(--accent)"
-        font-family="var(--mono)">${fmt(H.hi,0)}</text>
-      <line x1="${x(H.point)}" y1="42" x2="${x(H.point)}" y2="72" stroke="var(--text)" stroke-width="2.5"/>
-      <circle cx="${x(H.point)}" cy="57" r="4.5" fill="var(--text)"/>
-      <text x="${x(H.point)}" y="86" text-anchor="middle" font-size="11.5" font-weight="700"
+
+      <rect x="${x(H.lo)}" y="${TRACK_Y}" width="${x(H.hi)-x(H.lo)}" height="${TRACK_H}"
+        rx="3" fill="var(--accent)" opacity="0.34"/>
+      <line x1="${x(H.lo)}" y1="${TRACK_Y}" x2="${x(H.lo)}" y2="${TRACK_Y+TRACK_H}" stroke="var(--accent)" stroke-width="1.5"/>
+      <line x1="${x(H.hi)}" y1="${TRACK_Y}" x2="${x(H.hi)}" y2="${TRACK_Y+TRACK_H}" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="${x((H.lo+H.hi)/2)}" y="${TRACK_Y-9}" text-anchor="middle" font-size="10"
+        fill="var(--accent)" font-family="var(--mono)">95% interval ${fmt(H.lo,0)}&ndash;${fmt(H.hi,0)}</text>
+
+      <line x1="${x(H.point)}" y1="${TRACK_Y-3}" x2="${x(H.point)}" y2="${AXIS}"
+        stroke="var(--text)" stroke-width="2"/>
+      <circle cx="${x(H.point)}" cy="${TRACK_Y+TRACK_H/2}" r="4.5" fill="var(--text)"
+        stroke="var(--panel)" stroke-width="1.5"/>
+      <text x="${x(H.point)}" y="${AXIS+31}" text-anchor="middle" font-size="11.5" font-weight="700"
         fill="var(--text)" font-family="var(--mono)">$${fmt(H.point,1)}m</text>
+
+      <line x1="${x(H.guide_high)}" y1="${TRACK_Y+TRACK_H/2}" x2="${x(H.lo)}" y2="${TRACK_Y+TRACK_H/2}"
+        stroke="var(--warn)" stroke-width="1.2"/>
+      <text x="${x((H.guide_high+H.lo)/2)}" y="${TRACK_Y+TRACK_H/2-6}" text-anchor="middle"
+        font-size="9.5" fill="var(--warn)" font-family="var(--mono)">gap ${fmt(H.lo-H.guide_high,0)}m</text>
     </svg>
-    <div class="note" style="margin-top:0">Grey: company guidance. Blue: the 95%
-      interval. The forecast sits <strong>entirely above the guidance range</strong> —
-      which is what 27 consecutive beats implies, and the most consequential
-      assumption on this page.</div>`;
+    <div class="note" style="margin-top:0">Both bars are on the same revenue axis.
+      The 95% interval does <strong>not overlap the guidance range at any point</strong> —
+      its floor sits $${fmt(H.lo-H.guide_high,0)}m above the top of guidance. That is what
+      27 consecutive beats implies, and it is the most consequential assumption on
+      this page.</div>`;
   })()}
   ${(() => {
     const B = DATA.beat_history, W = 760, HH = 108, PADL = 34, PADR = 10, TOP = 12, BOT = 26;
