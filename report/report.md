@@ -24,8 +24,6 @@ Three things the call rests on:
 2. **The beat distribution is stationary over the recent sample** (ADF p=0.007, KPSS p=0.100 on the last 16 quarters), sd 0.66pp over the last eight.
 3. **The signals run as a divergence monitor, not an estimator** — flagging when the quarter stops resembling the last eight, which is when a trailing-mean rule breaks.
 
-The methodology is the deliverable in a second sense: fourteen times a default behaviour — the kind an LLM research agent exhibits by construction — produced a confident wrong answer that only a specific control caught. §6 turns the three most important into product requirements.
-
 ---
 
 ## 2. Part 1 — Data selection and rationale
