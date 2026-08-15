@@ -1,4 +1,4 @@
-# Alternative Data Nowcasting — Datadog (DDOG)
+# Alternative Data Nowcasting — Datadog (NASDAQ: DDOG)
 ### 10 slides · 15 minutes · speaker notes below each
 
 ---
@@ -10,201 +10,192 @@
 
 | | |
 |---|---|
-| Guidance midpoint | $1,140m *(verified, 8-K 0001628280-26-053829)* |
+| Guidance midpoint | $1,140m *(verified against 8-K 0001628280-26-053829)* |
 | Mean beat, out-of-sample-selected window | +4.25% *(sd 0.66pp)* |
 | Quarters below the midpoint, ever | **0 of 27** |
 
-**It is not built from alternative data. The next four slides are how I know.**
+**This forecast is not built from alternative data. The next six slides are how I established that.**
 
-> **Notes.** Lead with the number. Say the guidance range out loud —
-> "$1.135 to $1.145 billion" — I read it in the filing myself. Flag the
-> punchline early so the negative result reads as method, not failure.
+> **Notes.** Lead with the number. Read the guidance range aloud — "$1.135 to
+> $1.145 billion" — I checked it in the filing myself. Flag the punchline early
+> so the negative result is heard as method, not as failure.
 
 ---
 
 ## Slide 2 — How it's built, and why the baseline is honest
 
-**Rule:** guidance midpoint × (1 + mean beat), window length chosen by **nested walk-forward inside the training set only**. MAPE **4.10%**, hit rate **76.9%**.
+**Rule:** guidance midpoint × (1 + mean beat), window length chosen by **nested walk-forward inside the training set only**. MAPE **4.10%**, directional hit rate **76.9%**.
 
-An earlier version fixed the window at 8 quarters *after* seeing the sample — data snooping on the baseline while the signals faced walk-forward discipline. Removing it **improved** the baseline (RMSE 0.0229 → 0.0200), raising the bar for the signals. For the live quarter the fair rule picks 8 quarters on its own, so the number is unchanged.
-
-Walk-forward residuals: pre-2025 **−1.96pp** (1/7 positive) → 2025 onward **+0.53pp** (5/6). **2026Q2, the largest acceleration in the sample: +0.18pp.**
+- **Removing my own data snooping.** An earlier version fixed the window at 8 quarters *after* seeing the sample. Replacing that with walk-forward selection **improved** the baseline (RMSE 0.0229 → 0.0200), which raised the bar the signals had to clear. For the live quarter the fair rule independently picks 8 quarters, so the published number is unchanged.
+- **Regime break.** Walk-forward residuals ran **−1.96pp** before 2025 (1 of 7 positive) and **+0.53pp** from 2025 onward (5 of 6).
+- **Stress test.** In 2026Q2, when YoY growth jumped 24.6% → 35.6% — the largest acceleration in the sample — the residual was **+0.18pp**.
 
 A revenue-history model must *infer* a regime break. A guidance-anchored rule *inherits* it.
 
 > **Notes.** This answers both "what about the 2026 structural break" and
-> "isn't your baseline cheating". The second one matters — I found it myself
-> only after a reviewer pushed, and fixing it made my own case harder.
+> "isn't your baseline overfitted". The second matters — I found it only after
+> being pushed on it, and fixing it made my own case harder to prove.
 
 ---
 
-## Slide 3 — Part 1: the five sources, and why these
+## Slide 3 — Part 1: the five sources evaluated
 
 | Source | Economic logic | Freq · latency · history | Cost | Status |
 |---|---|---|---|---|
-| **npm instrumentation downloads** | Datadog bills on hosts, metrics, spans, logs — customers emit telemetry by installing instrumentation | daily · 1 day · 2015+ | free | **tested** |
-| **Hyperscaler cloud segment growth** | Datadog monitors workloads on AWS/Azure/GCP; timing verified — all three report **before** DDOG in 28/28 quarters | quarterly · 5–19 days early | free | **tested** |
-| **PyPI downloads** | Same logic, Python ecosystem — intended as cross-ecosystem confirmation | daily · 1 day · **181 days only** | free | cross-check, underpowered |
-| **Hiring / job postings** | Adoption breadth plausibly leads bookings 2–3 quarters | daily · vendor-dependent | **paid** | proposed, not tested |
-| **Competitive displacement / cost sentiment** | Bill shock is a documented churn vector — a **downside proxy for NRR, not a revenue predictor** | daily · 2010+ | free | proposed, deliberately not forced into the revenue model |
+| **npm SDK downloads** | DDOG bills on hosts, spans, logs; telemetry requires installing instrumentation | daily · 1 day · 2015+ | free | **Tested — Signal 1** |
+| **Hyperscaler segment growth** | DDOG monitors AWS/Azure/GCP workloads; all three report **5–19 days before DDOG in 28/28 quarters** | quarterly · 5–19d early | free | **Tested — Signal 2** |
+| **Earnings-release text** | Guidance conservatism may signal a lower bar (sandbagging) | quarterly · 0 days · 28 quarters | free | **Tested — Signal 3** |
+| **Job postings / hiring** | Adoption breadth plausibly leads bookings 2–3 quarters | daily · vendor-dependent | **paid** | Proposed — no free history |
+| **Churn / bill-shock sentiment** | Cost fatigue on Stack Overflow, GitHub — proxy for **NRR downside, not revenue level** | daily · 2010+ | free | Proposed — risk proxy by design |
 
-**One check that changed the design.** `dd-trace` v5 — **82.6%** of installs — carries `@opentelemetry/api` inside its dependency closure. Any control basket containing OpenTelemetry would contain traffic generated by the numerator. That is a dependency-graph fact, not a judgement call, and it is why the denominator excludes OTel.
+**A dependency check that changed the design.** `dd-trace` v5 — **82.6%** of installs — carries `@opentelemetry/api` inside its dependency closure. Any control basket containing OpenTelemetry counts traffic generated by Datadog installs, so OTel is excluded from the denominator. That is a fact about the dependency graph, not a judgement call.
 
-> **Notes.** The assignment asks for 3–5 sources with economics, frequency, cost
-> and limitations. Two were tested end-to-end; three are scoped honestly. Don't
-> pretend the untested ones were tested — the status column is the point.
-
----
-
-## Slide 4 — The test design applied to every signal
-
-**Signals:** npm instrumentation downloads (3 constructions × 4 windows) · hyperscaler cloud segment growth
-
-1. **As-of vintage panel** — features stored as (quarter, value, `available_from`); disclosure dated by the earnings 8-K, not the 10-Q. 13 unit tests, one of which poisons the look-ahead-contaminated loader and rebuilds the whole panel.
-2. **Matched negative control for every candidate**, including a placebo basket (`lodash`, `chalk`, `axios`, `react`) with no economic link to Datadog.
-3. **Seven baselines**, including ARIMA(1,1,0) and the un-snoopable guidance rule.
-4. **Guidance-orthogonalised variant** — features residualised against guidance-implied growth, because the tradable question is the *surprise*, not the level.
-5. **Four target metrics** from the brief — revenue growth, beat vs guidance, $100k+ customer growth, billings.
-6. **Permutation null, Diebold–Mariano (HLN), 10,000-draw bootstrap, and a power analysis.**
-
-> **Notes.** Spend real time here; this is the deliverable. The a priori feature
-> ranking was written into LOG.md D24 before Phase 4 ran — and my top-ranked
-> feature lost. That's the system working, not a failure of the system.
+> **Notes.** The brief asks for 3–5 sources across logic, frequency, latency,
+> cost and limitations. Three were backtested end to end; two are scoped
+> honestly. Don't claim the untested ones were tested — the status column is
+> the point.
 
 ---
 
-## Slide 5 — Does it actually lead? The partial-quarter test
+## Slide 4 — Part 2: the test design applied to every signal
 
-Cross-correlation and stationarity are necessary but not the answer. **The only test that answers "leads" operationally: does the first 45 days predict the full quarter, out of sample?**
+1. **Point-in-time vintage panel.** Features stored as `(quarter, value, available_from)`; disclosure dated by the Item 2.02 8-K, not the 10-Q. 13 unit tests, one of which replaces the look-ahead-contaminated loader with a raising stub and rebuilds the whole panel.
+2. **Matched negative control for every candidate**, plus a placebo basket (`lodash`, `chalk`, `axios`, `react`) with no economic link to Datadog.
+3. **Seven baselines** — random walk, AR(1), AR(1)+trend, ARIMA(1,1,0), and three guidance rules including the un-snoopable auto-window.
+4. **Guidance orthogonalisation** — features residualised against guidance-implied growth, to isolate the surprise rather than the level.
+5. **Four targets** — revenue growth, beat vs guidance, $100k+ customer growth, billings.
+6. **Inference** — permutation null (1,000 draws), Diebold–Mariano with the HLN small-sample correction, 10,000-draw bootstrap, and a power analysis.
 
-| horizon | d30 | d45 | d60 | full quarter |
+> **Notes.** Spend real time here; this is the deliverable. The feature ranking
+> was pre-registered in `LOG.md` before any backtest ran — and my top-ranked
+> feature lost. That is the system working, not failing.
+
+---
+
+## Slide 5 — Signal 1: npm downloads, and trend-phase fitting
+
+Cross-correlation is misleading here: the **placebo basket correlates 0.72–0.76 with revenue at every lag from −2 to +2**, purely from shared ecosystem expansion.
+
+**The partial-quarter lead test** — does the first N days predict the quarter, out of sample?
+
+| `dd_abs`, revenue growth | day 30 | day 45 | day 60 | full quarter |
 |---|---|---|---|---|
-| `dd_abs` vs AR(1) | **0.734** | 0.860 | 0.895 | 0.975 |
+| vs AR(1) | **0.734** | 0.860 | 0.895 | 0.975 |
+| vs strongest baseline | 1.137 | 1.332 | 1.386 | 1.511 |
 
-**Performance degrades as observations accumulate.** A real signal sharpens as the quarter fills in. This shape is what trend-phase fitting looks like.
+**Performance degrades as observations accumulate.** A real signal sharpens as the quarter fills in; this shape is what local trend-phase fitting looks like.
 
-Both targets are **non-stationary** (`rev_yoy` ADF p=0.063 / KPSS p=0.022) — which is what makes AR(1) a weak opponent and sets up the next slide.
+**The clock test.** Beating AR(1) looks impressive (15 of 24 cells, permutation p=0.002) until a **bare time index** goes through the identical pipeline and also beats AR(1) at 0.896, with zero Datadog content.
 
-Granger tests were run and are reported as **descriptive only**: at n≈24 they cannot support a causal claim, and the negative controls "Granger-cause" revenue about as readily as the signals do.
+**Result: 0 of 24 cells beat the strongest baseline** (best 1.075). Orthogonalised against guidance, still 0 of 24, best **1.323** — stripping out what guidance already implies leaves *less*.
 
-> **Notes.** If asked why not more weight on CCF: the placebo basket correlates
-> 0.72–0.76 with revenue at *every* lag. Cross-correlation cannot separate a
-> signal from a shared trend, which is exactly why the partial-quarter test and
-> the placebo carry the argument instead.
-
----
-
-## Slide 6 — The result, and what the apparent signal actually was
-
-### 0 of 24 cells beat the strongest baseline. 0 again when orthogonalised against guidance.
-
-**The chain, in three facts:**
-
-- vs **AR(1)**, 15 of 24 cells beat 0.9; permutation null gives 0.58 → **p = 0.002**. The features *do* carry information AR(1) lacks.
-- A **bare time index** through the identical pipeline also beats AR(1) (0.896). Zero Datadog content.
-- vs the **strongest** baseline, that null gives 0.01 cells and the observed count is **0**.
-
-**The information was drift. A correctly specified naive model already has it.**
-
-Corroborating: placebo packages correlate **0.72–0.76 with revenue at every lag −2 to +2** — flat. Performance *degrades* as the window lengthens (0.734 → 0.975); a real signal sharpens.
-
-**The same trap in unstructured text.** I also tested management tone in the earnings press release, with a placebo *inside the same document* — the forward-looking-statements disclaimer written by counsel:
-
-| | corr with next beat | best cell |
-|---|---|---|
-| management's own words | +0.211 | 1.551 |
-| **the lawyer's boilerplate** | **−0.808** | **0.968** |
-
-The disclaimer wins, and against AR(1) it is "significant" (CI [0.533, 0.835], DM p=0.088). Boilerplate drifts as counsel updates the template, so it proxies time.
-
-**What this does and does not prove.** At n=13 the test detects a 5% edge only **6%** of the time, a 10% edge **15%**. So "0 of 24" *bounds* the effect; it does not show it is zero. But the observed cells sit at **1.05–2.65** — that part is measurement, not low power.
-
-> **Notes.** The p=0.002 is not a contradiction, it's the pivot. Say plainly:
-> "beating AR(1) sounds like a result until you notice a clock beats AR(1)."
-> The boilerplate result is the one to tell if asked about adding LLM-parsed
-> research: text features are *more* exposed to spurious trend-fitting, not less.
+> **Notes.** Explain why CCF was rejected: the placebo scores 0.75 too. Walk the
+> degradation row left to right. Then: "beating AR(1) sounds like a result until
+> you notice a clock beats AR(1)."
 
 ---
 
-## Slide 7 — The scope of that claim, stated precisely
+## Slide 6 — Signal 2: hyperscaler cloud segment growth
 
-| Channel | Carries | Cumulative | History |
+Cloud providers report **before** Datadog in every quarter on record (AWS median lead 7 days — verified from filing dates, not assumed). Scored against the strongest baseline on revenue growth:
+
+| Series | Role | n OOS | RMSE ratio | 95% bootstrap CI | DM p | Hit rate |
+|---|---|---|---|---|---|---|
+| **MSFT Intelligent Cloud** | signal | 13 | **3.206** | [1.720, 12.008] | **0.021** | **84.6%** |
+| *MSFT Productivity & Business Processes* | *control* | 13 | 1.913 | [1.137, 7.177] | 0.019 | 69.2% |
+| **AWS** | signal | **4** | 2.347 | [0.766, 9.426] | 0.267 | 100% |
+| *Amazon total net sales* | *control* | 13 | 1.711 | [1.517, 3.639] | 0.099 | 38.5% |
+
+**Significantly worse than the baseline — the CI excludes 1.0 on the wrong side.** AWS has only 4 out-of-sample points and is reported as untestable, not as the one cell that nearly worked.
+
+**An 84.6% hit rate with 3× the error is the trap.** Direction right, magnitude badly wrong — which is what tracking a shared cycle looks like. *Hypothesis, not a tested claim:* recent hyperscaler growth is heavily AI-capex driven, while Datadog bills application-layer hosts and log ingestion.
+
+> **Notes.** This is the slide that satisfies "test at least two signals". Lead
+> with the hit-rate trap — it is the most quotable methodological point in the
+> deck, and the controls from the same filing fail too.
+
+---
+
+## Slide 7 — Signal 3: earnings-release text, and the boilerplate placebo
+
+The 8-K press release is the one qualitative source that is cleanly backfillable — free, official, and timestamped **at the moment guidance is issued**. Hypothesis: heavier hedging implies a lower bar, so a larger beat.
+
+**The design point is the placebo inside the same document** — the forward-looking-statements disclaimer written by counsel, not management.
+
+| Text measured | Author | Corr with next beat | vs strongest baseline | vs AR(1) |
+|---|---|---|---|---|
+| Management commentary | CEO / CFO | +0.211 *(p=0.291)* | 1.551 | 1.005 |
+| **Legal disclaimer (placebo)** | outside counsel | **−0.808 *(p<0.001)*** | **0.968** | **0.627 *(DM p=0.088)*** |
+
+**The lawyer's boilerplate beats management's own words on every comparison** — and against AR(1) it is "significant", from text written to convey no information at all.
+
+**Why:** counsel refreshes the template every few years; that lexical drift happens to track the compression of Datadog's beat from ~12% to ~4%.
+
+**The transferable lesson: text features are *more* exposed to spurious trend-fitting than numerical ones.** An LLM extraction pipeline without automated placebo controls will mistake a law firm's drafting cycle for alpha.
+
+> **Notes.** This is the case study to tell if asked about parsing transcripts or
+> sell-side research with an LLM. Control discipline matters more than
+> extraction quality.
+
+---
+
+## Slide 8 — The observability boundary
+
+| Channel | What it carries | Cumulative | History available |
 |---|---|---|---|
 | npm basket *(what I could test)* | Node.js APM SDK | 1.13bn | daily, 2017+ |
 | **Docker Hub `datadog/agent`** | **core Go agent — hosts, containers, logs** | **11.25bn** | **lifetime counter only** |
-| APT/YUM, Helm, marketplaces | core Go agent | not published | none |
+| APT/YUM, Helm, cloud marketplaces | core Go agent | not published | none |
 
-**~10× the volume sits in a channel with no history.**
+**Roughly 10× the volume sits in a channel with no public history.**
 
 > The finding is **not** "alternative data cannot predict Datadog". It is:
 > *the freely and historically observable slice is the wrong slice, and the right slice is not retrospectively observable at all.*
 
-The forward fix is cheap and is the highest-value addition to this pipeline: snapshot the Docker Hub counter daily and you have the correct series **from that day on**. You just cannot recover the 27 quarters already gone.
+**The forward fix is one API call a day.** Snapshotting the Docker Hub counter yields a correct series **from that day on**; the 27 elapsed quarters cannot be recovered.
 
 > **Notes.** Own this. I built the analysis on the channel that was easy to
 > observe rather than the one that mattered, and one API call would have caught
-> it on day one. That is now the first item in the productisation section.
+> it on day one.
 
 ---
 
-## Slide 8 — The finding that generalises
+## Slide 9 — Economic decoupling, tested against SaaS hypotheses
 
 # Downloads per $1m of revenue: 21,818 → 97,228
 ### +346% · Spearman ρ = +0.927 · p < 0.0001 · near-monotonic over 28 quarters
 
-**Tested against the standard SaaS explanations, not asserted.** Normalising by disclosed $100k+ ARR customers:
+**Normalised by disclosed $100k+ ARR customers:**
 
-| | first 4 → last 4 |
-|---|---|
-| revenue per large customer | **+67%** |
-| downloads per large customer | **+644%** |
+| Per large customer | first 4 → last 4 | ρ vs time | Reading |
+|---|---|---|---|
+| Revenue | **+67%** | +0.993 | cross-sell and tiering are real |
+| Downloads | **+644%** | +0.981 | **but downloads inflated ~10× faster** |
 
-Cross-sell and tiering are **real** — but downloads per customer grew ~10× faster, so monetisation explains a minority. Private-registry mirroring pushes the *opposite* way. CI/CD re-pulls fail too: weekday/weekend ratio 6.39 → 5.61, p=0.77.
+- **Cross-sell explains a minority of the gap**, not the whole of it.
+- **Private-registry mirroring pushes the opposite way** — fewer public pulls per host — so it cannot explain a +644% rise.
+- **CI/CD re-pulls fail the test too:** the weekday/weekend ratio went 6.39 → 5.61, slope p = 0.77.
 
-**Counts vs dollars:** downloads are an unweighted count, so a count target should fit better — and it does. Best cell against **customer growth 1.049** vs **revenue growth 1.137**. Directionally right, still a loss.
+**Counts vs dollars:** downloads are an unweighted count, so a count target should fit better — and it does, 1.137 → **1.049** against $100k+ customer growth. Closest any signal came. Still a loss, at n=11.
 
-> **Notes.** This is the original-research moment. Pause here. It's a measured,
-> generalisable statement about a class of alternative data, not a post-mortem.
-
----
-
-## Slide 9 — The right role: divergence monitor. Live dashboard.
-
-Headline from the baseline; signals monitor when the baseline breaks. Today's reading *is* the thesis:
-
-| Signal (day 46, d45 window) | z | State |
-|---|---|---|
-| Datadog **absolute** | **+2.41** | diverging |
-| **PLACEBO** vs competitors | **+1.42** | leaning |
-| Datadog vs ecosystem | **+0.06** | in line |
-
-**The ecosystem is running hot, not Datadog** — the placebo, which cannot contain Datadog information, is leaning *harder* than the ecosystem-adjusted Datadog measure, which is flat. An absolute-download dashboard would be flashing green right now.
-
-**How the signals combine — the tracking call.** Composite = equal-weight mean z of the two drift-adjusted constructions; `dd_abs` excluded because it carries the ecosystem inflation. Thresholds z ≥ +1 *tracking ahead*, ≤ −1 *tracking behind*. **Today: +0.65, in line.**
-
-And the call is backtested, not asserted: recomputed from prior quarters only, **7 of 10 directional calls correct (70%), binomial p = 0.34** — a monitoring aid with a measured and unimpressive reliability, stated on the page rather than hidden.
-
-Also on the page: observability table · QTD pace vs prior quarters at the same day · outage-treatment spread (8.9% of this quarter imputed) · risk flags · **and the 0-of-24 grid and the power table, on the face of the dashboard**.
-
-> **Notes.** Show it live. Diagnostics are visible rather than hidden because an
-> analyst has to know how much to trust the headline. Thresholds are conventional
-> 1σ/2σ, deliberately not fitted.
+> **Notes.** This is the original-research moment: a measurable, transferable
+> statement about a whole class of alternative data, not a post-mortem. Pause here.
 
 ---
 
-## Slide 10 — Templating, and what this means for a research platform
+## Slide 10 — What the data supports, and what would change the answer
 
-**Repointing at SNOW or MDB:** CIK + revenue tag · signal basket with its control and placebo baskets · guidance extractor re-pointed. Everything else is ticker-agnostic. **The conclusion is what doesn't transfer.**
+**Supported.** A guidance-anchored rule with an out-of-sample-selected window forecasts Q3 2026 at **$1,188.5m ± $14.7m**, MAPE 4.10%, using no alternative data. Three signals were tested end to end; none beat it.
 
-| Component | Why, from this project |
-|---|---|
-| **Observability triage first** | The biggest error here was analysing the easy channel, not the right one. One API call flags "high relevance, zero history" before any modelling. |
-| **Matched control as mandatory metadata** | The control turned a 0.79 correlation into a rejected hypothesis — and in text, a legal disclaimer "predicted" earnings surprises at r=−0.81. |
-| **As-of vintage as infrastructure** | Asked for "Q2 revenue", an agent fetches *today's* value. Worth 18 days on Q4 here. Test belongs in CI. |
-| **Evaluator loop that reports power** | Every negative result should ship with its minimum detectable effect, so "no edge found" is never read as "no edge exists". |
+**Not supported — stated as a bound, not a verdict.** At n=13 a Diebold–Mariano test detects a 5% edge only **6%** of the time. "0 of 24" *bounds* the effect size; it does not prove the effect is zero. What is *not* a power problem: the observed cells sit at **1.05–2.65**, consistently on the wrong side of parity.
 
-**The deliverable isn't a signal — it's a method that can tell you when you don't have one.**
+**Three things would change my answer**, in order:
+1. The downloads-to-revenue ratio stabilises — today ρ = +0.927 says the opposite.
+2. A candidate beats the **strongest** baseline while its matched placebo fails.
+3. The result replicates in a second ecosystem.
 
-> **Notes.** Land here, then stop. Don't pitch a roadmap — the pipeline is the
-> argument. If they want to go further into productisation, that is what the
-> Q&A is for, and the prep notes cover it in depth.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor. The validation harness is ticker-agnostic. **What does not transfer is the conclusion.**
+
+> **Notes.** Close on the three falsifiers — they show the pipeline is built to
+> be re-run and to change its mind, not to defend a result. The dashboard
+> prototype is `dashboard/index.html`; open it if there is time, or in Q&A.

@@ -99,7 +99,7 @@ The signal loses on error *and* direction, not just RMSE.
 
 Of 24 significance tests, exactly one cell has a bootstrap CI excluding 1.0: `dd_abs_d45` on `beat_vs_guide`, 0.718, CI [0.604, 0.834], DM p=0.070 — **against AR(1) only**; against a random walk it is 1.108, CI [0.534, 1.784].
 
-**Signal 2 fails harder.** Intelligent Cloud growth scores 2.912 vs ARIMA(1,1,0), CI [1.671, 5.970], DM p=0.025 — significantly *worse*. It hits 0.846 on direction while carrying ~3× the error: right direction, wrong magnitude, and a clean demonstration of why hit rate alone is a poor metric.
+**Signal 2 fails harder.** Intelligent Cloud growth scores **3.206** against the strongest baseline, CI [1.720, 12.008], DM p=0.021 — significantly *worse*, and its matched non-cloud control from the same filing is no better (1.913). It hits 0.846 on direction while carrying over 3× the error: right direction, wrong magnitude, and the cleanest demonstration here of why hit rate alone is a poor metric. AWS scores 2.347 but on only 4 out-of-sample points, so it is reported as untestable rather than as a result.
 
 ### 3.5 The assignment's other target metrics
 
@@ -155,22 +155,6 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 **The interval is conditional.** ±$14.7m reflects only the historical variance of the beat. Guidance extraction error is zero — every figure re-fetched from EDGAR and matched to its verbatim outlook sentence. Regime risk is second-order: flat trailing-mean gives $1,188m, trend-extrapolation $1,195m, a $7m spread inside the band. Not covered: guidance-philosophy change, customer concentration, M&A (Datadog acquired Adaptive ML in the quarter). Formally the band is *conditional on the beat distribution remaining stationary* — supported over 16 quarters, mildly strained over 8 (ρ=+0.69, p=0.058).
 
 **Sample size.** 27 usable quarters, 7–14 out-of-sample points by target. Every hit rate here is indistinguishable from chance (binomial p ≥ 0.18); Granger tests are descriptive only. This is also why the models are OLS with at most two predictors. Relatedly, a result that flips on 0.34% of the data is not a result: removing 12 outage days out of 3,512 moves the cross-registry correlation from below its placebo (0.932 vs 0.951) to above it (0.972 vs 0.961) — grounds for the inconclusive verdict, not a repair.
-
----
-
-## 6. Productisation — what this becomes as an agent workflow
-
-**The headline result is the product insight.** The best nowcast used the company's own guidance and no alternative data — so the constraint on research quality is not signal count, it is the ability to distinguish a signal from a trend. Every component below is specified from an incident in this project rather than from first principles, and each is a place where an LLM agent's *default* behaviour is the wrong one:
-
-**Observability triage, before modelling.** The largest error here was analysing the channel that was *easy* to observe rather than the one that *matters*. A registry should record, per candidate, what share of the economic quantity it sees and whether history exists — one API call would have flagged `datadog/agent` as high-relevance, zero-history on day one.
-
-**Matched controls as mandatory metadata.** The control turned a 0.79 correlation into a rejected hypothesis, and §3.6 shows the stakes rise with text, where a legal disclaimer "predicted" surprises at r=−0.81. A registry storing a signal without its control ships false positives by default.
-
-**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value. Worth 18 days on Q4 here; the test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
-
-**An automated evaluator that reports power.** Baselines, placebo, permutation null and DM intervals are mechanical, and a harness runs all of them where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
-
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input. That is the point of running baselines first.
 
 ---
 
