@@ -149,6 +149,69 @@ app.appendChild(el(panel("Headline nowcast &mdash; Q3 2026 revenue", `
       <div class="kv"><span>Sell-side consensus</span><span style="color:var(--dim)">not sourced</span></div>
     </div>
   </div>
+  ${(() => {
+    const W = 760, HH = 92, PADL = 14, PADR = 14;
+    const lo = Math.min(H.guide_low, H.lo) - 18, hi = Math.max(H.guide_high, H.hi) + 18;
+    const x = v => PADL + (v - lo) / (hi - lo) * (W - PADL - PADR);
+    return `<svg viewBox="0 0 ${W} ${HH}" width="100%" height="${HH}" style="margin:12px 0 4px"
+      role="img" aria-label="Forecast interval against the guidance range">
+      <rect x="${x(H.guide_low)}" y="24" width="${Math.max(2, x(H.guide_high) - x(H.guide_low))}" height="18"
+        rx="3" fill="var(--dim)" opacity="0.6"/>
+      <text x="${x(H.guide_mid)}" y="18" text-anchor="middle" font-size="10"
+        fill="var(--muted)" font-family="var(--mono)">guidance ${fmt(H.guide_low,0)}&ndash;${fmt(H.guide_high,0)}</text>
+      <rect x="${x(H.lo)}" y="48" width="${x(H.hi) - x(H.lo)}" height="18"
+        rx="3" fill="var(--accent)" opacity="0.32"/>
+      <line x1="${x(H.lo)}" y1="46" x2="${x(H.lo)}" y2="68" stroke="var(--accent)" stroke-width="1.5"/>
+      <line x1="${x(H.hi)}" y1="46" x2="${x(H.hi)}" y2="68" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="${x(H.lo)}" y="42" text-anchor="middle" font-size="9" fill="var(--accent)"
+        font-family="var(--mono)">${fmt(H.lo,0)}</text>
+      <text x="${x(H.hi)}" y="42" text-anchor="middle" font-size="9" fill="var(--accent)"
+        font-family="var(--mono)">${fmt(H.hi,0)}</text>
+      <line x1="${x(H.point)}" y1="42" x2="${x(H.point)}" y2="72" stroke="var(--text)" stroke-width="2.5"/>
+      <circle cx="${x(H.point)}" cy="57" r="4.5" fill="var(--text)"/>
+      <text x="${x(H.point)}" y="86" text-anchor="middle" font-size="11.5" font-weight="700"
+        fill="var(--text)" font-family="var(--mono)">$${fmt(H.point,1)}m</text>
+    </svg>
+    <div class="note" style="margin-top:0">Grey: company guidance. Blue: the 95%
+      interval. The forecast sits <strong>entirely above the guidance range</strong> —
+      which is what 27 consecutive beats implies, and the most consequential
+      assumption on this page.</div>`;
+  })()}
+  ${(() => {
+    const B = DATA.beat_history, W = 760, HH = 108, PADL = 34, PADR = 10, TOP = 12, BOT = 26;
+    const mx = Math.max(...B.map(b => b.beat_pct)) * 1.12;
+    const bw = (W - PADL - PADR) / B.length;
+    const y = v => TOP + (1 - v / mx) * (HH - TOP - BOT);
+    const mean = H.trailing_beat_mean_pct;
+    return `<div class="sub" style="margin:16px 0 4px">Beat vs guidance midpoint, last ${B.length} quarters</div>
+    <svg viewBox="0 0 ${W} ${HH}" width="100%" height="${HH}" role="img"
+      aria-label="Quarterly beat versus guidance midpoint">
+      ${B.map((b, i) => {
+        const recent = i >= B.length - H.trailing_n;
+        return `<rect x="${PADL + i*bw + 2}" y="${y(b.beat_pct)}" width="${bw-4}"
+          height="${Math.max(1, y(0) - y(b.beat_pct))}" rx="2"
+          fill="${recent ? 'var(--accent)' : 'var(--dim)'}" opacity="${recent ? 0.9 : 0.5}"/>
+        <text x="${PADL + i*bw + bw/2}" y="${y(b.beat_pct)-3}" text-anchor="middle"
+          font-size="8" fill="var(--muted)" font-family="var(--mono)">${b.beat_pct.toFixed(1)}</text>`;
+      }).join("")}
+      <line x1="${PADL}" y1="${y(mean)}" x2="${W-PADR}" y2="${y(mean)}"
+        stroke="var(--good)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <rect x="${W-PADR-186}" y="1" width="186" height="14" rx="3" fill="var(--panel)" opacity="0.92"/>
+      <line x1="${W-PADR-182}" y1="8" x2="${W-PADR-168}" y2="8" stroke="var(--good)"
+        stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="${W-PADR-4}" y="11.5" text-anchor="end" font-size="9.5"
+        fill="var(--good)" font-family="var(--mono)">trailing-${H.trailing_n} mean +${mean.toFixed(2)}%</text>
+      <line x1="${PADL}" y1="${y(0)}" x2="${W-PADR}" y2="${y(0)}" stroke="var(--line)"/>
+      ${B.map((b, i) => i % 3 === 0 ? `<text x="${PADL + i*bw + bw/2}" y="${HH-10}"
+        text-anchor="middle" font-size="8" fill="var(--dim)"
+        font-family="var(--mono)">${b.quarter}</text>` : "").join("")}
+      <text x="4" y="${y(mx*0.9)}" font-size="8" fill="var(--dim)" font-family="var(--mono)">%</text>
+    </svg>
+    <div class="note" style="margin-top:0"><strong>Never negative, and flat since 2024.</strong>
+      The blue bars are the ${H.trailing_n} quarters feeding the current estimate
+      (sd ${H.trailing_beat_sd_pp.toFixed(2)}pp). That stability is what the &plusmn;$${fmt((H.hi-H.lo)/2,1)}m
+      interval is made of — and the assumption that breaks first if guidance philosophy changes.</div>`;
+  })()}
   <div class="callout">
     <strong>Why the headline is not built from the alternative data.</strong>
     No construction beat the strongest naive baseline out of sample &mdash; 0 of
@@ -179,6 +242,40 @@ const rows = DATA.divergence.map(d => `
     <td>${stateTag(d.state)}</td>
   </tr>`).join("");
 app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
+  ${(() => {
+    const W = 760, HH = 124, PADL = 46, PADR = 46, MID = 68;
+    const x = z => PADL + (Math.max(-3, Math.min(3, z)) + 3) / 6 * (W - PADL - PADR);
+    const rows = DATA.divergence, cz = DATA.composite.z;
+    return `<svg viewBox="0 0 ${W} ${HH}" width="100%" height="${HH}" role="img"
+      aria-label="Divergence gauge from minus three to plus three sigma">
+      <rect x="${x(-3)}" y="${MID-9}" width="${x(-1)-x(-3)}" height="18" fill="var(--bad)" opacity="0.18"/>
+      <rect x="${x(-1)}" y="${MID-9}" width="${x(1)-x(-1)}" height="18" fill="var(--good)" opacity="0.18"/>
+      <rect x="${x(1)}" y="${MID-9}" width="${x(3)-x(1)}" height="18" fill="var(--warn)" opacity="0.18"/>
+      <line x1="${x(0)}" y1="${MID-13}" x2="${x(0)}" y2="${MID+13}" stroke="var(--line)"/>
+      ${[-1,1].map(v => `<line x1="${x(v)}" y1="${MID-12}" x2="${x(v)}" y2="${MID+12}" stroke="var(--muted)" stroke-dasharray="2 2"/>`).join("")}
+      <text x="${x(-2)}" y="${MID+31}" text-anchor="middle" font-size="9.5" fill="var(--bad)" font-family="var(--mono)">TRACKING BEHIND</text>
+      <text x="${x(0)}" y="${MID+31}" text-anchor="middle" font-size="9.5" fill="var(--good)" font-family="var(--mono)">IN LINE</text>
+      <text x="${x(2)}" y="${MID+31}" text-anchor="middle" font-size="9.5" fill="var(--warn)" font-family="var(--mono)">TRACKING AHEAD</text>
+      ${[...rows].sort((a,b) => a.z - b.z).map((r, i) => {
+        const isPlc = r.note.indexOf("control") >= 0;
+        const col = isPlc ? "var(--muted)" : (Math.abs(r.z) >= 2 ? "var(--bad)" : Math.abs(r.z) >= 1 ? "var(--warn)" : "var(--good)");
+        // Sorted by z, then staggered across three levels, so neighbouring dots
+        // never share a label row -- three of the four cluster inside one sigma.
+        const yy = MID - 18 - (i % 3) * 13;
+        const short = r.label.replace(" (d30)", "").replace("Datadog ", "");
+        return `<line x1="${x(r.z)}" y1="${yy+4}" x2="${x(r.z)}" y2="${MID-9}" stroke="${col}" stroke-width="1" opacity="0.45"/>
+          <circle cx="${x(r.z)}" cy="${MID}" r="5" fill="${col}" stroke="var(--panel)" stroke-width="1.5"/>
+          <text x="${x(r.z)}" y="${yy}" text-anchor="middle" font-size="9" fill="${col}" font-family="var(--mono)">${short} ${r.z >= 0 ? "+" : ""}${r.z.toFixed(2)}</text>`;
+      }).join("")}
+      <polygon points="${x(cz)-6},${MID+17} ${x(cz)+6},${MID+17} ${x(cz)},${MID+10}" fill="var(--text)"/>
+      <text x="${x(cz)}" y="${MID+46}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text)" font-family="var(--mono)">COMPOSITE ${cz >= 0 ? "+" : ""}${cz.toFixed(2)}</text>
+      <text x="${x(-3)}" y="${MID+4}" text-anchor="end" font-size="9" fill="var(--dim)" font-family="var(--mono)">-3&sigma;</text>
+      <text x="${x(3)}" y="${MID+4}" text-anchor="start" font-size="9" fill="var(--dim)" font-family="var(--mono)">+3&sigma;</text>
+    </svg>
+    <div class="note" style="margin-top:0">The grey dot is the <strong>placebo</strong>
+      at +0.93 — close to the Datadog relative measures, and the reason the absolute
+      measure at +2.36 must not be read as a Datadog signal.</div>`;
+  })()}
   <table>
     <thead><tr><th>Signal</th><th class="num">Current</th><th class="num">Hist mean</th>
     <th class="num">Hist sd</th><th class="num">z</th><th>State</th></tr></thead>
@@ -408,24 +505,41 @@ app.appendChild(el(panel("Risk flags", `
   const D = DATA.diagnostics;
   const byTarget = {};
   D.grid.forEach(g => { (byTarget[g.target] = byTarget[g.target] || []).push(g); });
+  // Heatmap rather than a table of numbers: the point of this panel is that the
+  // whole grid is red, and a reader should get that in one glance rather than by
+  // scanning 24 cells. Numbers stay on the tiles so nothing is lost.
+  const hCol = r => r < 1.0 ? "var(--good)" : r < 1.3 ? "var(--warn)" : "var(--bad)";
+  const hOp  = r => r < 1.0 ? 0.85 : r < 1.3 ? 0.45 : Math.min(0.88, 0.34 + (r - 1.3) * 0.34);
   let gridHtml = "";
-  Object.keys(byTarget).forEach(t => {
-    const cands = [...new Set(byTarget[t].map(g => g.candidate))];
-    const wins = [...new Set(byTarget[t].map(g => g.window))];
-    let body = "";
-    cands.forEach(c => {
-      body += `<tr><td>${c}</td>` + wins.map(w => {
-        const cell = byTarget[t].find(g => g.candidate === c && g.window === w);
-        const v = cell ? cell.ratio : NaN;
-        const cls = v < 1 ? "t-good" : v < 1.3 ? "t-warn" : "t-bad";
-        return `<td class="num"><span class="tag ${cls}">${v.toFixed(3)}</span></td>`;
-      }).join("") + "</tr>";
-    });
-    gridHtml += `<div style="margin-bottom:14px"><div class="sub" style="margin-bottom:6px">
-      target: <code>${t}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)</div>
-      <table><thead><tr><th>Feature</th>${wins.map(w => `<th class="num">${w}</th>`).join("")}</tr></thead>
-      <tbody>${body}</tbody></table></div>`;
+  Object.keys(byTarget).forEach(tg => {
+    const cands = [...new Set(byTarget[tg].map(g => g.candidate))];
+    const wins  = [...new Set(byTarget[tg].map(g => g.window))];
+    const CW = 88, CH = 38, LEFT = 132, TOPH = 22;
+    const W = LEFT + CW * wins.length + 6, HT = TOPH + CH * cands.length + 4;
+    const tiles = cands.map((c, i) =>
+      `<text x="${LEFT - 10}" y="${TOPH + i*CH + CH/2 + 4}" text-anchor="end" font-size="10.5"
+         fill="var(--muted)" font-family="var(--mono)">${c}</text>` +
+      wins.map((w, j) => {
+        const cell = byTarget[tg].find(g => g.candidate === c && g.window === w);
+        if (!cell) return "";
+        return `<rect x="${LEFT + j*CW + 3}" y="${TOPH + i*CH + 3}" width="${CW-6}" height="${CH-6}"
+            rx="3" fill="${hCol(cell.ratio)}" opacity="${hOp(cell.ratio)}"/>
+          <text x="${LEFT + j*CW + CW/2}" y="${TOPH + i*CH + CH/2 + 4}" text-anchor="middle"
+            font-size="11.5" font-weight="700" fill="#0d1117"
+            font-family="var(--mono)">${cell.ratio.toFixed(3)}</text>`;
+      }).join("")).join("");
+    gridHtml += `<div style="margin-bottom:12px"><div class="sub" style="margin-bottom:4px">
+      target: <code>${tg}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)</div>
+      <svg viewBox="0 0 ${W} ${HT}" width="100%" style="max-width:${W}px" role="img"
+        aria-label="Heatmap of RMSE ratios for ${tg}; no cell is below one">
+        ${wins.map((w, j) => `<text x="${LEFT + j*CW + CW/2}" y="15" text-anchor="middle"
+          font-size="10.5" fill="var(--muted)" font-family="var(--mono)">${w}</text>`).join("")}
+        ${tiles}
+      </svg></div>`;
   });
+  gridHtml += `<div class="note" style="margin-top:0">Green would be a win (&lt;1.0).
+    <strong>There is no green.</strong> Amber is 1.0&ndash;1.3, red is worse, and the
+    deeper the red the further from parity.</div>`;
 
   const bl = DATA.baselines.map(b => `<tr><td>${b.target}</td><td>${b.baseline}</td>
     <td class="num">${b.rmse.toFixed(4)}</td><td class="num">${b.mape.toFixed(2)}</td>
