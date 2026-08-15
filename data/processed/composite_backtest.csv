@@ -1,0 +1,4 @@
+horizon,quarters_scored,directional_calls,correct,hit_rate,binomial_p_vs_coin
+d30,23,10,7,0.7,0.34375
+d45,23,10,7,0.7,0.34375
+d60,23,9,6,0.6666666666666666,0.5078125

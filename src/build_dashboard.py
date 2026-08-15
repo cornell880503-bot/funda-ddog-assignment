@@ -158,6 +158,9 @@ def main() -> None:
     cands = grid_best[(grid_best["role"] == "candidate") & (~grid_best["orthogonalised"])]
     cands_orth = grid_best[(grid_best["role"] == "candidate") & (grid_best["orthogonalised"])]
     coverage = pd.read_csv(sc.PROCESSED / "revision_coverage.csv")
+    div_rows = divergence_z()
+    comp_hist = pd.read_csv(sc.PROCESSED / "composite_tracking.csv")
+    comp_bt = pd.read_csv(sc.PROCESSED / "composite_backtest.csv")
     power = pd.read_csv(sc.PROCESSED / "revision_power.csv")
     extended = pd.read_csv(sc.PROCESSED / "extended_targets_grid.csv")
     cn = pd.read_csv(sc.PROCESSED / "extended_targets_panel.csv")
@@ -225,7 +228,7 @@ def main() -> None:
             "elapsed": days_published,
         },
         "pace": qtd_pace(),
-        "divergence": divergence_z(),
+        "divergence": div_rows,
         "baselines": [
             {
                 "target": r["target"],
@@ -269,6 +272,38 @@ def main() -> None:
             "residuals": [
                 {"quarter": r["quarter"], "resid": round(r["residual_pp"], 2)}
                 for _, r in resid.iterrows()
+            ],
+        },
+        "composite": {
+            "parts": ["Datadog vs ecosystem", "Datadog vs competitors"],
+            "excluded": "Datadog absolute (carries ecosystem inflation)",
+            "weighting": "equal -- nothing validated, so fitted weights would be the error this project warns about",
+            "z": round(float(np.mean([r["z"] for r in div_rows
+                                      if r["feature"] in ("dd_rel_plc_d30", "dd_rel_d30")])), 2),
+            "ahead_threshold": 1.0,
+            "behind_threshold": -1.0,
+            "backtest": [
+                {
+                    "horizon": r["horizon"],
+                    "calls": int(r["directional_calls"]),
+                    "correct": int(r["correct"]),
+                    "hit_rate": round(float(r["hit_rate"]), 3),
+                    "p": round(float(r["binomial_p_vs_coin"]), 3),
+                }
+                for _, r in comp_bt.iterrows()
+            ],
+            "examples": [
+                {
+                    "quarter": r["quarter"],
+                    "z": round(float(r["composite_z"]), 2),
+                    "call": r["call"],
+                    "beat_pct": round(float(r["beat"]) * 100, 2),
+                    "trailing_pct": round(float(r["trailing_mean_beat"]) * 100, 2),
+                    "outcome": r["outcome"],
+                    "correct": bool(r["correct"]) if pd.notna(r["correct"]) else None,
+                }
+                for _, r in comp_hist[(comp_hist["horizon"] == "d30")
+                                      & (comp_hist["called"])].tail(6).iterrows()
             ],
         },
         "coverage": [

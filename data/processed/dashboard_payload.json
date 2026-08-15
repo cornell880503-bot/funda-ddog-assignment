@@ -5,9 +5,9 @@
   "live_quarter": "2026Q3",
   "quarter_end": "2026-09-30",
   "expected_report": "early November 2026",
-  "generated": "2026-08-14",
+  "generated": "2026-08-15",
   "data_through": "2026-08-13",
-  "days_elapsed": 45,
+  "days_elapsed": 46,
   "days_in_quarter": 92
  },
  "headline": {
@@ -98,27 +98,27 @@
  "treatments": [
   {
    "name": "causal-imputed (point estimate)",
-   "dd_rel_plc": 0.1984,
-   "dd_rel": 0.3994,
-   "dd_abs": 0.7493
+   "dd_rel_plc": 0.1945,
+   "dd_rel": 0.3969,
+   "dd_abs": 0.7194
   },
   {
    "name": "dropped days, rescaled",
-   "dd_rel_plc": 0.2071,
-   "dd_rel": 0.406,
-   "dd_abs": 0.7755
+   "dd_rel_plc": 0.2032,
+   "dd_rel": 0.4035,
+   "dd_abs": 0.7681
   },
   {
    "name": "raw, outage zeros kept",
-   "dd_rel_plc": 0.2346,
-   "dd_rel": 0.407,
-   "dd_abs": 0.7177
+   "dd_rel_plc": 0.2307,
+   "dd_rel": 0.4045,
+   "dd_abs": 0.6878
   }
  ],
  "imputation": {
-  "share_pct": 9.1,
+  "share_pct": 8.9,
   "days": 4,
-  "elapsed": 44
+  "elapsed": 45
  },
  "pace": {
   "2024Q2": {
@@ -2354,6 +2354,96 @@
    }
   ]
  },
+ "composite": {
+  "parts": [
+   "Datadog vs ecosystem",
+   "Datadog vs competitors"
+  ],
+  "excluded": "Datadog absolute (carries ecosystem inflation)",
+  "weighting": "equal -- nothing validated, so fitted weights would be the error this project warns about",
+  "z": 0.74,
+  "ahead_threshold": 1.0,
+  "behind_threshold": -1.0,
+  "backtest": [
+   {
+    "horizon": "d30",
+    "calls": 10,
+    "correct": 7,
+    "hit_rate": 0.7,
+    "p": 0.344
+   },
+   {
+    "horizon": "d45",
+    "calls": 10,
+    "correct": 7,
+    "hit_rate": 0.7,
+    "p": 0.344
+   },
+   {
+    "horizon": "d60",
+    "calls": 9,
+    "correct": 6,
+    "hit_rate": 0.667,
+    "p": 0.508
+   }
+  ],
+  "examples": [
+   {
+    "quarter": "2023Q1",
+    "z": -1.25,
+    "call": "tracking behind",
+    "beat_pct": 2.93,
+    "trailing_pct": 8.1,
+    "outcome": "below trend",
+    "correct": true
+   },
+   {
+    "quarter": "2023Q2",
+    "z": -1.21,
+    "call": "tracking behind",
+    "beat_pct": 1.89,
+    "trailing_pct": 7.62,
+    "outcome": "below trend",
+    "correct": true
+   },
+   {
+    "quarter": "2024Q2",
+    "z": -1.06,
+    "call": "tracking behind",
+    "beat_pct": 3.74,
+    "trailing_pct": 4.48,
+    "outcome": "below trend",
+    "correct": true
+   },
+   {
+    "quarter": "2024Q4",
+    "z": 1.97,
+    "call": "tracking ahead",
+    "beat_pct": 3.76,
+    "trailing_pct": 3.81,
+    "outcome": "below trend",
+    "correct": false
+   },
+   {
+    "quarter": "2025Q1",
+    "z": 2.53,
+    "call": "tracking ahead",
+    "beat_pct": 3.05,
+    "trailing_pct": 3.65,
+    "outcome": "below trend",
+    "correct": false
+   },
+   {
+    "quarter": "2025Q2",
+    "z": 1.08,
+    "call": "tracking ahead",
+    "beat_pct": 4.79,
+    "trailing_pct": 3.67,
+    "outcome": "above trend",
+    "correct": true
+   }
+  ]
+ },
  "coverage": [
   {
    "channel": "npm (constant-composition basket)",
@@ -2437,6 +2527,12 @@
    "best": 1.049
   }
  ],
+ "tone": {
+  "mgmt_corr": 0.211,
+  "boilerplate_corr": -0.808,
+  "mgmt_best": 1.551,
+  "boilerplate_best": 0.968
+ },
  "decoupling": {
   "first4": 21818,
   "last4": 97228,

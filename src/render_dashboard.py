@@ -220,6 +220,69 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
   </div>
 `)));
 
+/* --------------------------------------------- composite tracking indicator */
+const C = DATA.composite;
+const callNow = C.z >= C.ahead_threshold ? "tracking ahead"
+              : C.z <= C.behind_threshold ? "tracking behind" : "in line";
+const callCls = callNow === "in line" ? "t-good" : "t-warn";
+app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
+  <div class="row">
+    <div>
+      <div class="label">Composite tracking indicator, day ${M.days_elapsed}</div>
+      <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
+      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
+    </div>
+    <div class="kv">
+      <div><span>Combines</span><b>${C.parts.join(" + ")}</b></div>
+      <div><span>Weighting</span><b>equal</b></div>
+      <div><span>Excluded</span><b>${C.excluded}</b></div>
+      <div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
+      <div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
+    </div>
+  </div>
+  <div class="note"><strong>Why these two, equally weighted.</strong>
+    Both are drift-adjusted. <em>Datadog absolute</em> is excluded from the
+    composite because it carries the ecosystem-wide inflation documented below &mdash;
+    including it would make the indicator fire on registry activity rather than on
+    Datadog. Weights are equal because nothing here survived validation, and fitting
+    weights on ${DATA.diagnostics.grid_cells} cells that all failed would be exactly
+    the error this project exists to warn about.</div>
+
+  <div class="sub" style="margin:16px 0 6px">What "tracking ahead / behind" has actually meant</div>
+  <div class="note" style="margin-top:0">A directional label is decoration until
+    someone checks it. For every historical quarter the call is recomputed from
+    prior quarters only, then compared with whether that quarter beat guidance by
+    <em>more</em> than its own trailing 8-quarter mean beat.</div>
+  <table><thead><tr><th>Quarter</th><th class="num">Composite z</th><th>Call</th>
+    <th class="num">Beat</th><th class="num">Trailing mean</th><th>Outcome</th><th></th></tr></thead>
+    <tbody>${C.examples.map(e => `<tr>
+      <td>${e.quarter}</td>
+      <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
+      <td>${e.call}</td>
+      <td class="num">${e.beat_pct.toFixed(2)}%</td>
+      <td class="num">${e.trailing_pct.toFixed(2)}%</td>
+      <td>${e.outcome}</td>
+      <td>${e.correct === null ? "" : e.correct
+            ? '<span class="tag t-good">correct</span>'
+            : '<span class="tag t-bad">wrong</span>'}</td></tr>`).join("")}
+    </tbody></table>
+
+  <table style="margin-top:10px"><thead><tr><th>Horizon</th>
+    <th class="num">Directional calls</th><th class="num">Correct</th>
+    <th class="num">Hit rate</th><th class="num">p vs coin flip</th></tr></thead>
+    <tbody>${C.backtest.map(b => `<tr><td>${b.horizon}</td>
+      <td class="num">${b.calls}</td><td class="num">${b.correct}</td>
+      <td class="num">${(b.hit_rate * 100).toFixed(0)}%</td>
+      <td class="num">${b.p.toFixed(3)}</td></tr>`).join("")}</tbody></table>
+  <div class="note" style="margin-top:6px"><strong>70% at ten calls is not a
+    result.</strong> The binomial p-value against a coin flip is 0.34. The
+    indicator is a monitoring aid with a measured and unimpressive reliability,
+    stated here rather than hidden &mdash; which is the only defensible way to put a
+    directional call on an analyst's screen. It does <em>not</em> feed the headline
+    number, and the signals do not combine into a revenue estimate, because no
+    construction beat a naive baseline out of sample.</div>
+`)));
+
 /* ----------------------------------------------------- observability panel */
 app.appendChild(el(panel("Observability &mdash; what the signal can and cannot see", `
   <table>

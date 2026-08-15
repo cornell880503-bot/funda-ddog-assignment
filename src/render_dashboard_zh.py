@@ -176,9 +176,7 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
      '<th class="num">MAPE %</th><th class="num">命中率</th>'),
     ("Signal 2 &mdash; hyperscaler cloud growth, identical pipeline",
      "訊號 2 &mdash; hyperscaler 雲端成長，完全相同的管線"),
-    # NOTE: the short header mappings above already ran, so these match the
-    # partially-translated state. Order dependence is deliberate and asserted.
-    ('<th>Target</th><th>特徵</th><th class="num">Ratio</th>',
+    ('<th>Target</th><th>Feature</th><th class="num">Ratio</th>',
      '<th>目標</th><th>特徵</th><th class="num">比值</th>'),
     ("<th>Target</th><th>Baseline</th>", "<th>目標</th><th>基準</th>"),
     ('<th class="num">Boot 95% CI</th>', '<th class="num">Bootstrap 95% CI</th>'),
@@ -225,8 +223,34 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
      '<strong>法務撰寫的前瞻性陳述樣板</strong>'),
     ('The 8-K press release is the one\n      qualitative source that is cleanly backfillable &mdash; free, official, and\n      timestamped at the guidance-issuance moment. <strong>The legal disclaimer\n      beats management\'s own words on every comparison</strong>, and against AR(1)\n      it is "significant" (CI [0.533, 0.835], DM p=0.088) &mdash; from text written\n      to convey no information. Boilerplate drifts as counsel updates the template,\n      so it proxies time. Unstructured features are <em>more</em> exposed to\n      spurious trend-fitting than structured ones, so in an LLM extraction pipeline\n      the control discipline matters more than the extraction quality.',
      '8-K 新聞稿是唯一可以乾淨回補的質化來源 &mdash; 免費、官方，\n      且時間戳就落在指引發布的那一刻。<strong>法務的免責聲明在每一項比較上\n      都打敗管理層自己的話</strong>，對 AR(1) 更達到「顯著」\n      （CI [0.533, 0.835]、DM p=0.088）&mdash; 而那段文字根本不是為了傳遞資訊而寫的。\n      樣板隨律師改版而漂移，因此它是時間的代理。非結構化特徵比結構化特徵\n      <em>更</em>容易產生偽趨勢擬合，所以在 LLM 抽取管線裡，\n      對照組紀律比抽取品質更重要。'),
+    ('How the signals combine &mdash; the tracking call',
+     '訊號如何合成 &mdash; 追蹤判斷'),
+    ('Composite tracking indicator, day ${M.days_elapsed}',
+     '合成追蹤指標，第 ${M.days_elapsed} 天'),
+    ('<div><span>Combines</span>',
+     '<div><span>合成自</span>'),
+    ('<div><span>Weighting</span><b>equal</b></div>',
+     '<div><span>權重</span><b>等權</b></div>'),
+    ('<div><span>Excluded</span>',
+     '<div><span>排除</span>'),
+    ('<div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>',
+     '<div><span>領先</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>'),
+    ('<div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>',
+     '<div><span>落後</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>'),
+    ('<strong>Why these two, equally weighted.</strong>\n    Both are drift-adjusted. <em>Datadog absolute</em> is excluded from the\n    composite because it carries the ecosystem-wide inflation documented below &mdash;\n    including it would make the indicator fire on registry activity rather than on\n    Datadog. Weights are equal because nothing here survived validation, and fitting\n    weights on ${DATA.diagnostics.grid_cells} cells that all failed would be exactly\n    the error this project exists to warn about.',
+     '<strong>為什麼是這兩個，而且等權。</strong>\n    兩者都做過漂移調整。<em>Datadog 絕對值</em>被排除在合成之外，因為它帶著下方記錄的\n    全生態系膨脹 &mdash; 納入它會讓指標對 registry 活動亮燈而不是對 Datadog 亮燈。\n    權重等權，是因為這裡沒有任何東西通過驗證，而在 ${DATA.diagnostics.grid_cells} 個\n    全數失敗的格子上去擬合權重，正是本專案要警告的那個錯誤。'),
+    ('What "tracking ahead / behind" has actually meant',
+     '「領先／落後」在歷史上實際代表什麼'),
+    ('A directional label is decoration until\n    someone checks it. For every historical quarter the call is recomputed from\n    prior quarters only, then compared with whether that quarter beat guidance by\n    <em>more</em> than its own trailing 8-quarter mean beat.',
+     '方向標籤在有人驗證它之前只是裝飾。每一個歷史季度的判斷都只用先前季度重算，\n    再比對該季實際超額是否**高於**它自己近八季的平均超額。'),
+    ('<th>Quarter</th><th class="num">Composite z</th><th>Call</th>\n    <th class="num">Beat</th><th class="num">Trailing mean</th><th>Outcome</th><th></th>',
+     '<th>季度</th><th class="num">合成 z</th><th>判斷</th>\n    <th class="num">實際超額</th><th class="num">近八季均值</th><th>結果</th><th></th>'),
+    ('<th>Horizon</th>\n    <th class="num">Directional calls</th><th class="num">Correct</th>\n    <th class="num">Hit rate</th><th class="num">p vs coin flip</th>',
+     '<th>視窗</th>\n    <th class="num">方向判斷次數</th><th class="num">正確</th>\n    <th class="num">命中率</th><th class="num">對擲硬幣的 p</th>'),
+    ("<strong>70% at ten calls is not a\n    result.</strong> The binomial p-value against a coin flip is 0.34. The\n    indicator is a monitoring aid with a measured and unimpressive reliability,\n    stated here rather than hidden &mdash; which is the only defensible way to put a\n    directional call on an analyst's screen. It does <em>not</em> feed the headline\n    number, and the signals do not combine into a revenue estimate, because no\n    construction beat a naive baseline out of sample.",
+     '<strong>十次判斷 70% 不是結果。</strong>\n    對擲硬幣的 binomial p 值是 0.34。這個指標是一個可靠度經過量測、而且並不亮眼的\n    監控工具，數字放在這裡而不是藏起來 &mdash; 那是把方向判斷放上分析師螢幕\n    唯一站得住的做法。它<em>不</em>餵入頭條數字，而且訊號不會合成為營收估計，\n    因為沒有任何構造在樣本外勝過樸素基準。'),
     # cadence + templating + footer
-    ("<th>訊號</th><th>Frequency</th><th>Latency</th><th>Role</th>",
+    ("<th>Signal</th><th>Frequency</th><th>Latency</th><th>Role</th>",
      "<th>訊號</th><th>頻率</th><th>延遲</th><th>角色</th>"),
     ("""  Everything ticker-specific is in the <code>CONFIG</code> object at the top of this
   file plus the <code>DATA</code> payload. Repointing at SNOW or MDB requires:
@@ -333,6 +357,10 @@ PAYLOAD_MAP = {
     "appendix": "附錄",
     "yes": "是",
     "NO": "否",
+    "tracking ahead": "領先", "tracking behind": "落後",
+    "above trend": "高於趨勢", "below trend": "低於趨勢",
+    "Datadog vs ecosystem": "Datadog 相對生態系",
+    "Datadog absolute (carries ecosystem inflation)": "Datadog 絕對值（帶有生態系膨脹）",
     "Ecosystem-wide download inflation": "全生態系下載量膨脹",
     "Download-to-revenue decoupling": "下載量與營收脫鉤",
     "Hyperscaler divergence": "Hyperscaler 背離",
@@ -381,7 +409,11 @@ def main() -> None:
     # translate the template, asserting every mapping lands
     tpl = render_dashboard.TEMPLATE
     missing = []
-    for en, zh in TEMPLATE_MAP:
+    # Longest source first. A short generic mapping ("prior quarters") would
+    # otherwise chop up a longer specific one that contains it, and the longer
+    # mapping would then silently fail to match. Sorting by length removes the
+    # whole class of ordering bug instead of hand-tuning individual entries.
+    for en, zh in sorted(TEMPLATE_MAP, key=lambda kv: -len(kv[0])):
         if en not in tpl:
             missing.append(en[:70])
             continue
@@ -416,6 +448,11 @@ def main() -> None:
         ('state: "leaning"', 'state: "傾向"'),
         ('state: "in line"', 'state: "符合"'),
         ('state === "diverging"', 'state === "背離"'),
+        ('C.z >= C.ahead_threshold ? "tracking ahead"', 'C.z >= C.ahead_threshold ? "領先"'),
+        ('C.z <= C.behind_threshold ? "tracking behind" : "in line"', 'C.z <= C.behind_threshold ? "落後" : "符合"'),
+        ('callNow === "in line" ? "t-good" : "t-warn"', 'callNow === "符合" ? "t-good" : "t-warn"'),
+        ("'<span class=\"tag t-good\">correct</span>'", "'<span class=\"tag t-good\">正確</span>'"),
+        ("'<span class=\"tag t-bad\">wrong</span>'", "'<span class=\"tag t-bad\">錯誤</span>'"),
         ('state === "leaning"', 'state === "傾向"'),
         ('paceUnits: "millions of downloads, cumulative"',
          'paceUnits: "單位：百萬次下載，累計"'),

@@ -44,7 +44,7 @@ Three things the call rests on:
 | **4. Hiring / job postings** — postings requiring "Datadog"; sales headcount | Revelio, LinkUp, Coresignal | Adoption breadth plausibly leads bookings 2–3 quarters; headcount is future capacity | Daily/weekly · days · vendor-dependent · US-skewed | **Vendor, paid** | No free source with usable history; over-weights large employers → de-seasonalise, employer fixed effects | **Proposed, not tested** |
 | **5. Competitive displacement / cost sentiment** — Stack Exchange tags; GitHub vs `grafana/grafana`, OpenTelemetry | Public APIs | **Downside-risk proxy for NRR, not a revenue predictor.** Bill shock is a documented churn vector | Daily · days · 2010+ | Free | Volume tracks community size, not spend → share-of-tag construction, matched competitor baseline. **Not forced into the revenue model** | **Proposed, not tested** |
 
-**A dependency-graph fact that fixed the control basket.** `dd-trace` v5 — **82.6%** of current installs — carries `@opentelemetry/api` in its dependency closure at depth 1 (v6 drops it). A control containing OpenTelemetry would contain numerator-generated traffic. This is why the denominator excludes OTel: a fact, not a judgement.
+**A dependency-graph fact that fixed the control basket.** `dd-trace` v5 — **82.6%** of installs — carries `@opentelemetry/api` in its dependency closure at depth 1 (v6 drops it), so a control containing OpenTelemetry would contain numerator-generated traffic. The denominator excludes OTel on a fact, not a judgement.
 
 ---
 
@@ -75,7 +75,7 @@ An earlier version used a trailing 8-quarter window chosen after seeing the samp
 
 ### 3.4 The result
 
-Three features × four windows × two revenue targets = 24 cells, each with a matched control, scored against the strongest baseline. Then re-run with each feature **orthogonalised against guidance-implied growth**, because a quantamental desk uses alternative data to predict the surprise around guidance, not to replace it.
+Three features × four windows × two revenue targets = 24 cells, each with a matched control, scored against the strongest baseline — then re-run with each feature **orthogonalised against guidance-implied growth**, because a quantamental desk predicts the surprise around guidance rather than replacing it.
 
 | Feature treatment | Cells beating the strongest baseline | Best cell |
 |---|---|---|
@@ -84,7 +84,16 @@ Three features × four windows × two revenue targets = 24 cells, each with a ma
 
 Orthogonalising makes the features *worse*: once what guidance already implies is stripped out, less remains.
 
-**The chain that explains it.** Against AR(1), 15 of 24 cells score below 0.9 and a permutation null (1,000 draws, feature values shuffled across quarters) yields 0.58 such cells — **p = 0.002**, so the features do carry information AR(1) lacks. But a **bare time index** through the identical pipeline also beats AR(1) (0.896), containing zero Datadog content. Against the strongest baseline the same null yields 0.01 cells and the observed count is **0**. The information was drift, which a correctly specified naive model already supplies.
+All three metrics the brief asks for, on the best cell per target:
+
+| Best candidate cell | RMSE ratio | MAPE | Hit rate | Baseline MAPE | Baseline hit |
+|---|---|---|---|---|---|
+| `rev_yoy` · `dd_abs_d30` | 1.137 | 7.24% | 0.538 | **4.10%** | **0.769** |
+| `beat_vs_guide` · `dd_abs_d60` | 1.075 | 30.8% | 0.571 | **24.7%** | n/a\* |
+
+The signal loses on error *and* on direction, not just on RMSE.
+
+**The chain that explains it.** Against AR(1), 15 of 24 cells score below 0.9 while a permutation null (1,000 draws, features shuffled across quarters) yields 0.58 — **p = 0.002**, so the features do carry information AR(1) lacks. But a **bare time index** through the identical pipeline also beats AR(1) (0.896) with zero Datadog content, and against the strongest baseline the same null yields 0.01 cells against an observed **0**. The information was drift, which a correctly specified naive model already supplies.
 
 Of 24 significance tests, exactly one cell has a bootstrap CI excluding 1.0: `dd_abs_d45` on `beat_vs_guide`, ratio 0.718, CI [0.604, 0.834], DM p=0.070 — **against AR(1) only**; against a random walk it is 1.108, CI [0.534, 1.784].
 
@@ -101,7 +110,7 @@ The Objective names billings/RPO, NRR and $100k+ ARR customer growth. Testing th
 | `rpo_yoy` | XBRL | 20 | — | — | not testable | insufficient history |
 | NRR | — | — | — | — | **not disclosed numerically in 8-K exhibits** | excluded, not approximated |
 
-**Directionally supported, still insufficient.** Against customer growth the best cell is **1.049** — the closest any signal came to a baseline here, and better than 1.137 against revenue growth. Matched controls fail on those cells (1.69–1.83), so the residual edge is attributable. But 1.049 is a loss, at n=11.
+**Directionally supported, still insufficient.** Against customer growth the best cell is **1.049** — the closest any signal came to a baseline here, versus 1.137 against revenue growth. Matched controls fail on those cells (1.69–1.83), so the residual edge is attributable. But 1.049 is a loss, at n=11.
 
 ### 3.6 One unstructured signal, and the sharpest placebo result in the project
 
