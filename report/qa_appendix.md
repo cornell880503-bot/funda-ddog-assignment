@@ -154,6 +154,28 @@ cell with the feature residualised against guidance-implied growth using
 train-only coefficients. Result: **0 of 24 again, and the best cell worsens from
 1.075 to 1.323** — stripping out what guidance implies leaves less, not more.
 
+### "Should this pipeline ingest sell-side research, vendor data previews, or LLM-parsed transcripts?"
+
+Yes eventually, but two of those three cannot be backtested honestly today, and
+I tested the one that can. Vendor blog previews are captured sporadically by
+the Internet Archive *and* are published only when the vendor's data looks
+interesting — survivorship bias in the sample itself. Consensus revision
+momentum needs point-in-time consensus vintages, which the free feeds do not
+provide (`yfinance` gives current estimates, not a historical revision series).
+Transcripts are vendor-licensed.
+
+The clean one is the 8-K press release: free, official, cached for all 28
+quarters, timestamped exactly at the guidance-issuance moment. I built a
+management-tone feature from it and ran it through the identical pipeline —
+with a placebo *inside the same document*, the forward-looking-statements
+disclaimer written by counsel. **The lawyer's boilerplate beat management's own
+words on every comparison** (r=−0.808 vs +0.211 against the subsequent beat)
+and produced a "significant" result against AR(1), CI [0.533, 0.835], DM
+p=0.088. Boilerplate drifts as counsel updates the template, so it proxies
+time. The lesson generalises: unstructured features are *more* exposed to
+spurious trend-fitting than structured ones, so in an LLM pipeline the control
+discipline matters more than the extraction quality.
+
 ### "Why not gradient boosting or an LSTM?"
 
 27 quarters and 13 out-of-sample predictions. Those models would fit the trend
@@ -203,6 +225,7 @@ automatically as new quarters arrive.
 | Other targets | customer growth best 1.049 (n=11); billings 1.106 (n=7); RPO untestable; NRR not disclosed |
 | Observability | Docker `datadog/agent` 11.25bn pulls vs npm basket 1.13bn — 10x, no history |
 | Power | detects r=0.95 6% of the time, r=0.90 15% |
+| Tone placebo | counsel boilerplate r=−0.808 vs management +0.211 |
 | Decoupling | 21,818 → 97,228 downloads per $m, +346%, ρ=+0.927 |
 | Sample | 27 usable quarters, 13–14 out-of-sample points |
 | Reporting lag | median 38 days; Q4 44 days; 8-K leads 10-Q by up to 18 |

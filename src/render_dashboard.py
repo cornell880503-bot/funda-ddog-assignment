@@ -423,6 +423,26 @@ app.appendChild(el(panel("Risk flags", `
       closest any signal came to a baseline here, versus 1.137 against revenue growth.
       Still a loss, at n=11. RPO has insufficient history; NRR is not disclosed as a
       number in the 8-K exhibits and is excluded rather than approximated.</div>
+    <div class="sub" style="margin:16px 0 6px">Unstructured signal &mdash; management tone, and its in-document placebo</div>
+    <table><thead><tr><th>Text measured</th>
+      <th class="num">corr with next beat</th><th class="num">Best cell</th></tr></thead>
+      <tbody>
+        <tr><td>management-authored body</td>
+          <td class="num">${DATA.tone.mgmt_corr >= 0 ? "+" : ""}${DATA.tone.mgmt_corr.toFixed(3)}</td>
+          <td class="num">${DATA.tone.mgmt_best.toFixed(3)}</td></tr>
+        <tr><td><strong>counsel's forward-looking-statements boilerplate</strong></td>
+          <td class="num"><strong>${DATA.tone.boilerplate_corr.toFixed(3)}</strong></td>
+          <td class="num"><strong>${DATA.tone.boilerplate_best.toFixed(3)}</strong></td></tr>
+      </tbody></table>
+    <div class="note" style="margin-top:6px">The 8-K press release is the one
+      qualitative source that is cleanly backfillable &mdash; free, official, and
+      timestamped at the guidance-issuance moment. <strong>The legal disclaimer
+      beats management's own words on every comparison</strong>, and against AR(1)
+      it is "significant" (CI [0.533, 0.835], DM p=0.088) &mdash; from text written
+      to convey no information. Boilerplate drifts as counsel updates the template,
+      so it proxies time. Unstructured features are <em>more</em> exposed to
+      spurious trend-fitting than structured ones, so in an LLM extraction pipeline
+      the control discipline matters more than the extraction quality.</div>
     <div class="sub" style="margin:16px 0 6px">Statistical power &mdash; what this sample could have detected</div>
     <table><thead><tr><th>Target</th><th class="num">n</th>
       <th class="num">detect r=0.95</th><th class="num">r=0.90</th>

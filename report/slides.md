@@ -69,10 +69,21 @@ A revenue-history model must *infer* a regime break. A guidance-anchored rule *i
 
 Corroborating: placebo packages correlate **0.72–0.76 with revenue at every lag −2 to +2** — flat. Performance *degrades* as the window lengthens (0.734 → 0.975); a real signal sharpens.
 
+**The same trap in unstructured text.** I also tested management tone in the earnings press release, with a placebo *inside the same document* — the forward-looking-statements disclaimer written by counsel:
+
+| | corr with next beat | best cell |
+|---|---|---|
+| management's own words | +0.211 | 1.551 |
+| **the lawyer's boilerplate** | **−0.808** | **0.968** |
+
+The disclaimer wins, and against AR(1) it is "significant" (CI [0.533, 0.835], DM p=0.088). Boilerplate drifts as counsel updates the template, so it proxies time.
+
 **What this does and does not prove.** At n=13 the test detects a 5% edge only **6%** of the time, a 10% edge **15%**. So "0 of 24" *bounds* the effect; it does not show it is zero. But the observed cells sit at **1.05–2.65** — that part is measurement, not low power.
 
 > **Notes.** The p=0.002 is not a contradiction, it's the pivot. Say plainly:
 > "beating AR(1) sounds like a result until you notice a clock beats AR(1)."
+> The boilerplate result is the one to tell if asked about adding LLM-parsed
+> research: text features are *more* exposed to spurious trend-fitting, not less.
 
 ---
 
@@ -145,7 +156,7 @@ Also on the page: observability table · QTD pace vs prior quarters at the same 
 | Component | Why, from this project |
 |---|---|
 | **Observability triage first** | The biggest error here was analysing the easy channel, not the right one. One API call flags "high relevance, zero history" before any modelling. |
-| **Matched control as mandatory metadata** | The control turned a 0.79 correlation into a rejected hypothesis. A registry without controls ships false positives. |
+| **Matched control as mandatory metadata** | The control turned a 0.79 correlation into a rejected hypothesis — and in text, a legal disclaimer "predicted" earnings surprises at r=−0.81. For an LLM extraction pipeline this is the primary safeguard, not a nicety. |
 | **As-of vintage as infrastructure** | Asked for "Q2 revenue", an agent fetches *today's* value. Worth 18 days on Q4 here. Test belongs in CI. |
 | **Evaluator loop that reports power** | Every negative result should ship with its minimum detectable effect, so "no edge found" is never read as "no edge exists". |
 

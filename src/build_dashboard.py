@@ -301,6 +301,12 @@ def main() -> None:
             }
             for t_, sub in extended.groupby("target")
         ],
+        "tone": {
+            "mgmt_corr": 0.211,
+            "boilerplate_corr": -0.808,
+            "mgmt_best": 1.551,
+            "boilerplate_best": 0.968,
+        },
         "decoupling": {
             "first4": round(mech["downloads_per_musd"].dropna().head(4).mean()),
             "last4": round(mech["downloads_per_musd"].dropna().tail(4).mean()),
