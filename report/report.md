@@ -28,7 +28,7 @@ Three things the call rests on:
 
 ## 2. Part 1 — Data selection and rationale
 
-**What is observable, and what is not.** This determines everything downstream and is stated before the source table:
+**What is observable, and what is not** — this determines everything downstream:
 
 | Distribution channel | Carries | Cumulative | History available | Testable here |
 |---|---|---|---|---|
@@ -148,7 +148,7 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **Power, quantified rather than conceded.** At n=13 a Diebold–Mariano test detects an RMSE ratio of 0.95 only **6%** of the time, 0.90 **15%**, 0.80 **28%** — **a genuine 5–10% edge would have gone undetected roughly 85–90% of the time**. So "0 of 24" *bounds* the effect size rather than showing it is zero. Not a power problem: the observed cells sit at **1.05 to 2.65**, consistent large degradation on the wrong side of parity.
 
-**Scope.** The conclusion applies to the freely observable channel. The core agent's distribution is ~10× larger and exposes no history, so the best-matched proxy was never testable — a statement about data availability, not about whether telemetry deployment tracks Datadog's business.
+**Scope.** The conclusion applies to the freely observable channel: the core agent's distribution is ~10× larger and exposes no history, so the best-matched proxy was never testable. That is a statement about data availability, not about whether telemetry deployment tracks Datadog's business.
 
 **The interval is conditional.** ±$14.7m reflects only the historical variance of the beat. Guidance extraction error is zero — every figure re-fetched from EDGAR and matched to its verbatim outlook sentence. Regime risk is second-order: flat trailing-mean gives $1,188m, trend-extrapolation $1,195m, a $7m spread inside the band. Not covered: guidance-philosophy change, customer concentration, M&A (Datadog acquired Adaptive ML in the quarter). Formally the band is *conditional on the beat distribution remaining stationary* — supported over 16 quarters, mildly strained over 8 (ρ=+0.69, p=0.058).
 
@@ -168,7 +168,7 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **An automated evaluator that reports power.** Baselines (with un-snoopable selection), placebo, permutation null and DM with bootstrap intervals are all mechanical, and a harness runs all of them at no marginal cost where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, and the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running baselines first.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running baselines first.
 
 ---
 
