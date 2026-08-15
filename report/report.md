@@ -91,7 +91,7 @@ All three metrics the brief asks for, on the best cell per target:
 | `rev_yoy` · `dd_abs_d30` | 1.137 | 7.24% | 0.538 | **4.10%** | **0.769** |
 | `beat_vs_guide` · `dd_abs_d60` | 1.075 | 30.8% | 0.571 | **24.7%** | n/a\* |
 
-The signal loses on error *and* on direction, not just on RMSE.
+The signal loses on error *and* direction, not just RMSE.
 
 **The chain that explains it.** Against AR(1), 15 of 24 cells score below 0.9 while a permutation null (1,000 draws, features shuffled across quarters) yields 0.58 — **p = 0.002**, so the features do carry information AR(1) lacks. But a **bare time index** through the identical pipeline also beats AR(1) (0.896) with zero Datadog content, and against the strongest baseline the same null yields 0.01 cells against an observed **0**. The information was drift, which a correctly specified naive model already supplies.
 
@@ -146,7 +146,7 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 ## 5. Limitations and what the data does not support
 
-**Power, quantified rather than conceded.** At n=13 a Diebold–Mariano test detects an RMSE ratio of 0.95 only **6%** of the time, 0.90 **15%**, 0.80 **28%**. **A genuine 5–10% edge would have gone undetected roughly 85–90% of the time.** So "0 of 24" *bounds* the effect size rather than showing it is zero. Not a power problem: the observed cells sit at **1.05 to 2.65**, consistent large degradation on the wrong side of parity.
+**Power, quantified rather than conceded.** At n=13 a Diebold–Mariano test detects an RMSE ratio of 0.95 only **6%** of the time, 0.90 **15%**, 0.80 **28%** — **a genuine 5–10% edge would have gone undetected roughly 85–90% of the time**. So "0 of 24" *bounds* the effect size rather than showing it is zero. Not a power problem: the observed cells sit at **1.05 to 2.65**, consistent large degradation on the wrong side of parity.
 
 **Scope.** The conclusion applies to the freely observable channel. The core agent's distribution is ~10× larger and exposes no history, so the best-matched proxy was never testable — a statement about data availability, not about whether telemetry deployment tracks Datadog's business.
 
