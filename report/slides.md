@@ -185,6 +185,8 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 
 ## Slide 10 — What the data supports, and what would change the answer
 
+**The binding constraint is observability, not modelling.** Datadog's billable telemetry is collected by a Go agent shipped through channels that publish **no time series** — 11.25bn cumulative pulls on Docker Hub alone against 1.13bn on the npm basket. **Roughly 90% of the install surface is unobservable**, and within the observable tenth the downloads-to-revenue coupling has decayed 346%. No amount of modelling recovers a series that was never recorded.
+
 **Supported.** A guidance-anchored rule with an out-of-sample-selected window forecasts Q3 2026 at **$1,188.5m ± $14.7m**, MAPE 4.10%, using no alternative data. Three signals were tested end to end; none beat it.
 
 **Not supported — stated as a bound, not a verdict.** At n=13 a Diebold–Mariano test detects a 5% edge only **6%** of the time. "0 of 24" *bounds* the effect size; it does not prove the effect is zero. What is *not* a power problem: the observed cells sit at **1.05–2.65**, consistently on the wrong side of parity.
@@ -194,8 +196,14 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 2. A candidate beats the **strongest** baseline while its matched placebo fails.
 3. The result replicates in a second ecosystem.
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor. The validation harness is ticker-agnostic. **What does not transfer is the conclusion.**
+**Next actions, in order.**
+1. **Start the Docker Hub daily snapshot today** — one API call converts a lifetime counter into a usable series covering the invisible 90%. It cannot be backfilled, so every day of delay is history permanently lost.
+2. **Price a dollar-weighted panel** (card / invoice data). Download counts weight an enterprise and a hobbyist the same; that flaw is not fixable with free data.
+3. **Re-run quarterly and let it change its mind** — the three conditions above are automated tests, not judgement calls.
 
-> **Notes.** Close on the three falsifiers — they show the pipeline is built to
-> be re-run and to change its mind, not to defend a result. The dashboard
-> prototype is `dashboard/index.html`; open it if there is time, or in Q&A.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor. The harness is ticker-agnostic. **What does not transfer is the conclusion.**
+
+> **Notes.** Land the 90%-unobservable line first — it reframes the negative
+> result as a data-availability finding rather than a modelling failure. Then
+> the three falsifiers, then the Docker snapshot as the concrete next action.
+> The dashboard prototype is `dashboard/index.html`; open it if there is time.
