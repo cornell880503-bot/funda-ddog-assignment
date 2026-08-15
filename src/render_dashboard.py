@@ -619,8 +619,8 @@ app.appendChild(el(panel("Risk flags", `
         <td class="num">${e.best.toFixed(3)}</td></tr>`).join("")}</tbody></table>
     <div class="note" style="margin-top:6px">Downloads are an unweighted count while
       revenue is dollar-weighted, so a count-type target should match better. It does:
-      against $100k+ customer growth the best cell is <strong>1.049</strong>, the
-      closest any signal came to a baseline here, versus 1.137 against revenue growth.
+      against $100k+ customer growth the best cell is <strong>${(DATA.extended.find(e => e.target === "cust_yoy") || {best:0}).best.toFixed(3)}</strong>, the
+      closest any signal came to a baseline here, versus ${DATA.diagnostics.best_cell_ratio.toFixed(3)} against revenue growth.
       Still a loss, at n=11. RPO has insufficient history; NRR is not disclosed as a
       number in the 8-K exhibits and is excluded rather than approximated.</div>
     <div class="sub" style="margin:16px 0 6px">Unstructured signal &mdash; management tone, and its in-document placebo</div>
@@ -638,7 +638,7 @@ app.appendChild(el(panel("Risk flags", `
       qualitative source that is cleanly backfillable &mdash; free, official, and
       timestamped at the guidance-issuance moment. <strong>The legal disclaimer
       beats management's own words on every comparison</strong>, and against AR(1)
-      it is "significant" (CI [0.533, 0.835], DM p=0.088) &mdash; from text written
+      it is "significant" (CI [${DATA.tone.plc_ci_lo.toFixed(3)}, ${DATA.tone.plc_ci_hi.toFixed(3)}], DM p=${DATA.tone.plc_dm_p.toFixed(3)}) &mdash; from text written
       to convey no information. Boilerplate drifts as counsel updates the template,
       so it proxies time. Unstructured features are <em>more</em> exposed to
       spurious trend-fitting than structured ones, so in an LLM extraction pipeline
@@ -656,6 +656,25 @@ app.appendChild(el(panel("Risk flags", `
       is <em>not</em> a power problem: the observed cells sit at ratios of 1.05 to
       2.65 &mdash; consistent, large degradation on the wrong side of parity.</div>
     <div class="sub" style="margin:16px 0 6px">Signal 2 &mdash; hyperscaler cloud growth, identical pipeline</div>
+    <div class="note" style="margin-top:0">Scored on revenue growth against the same
+      strongest baseline the headline uses. Matched non-cloud controls come from the
+      <em>same filing</em>, so issuer, quarter and extraction method are held fixed.</div>
+    <table><thead><tr><th>Series</th><th>Role</th><th class="num">n OOS</th>
+      <th class="num">Ratio</th><th class="num">Boot 95% CI</th>
+      <th class="num">DM p</th><th class="num">Hit</th></tr></thead>
+      <tbody>${(DATA.diagnostics.hyperscaler_rev || []).map(h => `<tr>
+        <td>${h.role === "control" ? "<em>" + h.feature + "</em>" : "<strong>" + h.feature + "</strong>"}</td>
+        <td>${h.role}</td><td class="num">${h.n_oos}</td>
+        <td class="num ${h.ratio < 1 ? "good" : "bad"}">${h.ratio.toFixed(3)}</td>
+        <td class="num">[${h.ci[0].toFixed(2)}, ${h.ci[1].toFixed(2)}]</td>
+        <td class="num">${h.dm_p.toFixed(3)}</td>
+        <td class="num">${(h.hit * 100).toFixed(0)}%</td></tr>`).join("")}</tbody></table>
+    <div class="note" style="margin-top:6px"><strong>An 84.6% directional hit rate with
+      over 3&times; the baseline error is the trap.</strong> Intelligent Cloud is
+      significantly <em>worse</em> than the baseline &mdash; its CI excludes 1.0 on the
+      wrong side &mdash; and its matched control from the same filing fails too. AWS has
+      only 4 out-of-sample points and is reported as untestable rather than as the one
+      cell that nearly worked.</div>
     <table><thead><tr><th>Target</th><th>Feature</th><th class="num">Ratio</th>
       <th class="num">Boot 95% CI</th><th class="num">DM p</th></tr></thead><tbody>${hy}</tbody></table>
     <div class="note">Intelligent Cloud growth is <strong>significantly worse</strong> than

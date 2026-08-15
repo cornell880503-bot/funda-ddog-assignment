@@ -159,6 +159,11 @@ def main() -> None:
     cands_orth = grid_best[(grid_best["role"] == "candidate") & (grid_best["orthogonalised"])]
     coverage = pd.read_csv(sc.PROCESSED / "revision_coverage.csv")
     div_rows = divergence_z()
+    best_rev = baselines.sort_values("rmse").groupby("target").first().loc["rev_yoy", "baseline"]
+    tone_wf = pd.read_csv(sc.PROCESSED / "tone_walkforward.csv")
+    tone_plc = tone_wf[(tone_wf["feature"] == "plc_net_tone")
+                       & (tone_wf["target"] == "beat_vs_guide")
+                       & (tone_wf["vs_baseline"] == "AR(1)")].iloc[0]
     comp_hist = pd.read_csv(sc.PROCESSED / "composite_tracking.csv")
     comp_bt = pd.read_csv(sc.PROCESSED / "composite_backtest.csv")
     power = pd.read_csv(sc.PROCESSED / "revision_power.csv")
@@ -257,6 +262,16 @@ def main() -> None:
                 }
                 for _, r in cands.iterrows()
             ],
+            "hyperscaler_rev": [
+                {
+                    "feature": r["feature"], "role": r["role"], "n_oos": int(r["n_oos"]),
+                    "ratio": round(float(r["rmse_ratio"]), 3),
+                    "ci": [round(float(r["boot_ci_lo"]), 3), round(float(r["boot_ci_hi"]), 3)],
+                    "dm_p": round(float(r["dm_p"]), 3), "hit": round(float(r["hit"]), 3),
+                }
+                for _, r in pd.read_csv(sc.PROCESSED / "wf_hyperscaler.csv")
+                .query("target == 'rev_yoy' and vs_baseline == @best_rev").iterrows()
+            ],
             "hyperscaler": [
                 {
                     "target": r["target"],
@@ -348,6 +363,9 @@ def main() -> None:
             "boilerplate_corr": -0.808,
             "mgmt_best": 1.551,
             "boilerplate_best": 0.968,
+            "plc_ci_lo": float(tone_plc["boot_lo"]),
+            "plc_ci_hi": float(tone_plc["boot_hi"]),
+            "plc_dm_p": float(tone_plc["dm_p"]),
         },
         "decoupling": {
             "first4": round(mech["downloads_per_musd"].dropna().head(4).mean()),

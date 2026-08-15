@@ -2211,6 +2211,56 @@
     "ratio": 1.108
    }
   ],
+  "hyperscaler_rev": [
+   {
+    "feature": "azure_ic_yoy",
+    "role": "signal",
+    "n_oos": 13,
+    "ratio": 3.206,
+    "ci": [
+     1.72,
+     12.008
+    ],
+    "dm_p": 0.021,
+    "hit": 0.846
+   },
+   {
+    "feature": "msft_pbp_yoy",
+    "role": "control",
+    "n_oos": 13,
+    "ratio": 1.913,
+    "ci": [
+     1.137,
+     7.177
+    ],
+    "dm_p": 0.019,
+    "hit": 0.692
+   },
+   {
+    "feature": "aws_yoy",
+    "role": "signal",
+    "n_oos": 4,
+    "ratio": 2.347,
+    "ci": [
+     0.766,
+     9.426
+    ],
+    "dm_p": 0.267,
+    "hit": 1.0
+   },
+   {
+    "feature": "amzn_total_yoy",
+    "role": "control",
+    "n_oos": 13,
+    "ratio": 1.711,
+    "ci": [
+     1.517,
+     3.639
+    ],
+    "dm_p": 0.099,
+    "hit": 0.385
+   }
+  ],
   "hyperscaler": [
    {
     "target": "beat_vs_guide",
@@ -2490,7 +2540,10 @@
   "mgmt_corr": 0.211,
   "boilerplate_corr": -0.808,
   "mgmt_best": 1.551,
-  "boilerplate_best": 0.968
+  "boilerplate_best": 0.968,
+  "plc_ci_lo": 0.5330476322562242,
+  "plc_ci_hi": 0.8348561662257483,
+  "plc_dm_p": 0.0880554106746989
  },
  "decoupling": {
   "first4": 21818,
