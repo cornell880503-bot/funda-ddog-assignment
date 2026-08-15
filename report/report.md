@@ -166,12 +166,12 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **Matched controls as mandatory metadata.** The control turned a 0.79 correlation into a rejected hypothesis, and §3.6 shows the stakes rise with text, where a legal disclaimer "predicted" surprises at r=−0.81. A registry storing a signal without its control ships false positives by default.
 
-**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth 18 days on Q4 here. The test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
+**As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value. Worth 18 days on Q4 here; the test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
 
 **An automated evaluator that reports power.** Baselines, placebo, permutation null and DM intervals are mechanical, and a harness runs all of them where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running baselines first.
+**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input. That is the point of running baselines first.
 
 ---
 
-*Sources: SEC EDGAR XBRL company facts and Item 2.02 8-K exhibits (DDOG CIK 0001561550; AMZN 0001018724; MSFT 0000789019; GOOGL 0001652044); npm registry downloads API; pypistats.org; Docker Hub public repository API. Every figure traces to a cached raw response or a cited accession number. Decision record: `LOG.md`, D1–D43.*
+*Sources: SEC EDGAR XBRL company facts and Item 2.02 8-K exhibits (DDOG CIK 0001561550; AMZN 0001018724; MSFT 0000789019; GOOGL 0001652044); npm registry downloads API; pypistats.org; Docker Hub public repository API. Every figure traces to a cached raw response or a cited accession number. Full pipeline reproduces with `python run_all.py`. Decision record: `LOG.md`, D1–D44.*

@@ -178,4 +178,4 @@ Part 1 的邏輯是儀器化下載量代理計費單位。若成立，每美元�
 
 ---
 
-*資料來源：SEC EDGAR XBRL company facts 與 Item 2.02 8-K 附件（DDOG CIK 0001561550；AMZN 0001018724；MSFT 0000789019；GOOGL 0001652044）；npm registry downloads API；pypistats.org；Docker Hub 公開 repository API。每個數字都可追溯至快取的原始回應或引用的 accession number。決策紀錄：`LOG.md`，D1–D43。*
+*資料來源：SEC EDGAR XBRL company facts 與 Item 2.02 8-K 附件（DDOG CIK 0001561550；AMZN 0001018724；MSFT 0000789019；GOOGL 0001652044）；npm registry downloads API；pypistats.org；Docker Hub 公開 repository API。每個數字都可追溯至快取的原始回應或引用的 accession number。完整管線可用 `python run_all.py` 重現。決策紀錄：`LOG.md`，D1–D44。*
