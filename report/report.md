@@ -162,11 +162,11 @@ Cross-sell and tiering are real — revenue per large customer rose 67% — but 
 
 **Observability triage, before modelling.** The largest error here was analysing the channel that was *easy* to observe rather than the one that *matters*. A registry should record, per candidate, what share of the economic quantity it sees and whether history exists — `datadog/agent` would have been flagged instantly as high-relevance, zero-history. One API call, and it reframes the project on day one.
 
-**Matched controls as mandatory metadata.** The control turned a 0.79 correlation into a rejected hypothesis, and §3.6 shows the stakes rise with text, where a legal disclaimer "predicted" earnings surprises at r=−0.81. A registry storing a signal without its control ships false positives by default; for an LLM extraction pipeline that is the primary safeguard, not a nicety.
+**Matched controls as mandatory metadata.** The control turned a 0.79 correlation into a rejected hypothesis, and §3.6 shows the stakes rise with text, where a legal disclaimer "predicted" earnings surprises at r=−0.81. A registry storing a signal without its control ships false positives by default.
 
 **As-of vintage as infrastructure.** Look-ahead is the characteristic LLM-agent failure: asked for "Q2 revenue" an agent fetches *today's* value, not the decision-date value. Worth 18 days on Q4 here. The test — *no feature may carry a source timestamp later than the as-of date* — belongs in CI.
 
-**An automated evaluator that reports power.** Baselines (with un-snoopable selection), placebo, permutation null and DM with bootstrap intervals are all mechanical, and a harness runs all of them at no marginal cost where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
+**An automated evaluator that reports power.** Baselines, placebo, permutation null and DM with bootstrap intervals are mechanical, and a harness runs all of them where an analyst runs the one they thought of. Every negative result should ship with its **minimum detectable effect**, so "no edge found" is never read as "no edge exists".
 
 **Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor re-pointed. What does not transfer is the conclusion: for an issuer that guides less reliably the same pipeline could promote a different input, which is the point of running baselines first.
 
