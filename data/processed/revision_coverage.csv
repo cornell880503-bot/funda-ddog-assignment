@@ -1,6 +1,6 @@
 channel,what_it_distributes,cumulative_units,history,in_model
-npm (constant-composition basket),Node.js APM tracer + metrics client,1130305079.0,"daily, 2017+",yes
-npm (all Datadog packages),"Node.js SDKs incl. browser RUM/logs, CI",2176798483.0,"daily, 2017+",appendix
+npm (constant-composition basket),Node.js APM tracer + metrics client,1132642317.0,"daily, 2017+",yes
+npm (all Datadog packages),"Node.js SDKs incl. browser RUM/logs, CI",2181564778.0,"daily, 2017+",appendix
 Docker Hub datadog/agent,the core Go agent (host + container monitoring),11249210964.0,CUMULATIVE COUNTER ONLY -- no time series,NO -- not backfillable
 Docker Hub datadog/cluster-agent,the core Go agent (host + container monitoring),126493867.0,CUMULATIVE COUNTER ONLY -- no time series,NO -- not backfillable
 APT / YUM repositories,Linux package installs of the core agent,,not publicly exposed,NO

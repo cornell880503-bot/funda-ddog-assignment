@@ -1,4 +1,4 @@
 null,mean_cells_below_0.9,median,p95,max,observed,p_value
 permute feature (vs AR(1)),0.585,0.0,5.0,24,15,0.002
 permute target (vs AR(1)),0.714,0.0,7.0499999999999545,20,15,0.001
-permute feature (vs strongest baseline),0.009,0.0,0.0,5,0,1.0
+permute feature (vs strongest baseline),0.0,0.0,0.0,0,0,1.0

@@ -278,8 +278,15 @@ def main() -> None:
             "parts": ["Datadog vs ecosystem", "Datadog vs competitors"],
             "excluded": "Datadog absolute (carries ecosystem inflation)",
             "weighting": "equal -- nothing validated, so fitted weights would be the error this project warns about",
-            "z": round(float(np.mean([r["z"] for r in div_rows
-                                      if r["feature"] in ("dd_rel_plc_d30", "dd_rel_d30")])), 2),
+            # Match on the candidate name, NOT the full feature id: the
+            # divergence horizon advances with the quarter (d30 -> d45 -> d60),
+            # and hard-coding "_d30" silently produced mean([]) = NaN the moment
+            # the live quarter crossed day 45.
+            "z": round(float(np.mean([
+                r["z"] for r in div_rows
+                if r["feature"].rsplit("_", 1)[0] in ("dd_rel_plc", "dd_rel")
+            ])), 2),
+            "horizon": div_rows[0]["feature"].rsplit("_", 1)[1] if div_rows else "n/a",
             "ahead_threshold": 1.0,
             "behind_threshold": -1.0,
             "backtest": [
@@ -370,6 +377,11 @@ def main() -> None:
 
 if __name__ == "__main__":
     data = main()
+    if not np.isfinite(data["composite"]["z"]):
+        raise SystemExit(
+            "composite tracking z is not finite -- the divergence horizon and the "
+            "composite feature names have diverged. Fix before rendering."
+        )
     out = sc.PROCESSED / "dashboard_payload.json"
     out.write_text(json.dumps(data, indent=1))
     print(f"Wrote {out.relative_to(sc.REPO)}")

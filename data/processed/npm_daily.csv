@@ -3510,7 +3510,8 @@ date,package,downloads,cohort
 2026-08-10,dd-trace,1838649,datadog
 2026-08-11,dd-trace,0,datadog
 2026-08-12,dd-trace,1947811,datadog
-2026-08-13,dd-trace,0,datadog
+2026-08-13,dd-trace,1961986,datadog
+2026-08-14,dd-trace,0,datadog
 2017-01-01,@datadog/browser-rum,0,datadog
 2017-01-02,@datadog/browser-rum,0,datadog
 2017-01-03,@datadog/browser-rum,0,datadog
@@ -7022,7 +7023,8 @@ date,package,downloads,cohort
 2026-08-10,@datadog/browser-rum,1127044,datadog
 2026-08-11,@datadog/browser-rum,0,datadog
 2026-08-12,@datadog/browser-rum,1215067,datadog
-2026-08-13,@datadog/browser-rum,0,datadog
+2026-08-13,@datadog/browser-rum,1213809,datadog
+2026-08-14,@datadog/browser-rum,0,datadog
 2017-01-01,@datadog/browser-logs,0,datadog
 2017-01-02,@datadog/browser-logs,0,datadog
 2017-01-03,@datadog/browser-logs,0,datadog
@@ -10534,7 +10536,8 @@ date,package,downloads,cohort
 2026-08-10,@datadog/browser-logs,607523,datadog
 2026-08-11,@datadog/browser-logs,625156,datadog
 2026-08-12,@datadog/browser-logs,643442,datadog
-2026-08-13,@datadog/browser-logs,0,datadog
+2026-08-13,@datadog/browser-logs,635711,datadog
+2026-08-14,@datadog/browser-logs,0,datadog
 2017-01-01,datadog-metrics,40,datadog
 2017-01-02,datadog-metrics,169,datadog
 2017-01-03,datadog-metrics,270,datadog
@@ -14046,7 +14049,8 @@ date,package,downloads,cohort
 2026-08-10,datadog-metrics,486895,datadog
 2026-08-11,datadog-metrics,526602,datadog
 2026-08-12,datadog-metrics,510348,datadog
-2026-08-13,datadog-metrics,0,datadog
+2026-08-13,datadog-metrics,518511,datadog
+2026-08-14,datadog-metrics,0,datadog
 2017-01-01,@datadog/datadog-ci,0,datadog
 2017-01-02,@datadog/datadog-ci,0,datadog
 2017-01-03,@datadog/datadog-ci,0,datadog
@@ -17558,7 +17562,8 @@ date,package,downloads,cohort
 2026-08-10,@datadog/datadog-ci,822057,datadog
 2026-08-11,@datadog/datadog-ci,871114,datadog
 2026-08-12,@datadog/datadog-ci,868312,datadog
-2026-08-13,@datadog/datadog-ci,0,datadog
+2026-08-13,@datadog/datadog-ci,869551,datadog
+2026-08-14,@datadog/datadog-ci,0,datadog
 2017-01-01,@opentelemetry/api,0,control
 2017-01-02,@opentelemetry/api,0,control
 2017-01-03,@opentelemetry/api,0,control
@@ -21070,7 +21075,8 @@ date,package,downloads,cohort
 2026-08-10,@opentelemetry/api,13240956,control
 2026-08-11,@opentelemetry/api,13629888,control
 2026-08-12,@opentelemetry/api,13656403,control
-2026-08-13,@opentelemetry/api,0,control
+2026-08-13,@opentelemetry/api,14058455,control
+2026-08-14,@opentelemetry/api,0,control
 2017-01-01,newrelic,4974,control
 2017-01-02,newrelic,9661,control
 2017-01-03,newrelic,16283,control
@@ -24582,7 +24588,8 @@ date,package,downloads,cohort
 2026-08-10,newrelic,247316,control
 2026-08-11,newrelic,257505,control
 2026-08-12,newrelic,263074,control
-2026-08-13,newrelic,0,control
+2026-08-13,newrelic,262722,control
+2026-08-14,newrelic,0,control
 2017-01-01,elastic-apm-node,0,control
 2017-01-02,elastic-apm-node,0,control
 2017-01-03,elastic-apm-node,0,control
@@ -28094,7 +28101,8 @@ date,package,downloads,cohort
 2026-08-10,elastic-apm-node,84485,control
 2026-08-11,elastic-apm-node,93458,control
 2026-08-12,elastic-apm-node,90739,control
-2026-08-13,elastic-apm-node,0,control
+2026-08-13,elastic-apm-node,91856,control
+2026-08-14,elastic-apm-node,0,control
 2017-01-01,@sentry/node,0,control
 2017-01-02,@sentry/node,0,control
 2017-01-03,@sentry/node,0,control
@@ -31606,7 +31614,8 @@ date,package,downloads,cohort
 2026-08-10,@sentry/node,5569234,control
 2026-08-11,@sentry/node,0,control
 2026-08-12,@sentry/node,5787391,control
-2026-08-13,@sentry/node,0,control
+2026-08-13,@sentry/node,5826107,control
+2026-08-14,@sentry/node,0,control
 2017-01-01,lodash,398489,placebo
 2017-01-02,lodash,821577,placebo
 2017-01-03,lodash,1393116,placebo
@@ -35118,7 +35127,8 @@ date,package,downloads,cohort
 2026-08-10,lodash,28517007,placebo
 2026-08-11,lodash,29437926,placebo
 2026-08-12,lodash,29389260,placebo
-2026-08-13,lodash,0,placebo
+2026-08-13,lodash,29228830,placebo
+2026-08-14,lodash,0,placebo
 2017-01-01,express,0,placebo
 2017-01-02,express,0,placebo
 2017-01-03,express,0,placebo
@@ -38630,7 +38640,8 @@ date,package,downloads,cohort
 2026-08-10,express,21636840,placebo
 2026-08-11,express,22374016,placebo
 2026-08-12,express,22379938,placebo
-2026-08-13,express,0,placebo
+2026-08-13,express,22614070,placebo
+2026-08-14,express,0,placebo
 2017-01-01,chalk,171789,placebo
 2017-01-02,chalk,357664,placebo
 2017-01-03,chalk,644585,placebo
@@ -42142,7 +42153,8 @@ date,package,downloads,cohort
 2026-08-10,chalk,83829357,placebo
 2026-08-11,chalk,87115896,placebo
 2026-08-12,chalk,86620794,placebo
-2026-08-13,chalk,0,placebo
+2026-08-13,chalk,86568829,placebo
+2026-08-14,chalk,0,placebo
 2017-01-01,axios,4376,placebo
 2017-01-02,axios,10636,placebo
 2017-01-03,axios,19968,placebo
@@ -45654,7 +45666,8 @@ date,package,downloads,cohort
 2026-08-10,axios,20585854,placebo
 2026-08-11,axios,21433633,placebo
 2026-08-12,axios,21323208,placebo
-2026-08-13,axios,0,placebo
+2026-08-13,axios,21267802,placebo
+2026-08-14,axios,0,placebo
 2017-01-01,react,14519,placebo
 2017-01-02,react,46047,placebo
 2017-01-03,react,95502,placebo
@@ -49166,4 +49179,5 @@ date,package,downloads,cohort
 2026-08-10,react,27438463,placebo
 2026-08-11,react,0,placebo
 2026-08-12,react,28221368,placebo
-2026-08-13,react,0,placebo
+2026-08-13,react,28442032,placebo
+2026-08-14,react,0,placebo

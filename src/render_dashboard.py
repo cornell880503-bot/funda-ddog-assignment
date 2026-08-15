@@ -309,9 +309,10 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
       <text x="${x(-3)}" y="${MID+4}" text-anchor="end" font-size="9" fill="var(--dim)" font-family="var(--mono)">-3&sigma;</text>
       <text x="${x(3)}" y="${MID+4}" text-anchor="start" font-size="9" fill="var(--dim)" font-family="var(--mono)">+3&sigma;</text>
     </svg>
-    <div class="note" style="margin-top:0">The grey dot is the <strong>placebo</strong>
-      at +0.93 — close to the Datadog relative measures, and the reason the absolute
-      measure at +2.36 must not be read as a Datadog signal.</div>`;
+    <div class="note" style="margin-top:0">The grey dot is the <strong>placebo</strong>,
+      which cannot contain Datadog information. Compare it with the ecosystem-adjusted
+      Datadog measure before reading anything into the absolute one &mdash; when the
+      placebo leans as hard as the signal, the ecosystem is what is moving.</div>`;
   })()}
   <table>
     <thead><tr><th>Signal</th><th class="num">Current</th><th class="num">Hist mean</th>
@@ -347,7 +348,7 @@ const callCls = callNow === "in line" ? "t-good" : "t-warn";
 app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
   <div class="row">
     <div>
-      <div class="label">Composite tracking indicator, day ${M.days_elapsed}</div>
+      <div class="label">Composite tracking indicator, day ${M.days_elapsed} (${C.horizon} window)</div>
       <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
       <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
     </div>

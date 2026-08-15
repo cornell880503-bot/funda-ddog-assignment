@@ -172,19 +172,19 @@ Cross-sell and tiering are **real** — but downloads per customer grew ~10× fa
 
 Headline from the baseline; signals monitor when the baseline breaks. Today's reading *is* the thesis:
 
-| Signal (day 30) | z | State |
+| Signal (day 46, d45 window) | z | State |
 |---|---|---|
-| Datadog **absolute** | **+2.36** | diverging |
-| Datadog vs ecosystem | +0.38 | in line |
-| **PLACEBO** vs competitors | +0.93 | in line |
+| Datadog **absolute** | **+2.41** | diverging |
+| **PLACEBO** vs competitors | **+1.42** | leaning |
+| Datadog vs ecosystem | **+0.06** | in line |
 
-**The ecosystem is running hot, not Datadog.** An absolute-download dashboard would be flashing green right now.
+**The ecosystem is running hot, not Datadog** — the placebo, which cannot contain Datadog information, is leaning *harder* than the ecosystem-adjusted Datadog measure, which is flat. An absolute-download dashboard would be flashing green right now.
 
-**How the signals combine — the tracking call.** Composite = equal-weight mean z of the two drift-adjusted constructions; `dd_abs` excluded because it carries the ecosystem inflation. Thresholds z ≥ +1 *tracking ahead*, ≤ −1 *tracking behind*. **Today: +0.74, in line.**
+**How the signals combine — the tracking call.** Composite = equal-weight mean z of the two drift-adjusted constructions; `dd_abs` excluded because it carries the ecosystem inflation. Thresholds z ≥ +1 *tracking ahead*, ≤ −1 *tracking behind*. **Today: +0.65, in line.**
 
 And the call is backtested, not asserted: recomputed from prior quarters only, **7 of 10 directional calls correct (70%), binomial p = 0.34** — a monitoring aid with a measured and unimpressive reliability, stated on the page rather than hidden.
 
-Also on the page: observability table · QTD pace vs prior quarters at the same day · outage-treatment spread (9.1% of this quarter imputed) · risk flags · **and the 0-of-24 grid and the power table, on the face of the dashboard**.
+Also on the page: observability table · QTD pace vs prior quarters at the same day · outage-treatment spread (8.9% of this quarter imputed) · risk flags · **and the 0-of-24 grid and the power table, on the face of the dashboard**.
 
 > **Notes.** Show it live. Diagnostics are visible rather than hidden because an
 > analyst has to know how much to trust the headline. Thresholds are conventional

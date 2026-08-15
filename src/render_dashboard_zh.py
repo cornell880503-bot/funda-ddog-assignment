@@ -275,8 +275,13 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
      '>領先</text>'),
     ('COMPOSITE ${cz >= 0 ? "+" : ""}${cz.toFixed(2)}',
      '合成 ${cz >= 0 ? "+" : ""}${cz.toFixed(2)}'),
-    ('The grey dot is the <strong>placebo</strong>\n      at +0.93 — close to the Datadog relative measures, and the reason the absolute\n      measure at +2.36 must not be read as a Datadog signal.',
-     '灰點是<strong>安慰劑</strong>，位在 +0.93 — 與 Datadog 的相對指標很接近，\n      這就是絕對值指標 +2.36 不能被讀成 Datadog 訊號的理由。'),
+    ("""The grey dot is the <strong>placebo</strong>,
+      which cannot contain Datadog information. Compare it with the ecosystem-adjusted
+      Datadog measure before reading anything into the absolute one &mdash; when the
+      placebo leans as hard as the signal, the ecosystem is what is moving.""",
+     """灰點是<strong>安慰劑</strong>，它不可能含有任何 Datadog 資訊。
+      在對絕對值指標做任何解讀之前，先跟經生態系調整後的 Datadog 指標比一比 &mdash;
+      當安慰劑偏離得跟訊號一樣多，在動的就是生態系。"""),
     ('Green would be a win (&lt;1.0).\n    <strong>There is no green.</strong> Amber is 1.0&ndash;1.3, red is worse, and the\n    deeper the red the further from parity.',
      '綠色才算勝出（&lt;1.0）。<strong>沒有任何綠色。</strong>\n    琥珀色是 1.0&ndash;1.3，紅色更差，紅得越深離基準越遠。'),
     # cadence + templating + footer
