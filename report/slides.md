@@ -147,10 +147,11 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 | **Docker Hub `datadog/agent`** | **core Go agent — hosts, containers, logs** | **11.25bn** | **lifetime counter only** |
 | APT/YUM, Helm, cloud marketplaces | core Go agent | not published | none |
 
-**Roughly 10× the volume sits in a channel with no public history.**
+**Roughly 90% of the install surface publishes no time series at all.**
 
-> The finding is **not** "alternative data cannot predict Datadog". It is:
-> *the freely and historically observable slice is the wrong slice, and the right slice is not retrospectively observable at all.*
+> **The binding constraint is observability, not modelling.** No amount of modelling recovers a series that was never recorded — and inside the observable tenth, the downloads-to-revenue coupling has already decayed 346% (next slide).
+>
+> So the finding is **not** "alternative data cannot predict Datadog". It is: *the freely and historically observable slice is the wrong slice, and the right slice is not retrospectively observable at all.*
 
 **The forward fix is one API call a day.** Snapshotting the Docker Hub counter yields a correct series **from that day on**; the 27 elapsed quarters cannot be recovered.
 
@@ -183,27 +184,24 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 
 ---
 
-## Slide 10 — What the data supports, and what would change the answer
+## Slide 10 — What the data supports, and what would change it
 
-**The binding constraint is observability, not modelling.** Datadog's billable telemetry is collected by a Go agent shipped through channels that publish **no time series** — 11.25bn cumulative pulls on Docker Hub alone against 1.13bn on the npm basket. **Roughly 90% of the install surface is unobservable**, and within the observable tenth the downloads-to-revenue coupling has decayed 346%. No amount of modelling recovers a series that was never recorded.
+**Supported.** A guidance-anchored rule with an out-of-sample-selected window forecasts Q3 2026 at **$1,188.5m ± $14.7m**, MAPE 4.10%, using no alternative data. Three signals tested end to end; none beat it.
 
-**Supported.** A guidance-anchored rule with an out-of-sample-selected window forecasts Q3 2026 at **$1,188.5m ± $14.7m**, MAPE 4.10%, using no alternative data. Three signals were tested end to end; none beat it.
+**Not supported — a bound, not a verdict.** At n=13 the test detects a 5% edge only **6%** of the time, so "0 of 24" *bounds* the effect rather than proving it zero. Not a power problem: the observed cells sit at **1.05–2.65**, consistently on the wrong side of parity.
 
-**Not supported — stated as a bound, not a verdict.** At n=13 a Diebold–Mariano test detects a 5% edge only **6%** of the time. "0 of 24" *bounds* the effect size; it does not prove the effect is zero. What is *not* a power problem: the observed cells sit at **1.05–2.65**, consistently on the wrong side of parity.
+**What I would do next, and what would change my answer:**
 
-**Three things would change my answer**, in order:
-1. The downloads-to-revenue ratio stabilises — today ρ = +0.927 says the opposite.
-2. A candidate beats the **strongest** baseline while its matched placebo fails.
-3. The result replicates in a second ecosystem.
+| Action | The condition it tests |
+|---|---|
+| **Start the Docker Hub daily snapshot today.** One API call turns a lifetime counter into a usable series covering the invisible 90%. Not backfillable — every day of delay is history lost. | Does the right channel behave differently from the one I could measure? |
+| **Price a dollar-weighted panel** (card / invoice). Download counts weight an enterprise and a hobbyist the same; free data cannot fix that. | Does the count-vs-dollars mismatch explain the gap? |
+| **Re-run quarterly and let it change its mind.** | Ratio stabilises · a candidate beats the *strongest* baseline while its placebo fails · replicates in a second ecosystem. |
 
-**Next actions, in order.**
-1. **Start the Docker Hub daily snapshot today** — one API call converts a lifetime counter into a usable series covering the invisible 90%. It cannot be backfilled, so every day of delay is history permanently lost.
-2. **Price a dollar-weighted panel** (card / invoice data). Download counts weight an enterprise and a hobbyist the same; that flaw is not fixable with free data.
-3. **Re-run quarterly and let it change its mind** — the three conditions above are automated tests, not judgement calls.
+All three are automated tests, not judgement calls. **Repointing at SNOW or MDB takes three changes; the harness is ticker-agnostic. What does not transfer is the conclusion.**
 
-**Reusability.** Repointing at SNOW or MDB takes three changes — CIK and revenue tag, a signal basket with its control and placebo, the guidance extractor. The harness is ticker-agnostic. **What does not transfer is the conclusion.**
-
-> **Notes.** Land the 90%-unobservable line first — it reframes the negative
-> result as a data-availability finding rather than a modelling failure. Then
-> the three falsifiers, then the Docker snapshot as the concrete next action.
-> The dashboard prototype is `dashboard/index.html`; open it if there is time.
+> **Notes.** Slide 8 already landed the 90%-unobservable framing, so open straight
+> on "supported / not supported" and spend the time on the table. The right-hand
+> column is the point: each action is tied to a condition that would reverse the
+> call, which is what makes this a pipeline rather than a verdict.
+> Dashboard prototype is `dashboard/index.html`; open it if there is time.
