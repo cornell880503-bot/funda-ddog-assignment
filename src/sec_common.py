@@ -20,9 +20,52 @@ RAW = REPO / "data" / "raw"
 PROCESSED = REPO / "data" / "processed"
 MANUAL = REPO / "data" / "manual"
 
-CONTACT_EMAIL = os.environ.get("SEC_CONTACT_EMAIL", "cornell880503@gmail.com")
-USER_AGENT = f"DDOG-Nowcast research project ({CONTACT_EMAIL})"
-HEADERS = {"User-Agent": USER_AGENT, "Accept-Encoding": "gzip, deflate"}
+# SEC returns 403 without a contact email in the User-Agent, so this is
+# required rather than optional. No default: a personal address hardcoded here
+# would be published along with the repository. The check is deferred to the
+# first outbound request rather than done at import, because most modules
+# import this file only for the path constants below and never touch EDGAR --
+# raising at import would make the npm and rendering stages fail for a variable
+# they do not use.
+CONTACT_EMAIL = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
+
+
+def _require_contact() -> str:
+    if not CONTACT_EMAIL:
+        raise SystemExit(
+            "SEC_CONTACT_EMAIL is not set. SEC EDGAR rejects requests without a\n"
+            "contact address in the User-Agent header. Set it and re-run:\n\n"
+            '    export SEC_CONTACT_EMAIL="you@example.com"\n'
+        )
+    return CONTACT_EMAIL
+
+
+class _Headers(dict):
+    """Validates on use, so only the stages that call EDGAR need the variable."""
+
+    def __missing__(self, key: str) -> str:  # pragma: no cover - dict is prefilled
+        raise KeyError(key)
+
+    def __getitem__(self, key: str) -> str:
+        if key == "User-Agent":
+            return f"DDOG-Nowcast research project ({_require_contact()})"
+        return super().__getitem__(key)
+
+    def items(self):  # requests iterates items() when building the request
+        return [("User-Agent", self["User-Agent"]), ("Accept-Encoding", self["Accept-Encoding"])]
+
+    def keys(self):
+        return ["User-Agent", "Accept-Encoding"]
+
+
+HEADERS = _Headers({"Accept-Encoding": "gzip, deflate"})
+
+
+def __getattr__(name: str) -> str:
+    """Module-level lazy USER_AGENT (PEP 562) for callers that use it directly."""
+    if name == "USER_AGENT":
+        return f"DDOG-Nowcast research project ({_require_contact()})"
+    raise AttributeError(name)
 
 # CIKs used across the project.
 CIK = {

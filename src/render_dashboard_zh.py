@@ -13,6 +13,9 @@ from __future__ import annotations
 
 import json
 import re
+import pathlib
+import tempfile
+import subprocess
 
 import build_dashboard
 import render_dashboard
@@ -33,7 +36,7 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
     ("(${IMP.days} of ${IMP.elapsed} days with published data)",
      "（已發布資料 ${IMP.elapsed} 天中的 ${IMP.days} 天）"),
     ("guidance ${H.guidance_verified} vs 8-K ${H.guidance_accession}",
-     "指引已核對 8-K ${H.guidance_accession}"),
+     "指引核對 ${H.guidance_verified === 'agree' ? '一致' : H.guidance_verified} · 8-K ${H.guidance_accession}"),
     # panel titles
     ("Headline nowcast &mdash; Q3 2026 revenue", "頭條即時預測 &mdash; 2026Q3 營收"),
     ("Tracking ahead / behind &mdash; divergence monitor", "領先／落後追蹤 &mdash; 背離監控器"),
@@ -112,12 +115,12 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
     <em>not</em> translate into revenue: the mapping from these signals to revenue
     failed out-of-sample validation. Note the current reading &mdash; the absolute
     Datadog measure is diverging while the ecosystem-adjusted measure is in line and
-    the <em>placebo</em> sits at z=+0.93. That pattern says the ecosystem is running
+    the <em>placebo</em> sits at z=${(() => { const p = DATA.divergence.find(r => r.feature.indexOf("plc_") === 0); return (p.z >= 0 ? "+" : "") + p.z.toFixed(2); })()}. That pattern says the ecosystem is running
     hot, not that Datadog is.""",
      """「背離」代表本季在該指標上不像過去八季。它<em>不能</em>轉換成營收：
     這些訊號到營收的映射在樣本外驗證中失敗了。看目前的讀數 &mdash;
     Datadog 絕對值指標呈背離，但經生態系調整後的指標是符合，而<em>安慰劑</em>
-    位在 z=+0.93。這個組合說的是生態系在發燙，不是 Datadog。"""),
+    位在 z=${(() => { const p = DATA.divergence.find(r => r.feature.indexOf("plc_") === 0); return (p.z >= 0 ? "+" : "") + p.z.toFixed(2); })()}。這個組合說的是生態系在發燙，不是 Datadog。"""),
     # pace chart
     ("${q} (live)", "${q}（進行中）"),
     ("prior quarters", "過去各季"),
@@ -167,8 +170,8 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
       所以這些特徵確實帶有 AR(1) 缺乏的資訊。那個資訊是漂移，
       而設定正確的樸素基準本來就提供它：對最強基準，同一虛無分布產生
       ${D.perm_mean_vs_best} 格，而實際觀測值是 ${D.cells_beating_best} 格。"""),
-    ("target: <code>${tg}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)",
-     "目標：<code>${tg}</code> &mdash; 相對最強基準的 RMSE 比值（&lt;1 才算勝過）"),
+    ("target: <code>${T(tg)}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)",
+     "目標：<code>${T(tg)}</code> &mdash; 相對最強基準的 RMSE 比值（&lt;1 才算勝過）"),
     ("Baselines, expanding walk-forward, no alternative data",
      "基準模型，擴張視窗 walk-forward，未使用另類數據"),
     ('<th class="num">MAPE %</th><th class="num">Hit</th>',
@@ -178,6 +181,9 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
     ('<th>Target</th><th>Feature</th><th class="num">Ratio</th>',
      '<th>目標</th><th>特徵</th><th class="num">比值</th>'),
     ("<th>Target</th><th>Baseline</th>", "<th>目標</th><th>基準</th>"),
+    ("<th>Series</th><th>Role</th>", "<th>序列</th><th>角色</th>"),
+    ('<th class="num">n OOS</th>', '<th class="num">樣本外 n</th>'),
+    ('<th class="num">Hit</th>', '<th class="num">命中率</th>'),
     ('<th class="num">Boot 95% CI</th>', '<th class="num">Bootstrap 95% CI</th>'),
     ("""Intelligent Cloud growth is <strong>significantly worse</strong> than
       the naive baseline &mdash; the confidence interval excludes 1.0 on the wrong side.
@@ -221,21 +227,9 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
     ("<strong>counsel's forward-looking-statements boilerplate</strong>",
      '<strong>法務撰寫的前瞻性陳述樣板</strong>'),
     ('The 8-K press release is the one\n      qualitative source that is cleanly backfillable &mdash; free, official, and\n      timestamped at the guidance-issuance moment. <strong>The legal disclaimer\n      beats management\'s own words on every comparison</strong>, and against AR(1)\n      it is "significant" (CI [${DATA.tone.plc_ci_lo.toFixed(3)}, ${DATA.tone.plc_ci_hi.toFixed(3)}], DM p=${DATA.tone.plc_dm_p.toFixed(3)}) &mdash; from text written\n      to convey no information. Boilerplate drifts as counsel updates the template,\n      so it proxies time. Unstructured features are <em>more</em> exposed to\n      spurious trend-fitting than structured ones, so in an LLM extraction pipeline\n      the control discipline matters more than the extraction quality.',
-     '8-K 新聞稿是唯一可以乾淨回補的質化來源 &mdash; 免費、官方，\n      且時間戳就落在指引發布的那一刻。<strong>法務的免責聲明在每一項比較上\n      都打敗管理層自己的話</strong>，對 AR(1) 更達到「顯著」\n      （CI [0.533, 0.835]、DM p=0.088）&mdash; 而那段文字根本不是為了傳遞資訊而寫的。\n      樣板隨律師改版而漂移，因此它是時間的代理。非結構化特徵比結構化特徵\n      <em>更</em>容易產生偽趨勢擬合，所以在 LLM 抽取管線裡，\n      對照組紀律比抽取品質更重要。'),
+     '8-K 新聞稿是唯一可以乾淨回補的質化來源 &mdash; 免費、官方，\n      且時間戳就落在指引發布的那一刻。<strong>法務的免責聲明在每一項比較上\n      都打敗管理層自己的話</strong>，對 AR(1) 更達到「顯著」\n      （CI [${DATA.tone.plc_ci_lo.toFixed(3)}, ${DATA.tone.plc_ci_hi.toFixed(3)}]、DM p=${DATA.tone.plc_dm_p.toFixed(3)}）&mdash; 而那段文字根本不是為了傳遞資訊而寫的。\n      樣板隨律師改版而漂移，因此它是時間的代理。非結構化特徵比結構化特徵\n      <em>更</em>容易產生偽趨勢擬合，所以在 LLM 抽取管線裡，\n      對照組紀律比抽取品質更重要。'),
     ('How the signals combine &mdash; the tracking call',
      '訊號如何合成 &mdash; 追蹤判斷'),
-    ('Composite tracking indicator, day ${M.days_elapsed}',
-     '合成追蹤指標，第 ${M.days_elapsed} 天'),
-    ('<div><span>Combines</span>',
-     '<div><span>合成自</span>'),
-    ('<div><span>Weighting</span><b>equal</b></div>',
-     '<div><span>權重</span><b>等權</b></div>'),
-    ('<div><span>Excluded</span>',
-     '<div><span>排除</span>'),
-    ('<div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>',
-     '<div><span>領先</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>'),
-    ('<div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>',
-     '<div><span>落後</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>'),
     ('<strong>Why these two, equally weighted.</strong>\n    Both are drift-adjusted. <em>Datadog absolute</em> is excluded from the\n    composite because it carries the ecosystem-wide inflation documented below &mdash;\n    including it would make the indicator fire on registry activity rather than on\n    Datadog. Weights are equal because nothing here survived validation, and fitting\n    weights on ${DATA.diagnostics.grid_cells} cells that all failed would be exactly\n    the error this project exists to warn about.',
      '<strong>為什麼是這兩個，而且等權。</strong>\n    兩者都做過漂移調整。<em>Datadog 絕對值</em>被排除在合成之外，因為它帶著下方記錄的\n    全生態系膨脹 &mdash; 納入它會讓指標對 registry 活動亮燈而不是對 Datadog 亮燈。\n    權重等權，是因為這裡沒有任何東西通過驗證，而在 ${DATA.diagnostics.grid_cells} 個\n    全數失敗的格子上去擬合權重，正是本專案要警告的那個錯誤。'),
     ('What "tracking ahead / behind" has actually meant',
@@ -314,6 +308,38 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
      '上方每一塊實際多久會變動一次，以及你看到它時它可能已經多舊。'),
     ('What is generic infrastructure here, versus what is specific to Datadog.',
      '這裡哪些是通用基礎設施，哪些是 Datadog 專屬的。'),
+    ('First: what the z on this page actually is, and why it is not the raw growth rate',
+     '先講：這一頁的 z 到底是什麼，以及為什麼不直接看成長率'),
+    ('<b>The raw number cannot answer the question.</b>\n            Datadog downloads through day ${day} of this quarter are\n            <b>${pct(abs.current)}% YoY</b>. Ahead or behind? On its own that is unreadable\n            &mdash; the whole registry grew too, and the quarter is not finished.',
+     '<b>原始數字回答不了這個問題。</b>\n            本季到第 ${day} 天，Datadog 下載量年增 <b>${pct(abs.current)}%</b>。\n            這是領先還是落後？單看它無法判讀 &mdash; 整個 registry 也在長，而且這一季還沒結束。'),
+    ('<b>So compare the signal with its own past,\n            at the same point in the quarter.</b> Downloads accumulate, so day ${day} has to be\n            measured against day ${day} of the prior 8 quarters &mdash; never against a full quarter.',
+     '<b>所以要拿這個訊號跟它自己的過去比，而且要比在季內的同一個位置。</b>\n            下載量是累積的，所以第 ${day} 天只能對照前 8 季的第 ${day} 天 &mdash; 絕不能對照整季。'),
+    ('<b>That comparison is the z.</b> It says how\n            unusual today is <em>for this signal</em>, in units of its own normal quarter-to-quarter\n            variation.',
+     '<b>那個比較就是 z。</b> 它說的是：以<em>這個訊號自己</em>的標準來看，\n            今天有多不尋常 —— 單位是它自身正常的季間波動。'),
+    ('Worked, on the live reading',
+     '用現時讀數實際算一次'),
+    ('this quarter, day ${day}',
+     '本季，第 ${day} 天'),
+    ('prior 8 quarters, same day &mdash; average',
+     '前 8 季同一天 &mdash; 平均'),
+    ('prior 8 quarters &mdash; standard deviation',
+     '前 8 季 &mdash; 標準差'),
+    ('Read as: Datadog\'s absolute download growth is\n            <b>${Math.abs(abs.z).toFixed(1)} standard deviations ${abs.z >= 0 ? "above" : "below"}</b>\n            what this signal normally does by day ${day}. <b>z = 0</b> would be an\n            exactly typical quarter.',
+     '讀法：Datadog 的絕對下載成長，比這個訊號在第 ${day} 天的常態\n            <b>${abs.z >= 0 ? "高" : "低"}出 ${Math.abs(abs.z).toFixed(1)} 個標準差</b>。\n            <b>z = 0</b> 代表完全典型的一季。'),
+    ('<b>Why this is the right unit for "tracking\n        ahead / behind".</b> Ahead of what? Not of zero, and not of the ecosystem &mdash; of\n        <em>this quarter\'s own precedent</em>. A z answers exactly that, in a unit that is\n        comparable across signals measured on different scales, which is what makes averaging\n        them into one call defensible at all.',
+     '<b>為什麼這是「領先／落後」的正確單位。</b> 領先於什麼？不是領先於零，\n        也不是領先於生態系 &mdash; 是領先於<em>這一季自己的前例</em>。z 正好回答這個，\n        而且它的單位在不同尺度的訊號之間可以比較 —— 那才使得把它們平均成一個判斷是站得住的。'),
+    ('Composite tracking indicator, day ${M.days_elapsed} (${C.horizon} window)',
+     '合成追蹤指標，第 ${M.days_elapsed} 天（${C.horizon} 視窗）'),
+    ('<div class="kv"><span>Combines</span>',
+     '<div class="kv"><span>合成自</span>'),
+    ('<div class="kv"><span>Weighting</span><span>equal</span></div>',
+     '<div class="kv"><span>權重</span><span>等權</span></div>'),
+    ('<div class="kv"><span>Excluded</span>',
+     '<div class="kv"><span>排除</span>'),
+    ('<div class="kv"><span>Tracking ahead</span>',
+     '<div class="kv"><span>領先</span>'),
+    ('<div class="kv"><span>Tracking behind</span>',
+     '<div class="kv"><span>落後</span>'),
     # cadence + templating + footer
     ("<th>Signal</th><th>Frequency</th><th>Latency</th><th>Role</th>",
      "<th>訊號</th><th>頻率</th><th>延遲</th><th>角色</th>"),
@@ -349,21 +375,48 @@ TEMPLATE_MAP: list[tuple[str, str]] = [
   reproducible with <code>python src/build_dashboard.py</code>.""",
      """  資料來源：SEC EDGAR XBRL company facts 與 Item 2.02 8-K 附件；npm registry
   downloads API；pypistats.org。所有數字均可追溯至快取的原始回應或引用的
-  accession number。指引數字已由獨立解析路徑對主文件重新核對。未使用重大非公開資訊。
+  accession number。指引數字已由獨立解析路徑對主文件重新核對（${H.guidance_verified}）。未使用重大非公開資訊。
   於 ${M.generated} 由版本控管的程式碼產生；本頁每個數字都可用
   <code>python src/build_dashboard.py</code> 重現。"""),
 ]
 
 # ------------------------------------------------------------------ payload
+DISPLAY_MAP = {
+    # Values the JS branches on. These stay English in the payload so every
+    # comparison in the template keeps working; they are injected as TRV and
+    # translated at the moment of display instead. Translating them in the
+    # payload is what made the Chinese build throw and drop eight panels.
+    "in line": "符合", "leaning": "傾向", "diverging": "背離",
+    "rank-1 candidate": "先驗排序第 1",
+    "rank-2 candidate": "先驗排序第 2",
+    "rank-3 candidate": "先驗排序第 3",
+    "negative control": "負對照組",
+    "divergence monitor": "背離監控器",
+    "negative control ": "負對照組 ",
+    "HEADLINE INPUT": "頭條輸入",
+    "target / beat history": "目標／超額歷史",
+    "cross-check only, 181-day history": "僅交叉檢查，歷史 181 天",
+    "random walk": "隨機漫步",
+    "guidance + mean beat": "指引 + 展開式平均超額",
+    "guidance + trailing beat (8q)": "指引 + 近八季平均超額",
+    "AR(1)+trend": "AR(1)+趨勢",
+    "signal": "訊號", "control": "對照組",
+    "appendix": "附錄",
+    "yes": "是",
+    "NO": "否",
+    "tracking ahead": "領先", "tracking behind": "落後",
+    "cust_yoy": "$100k+ 客戶數成長", "billings_yoy": "Billings 成長",
+    "rev_yoy": "營收年增率", "beat_vs_guide": "相對指引超額",
+    "guidance + auto-window beat": "指引 + 自動選窗超額",
+    "no": "否",
+}
+
 PAYLOAD_MAP = {
     "Datadog, Inc.": "Datadog, Inc.（DDOG）",
     "early November 2026": "2026 年 11 月初",
     ("guidance midpoint x (1 + mean beat over a trailing window "
      "whose length is selected out-of-sample)"):
         "指引中點 × (1 + 樣本外選定視窗的平均超額)",
-    "guidance + auto-window beat": "指引 + 自動選窗超額",
-    "cust_yoy": "$100k+ 客戶數成長", "billings_yoy": "Billings 成長",
-    "rev_yoy": "營收年增率", "beat_vs_guide": "相對指引超額",
     "yes -- primary document re-fetched from EDGAR and read":
         "已核對（主文件自 EDGAR 重新抓取並閱讀）",
     ("Sell-side consensus is not included: no free, citable public "
@@ -376,11 +429,6 @@ PAYLOAD_MAP = {
     "Datadog vs competitors": "Datadog 相對競品",
     "Datadog absolute": "Datadog 絕對值",
     "PLACEBO vs competitors": "安慰劑 相對競品",
-    "rank-1 candidate": "先驗排序第 1",
-    "rank-2 candidate": "先驗排序第 2",
-    "rank-3 candidate": "先驗排序第 3",
-    "negative control": "負對照組",
-    "in line": "符合", "leaning": "傾向", "diverging": "背離",
     "npm download pace (Datadog basket)": "npm 下載配速（Datadog 籃）",
     "npm control + placebo baskets": "npm 對照籃 + 安慰劑籃",
     "Hyperscaler cloud segment growth": "Hyperscaler 雲端部門成長",
@@ -391,16 +439,6 @@ PAYLOAD_MAP = {
     "1 day": "1 天", "same day": "當日",
     "5-19 days before DDOG reports": "早於 DDOG 發布 5–19 天",
     "34-47 days after quarter end": "季末後 34–47 天",
-    "divergence monitor": "背離監控器",
-    "negative control ": "負對照組 ",
-    "HEADLINE INPUT": "頭條輸入",
-    "target / beat history": "目標／超額歷史",
-    "cross-check only, 181-day history": "僅交叉檢查，歷史 181 天",
-    "random walk": "隨機漫步",
-    "guidance + mean beat": "指引 + 展開式平均超額",
-    "guidance + trailing beat (8q)": "指引 + 近八季平均超額",
-    "AR(1)+trend": "AR(1)+趨勢",
-    "signal": "訊號", "control": "對照組",
     # coverage-table strings (payload side)
     "npm (constant-composition basket)": "npm（常數組成籃）",
     "npm (all Datadog packages)": "npm（全部 Datadog 套件）",
@@ -419,10 +457,6 @@ PAYLOAD_MAP = {
     "CUMULATIVE COUNTER ONLY -- no time series": "僅累計計數 —— 無時序資料",
     "not publicly exposed": "未公開",
     "NO -- not backfillable": "否 —— 無法回補",
-    "appendix": "附錄",
-    "yes": "是",
-    "NO": "否",
-    "tracking ahead": "領先", "tracking behind": "落後",
     "above trend": "高於趨勢", "below trend": "低於趨勢",
     "Datadog vs ecosystem": "Datadog 相對生態系",
     "Datadog absolute (carries ecosystem inflation)": "Datadog 絕對值（帶有生態系膨脹）",
@@ -446,6 +480,54 @@ RISK_DETAIL_MAP = {
 }
 
 
+def smoke_test(zh_html: pathlib.Path, en_html: pathlib.Path) -> None:
+    """Execute both builds' JS and require them to render the same panel count.
+
+    The Chinese build once shipped with eight of ten panels missing: a payload
+    value that the JS branched on had been translated, so a lookup returned
+    undefined and the script threw halfway down the page. Nothing in the
+    template-coverage or leftover-English checks can see that -- the file is
+    complete and correctly translated, it just stops executing. Only running it
+    catches it, so the render runs it.
+    """
+    stub = """
+const nodes = [];
+function mk(){ return { _h:"", set innerHTML(v){this._h=v;}, get innerHTML(){return this._h;},
+  get firstChild(){return this;}, appendChild(n){nodes.push(n); return n;}, style:{},
+  classList:{add(){},remove(){}}, querySelector(){return null;}, querySelectorAll(){return [];},
+  addEventListener(){}, textContent:"" }; }
+global.document = { createElement: mk, getElementById: () => mk(), querySelector: () => null,
+  querySelectorAll: () => [], addEventListener(){} };
+global.window = { addEventListener(){}, matchMedia: () => ({matches:false, addEventListener(){}}) };
+global.__nodes = nodes;
+"""
+    counts, rendered = {}, {}
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        (td / "stub.js").write_text(stub)
+        for tag, path in (("en", en_html), ("zh", zh_html)):
+            js = "\n".join(re.findall(r"<script[^>]*>(.*?)</script>", path.read_text(), re.S))
+            (td / f"{tag}.js").write_text(js)
+            r = subprocess.run(
+                ["node", "-e", f'require("{td}/stub.js");'
+                 f'try{{require("{td}/{tag}.js");}}catch(e){{console.log("THROW:"+e.message);}}'
+                 'console.log("N="+__nodes.length);'
+                 'console.log("<<<"+__nodes.map(n=>n.innerHTML).join("\\n"));'],
+                capture_output=True, text=True,
+            )
+            if "THROW:" in r.stdout:
+                raise SystemExit(f"zh: {tag} build throws at runtime -> {r.stdout.strip()}")
+            counts[tag] = int(re.search(r"N=(\d+)", r.stdout).group(1))
+            rendered[tag] = r.stdout.split("<<<", 1)[1] if "<<<" in r.stdout else ""
+    if counts["zh"] != counts["en"]:
+        raise SystemExit(
+            f"zh: rendered {counts['zh']} blocks but the English build renders "
+            f"{counts['en']} -- the translation broke a branch"
+        )
+    print(f"smoke test: both builds render {counts['en']} blocks")
+    return rendered["zh"]
+
+
 def main() -> None:
     payload = build_dashboard.main()
 
@@ -465,6 +547,24 @@ def main() -> None:
         return obj
 
     payload = tr(payload)
+    # A value the JS branches on must never be translated in the payload. The
+    # runtime smoke test below catches the variant that throws; this catches the
+    # quieter one, where a translated value simply falls through to the wrong
+    # branch and mislabels a row without any error.
+    overlap = set(DISPLAY_MAP) & set(PAYLOAD_MAP)
+    if overlap:
+        raise SystemExit(
+            "zh: these are branch values and must live only in DISPLAY_MAP: "
+            + ", ".join(sorted(overlap))
+        )
+    flat = json.dumps(payload, ensure_ascii=False)
+    leaked = [en for en, zh in DISPLAY_MAP.items() if f'"{zh}"' in flat]
+    if leaked:
+        raise SystemExit(
+            "zh: branch values were translated in the payload, so the template "
+            "will take the wrong branch: " + ", ".join(leaked)
+        )
+
     # Divergence labels carry a "(d30)" horizon suffix appended after the base
     # label, so they miss a whole-string lookup.
     for row in payload["divergence"]:
@@ -489,6 +589,28 @@ def main() -> None:
             + "\n  ".join(missing)
         )
 
+    for en, zh in (
+        ("""Scored on revenue growth against the same
+      strongest baseline the headline uses. Matched non-cloud controls come from the
+      <em>same filing</em>, so issuer, quarter and extraction method are held fixed.""",
+         """以營收年增率為標的，對照頭條所用的同一個最強基準評分。
+      配對的非雲端對照組取自<em>同一份 filing</em>，因此發行人、季度與抽取方法
+      都被固定住。"""),
+        ("""<strong>An 84.6% directional hit rate with
+      over 3&times; the baseline error is the trap.</strong> Intelligent Cloud is
+      significantly <em>worse</em> than the baseline &mdash; its CI excludes 1.0 on the
+      wrong side &mdash; and its matched control from the same filing fails too. AWS has
+      only 4 out-of-sample points and is reported as untestable rather than as the one
+      cell that nearly worked.""",
+         """<strong>84.6% 的方向命中率、配上超過 3&times; 的基準誤差，正是陷阱所在。</strong>
+      Intelligent Cloud 顯著<em>劣於</em>基準 &mdash; 信賴區間排除 1.0，但落在錯誤的
+      那一側 &mdash; 而且同一份 filing 出來的配對對照組也一起失敗。AWS 只有 4 個
+      樣本外點，故報告為無法檢定，而不是報告成「唯一差點成功的那一格」。"""),
+    ):
+        if en not in tpl:
+            raise SystemExit(f"zh: prose block not found: {en[:60]}")
+        tpl = tpl.replace(en, zh)
+
     # risk-flag detail strings live in the template's JS array
     for en, zh in RISK_DETAIL_MAP.items():
         tpl = tpl.replace(en, zh)
@@ -509,29 +631,25 @@ def main() -> None:
         ('name: "Beat distribution drift"', 'name: "超額分布漂移"'),
         ('name: "Model residual drift"', 'name: "模型殘差漂移"'),
         ('name: "Signal-set validity"', 'name: "訊號集有效性"'),
-        ('state: "diverging"', 'state: "背離"'),
-        ('state: "leaning"', 'state: "傾向"'),
-        ('state: "in line"', 'state: "符合"'),
-        ('state === "diverging"', 'state === "背離"'),
-        ('C.z >= C.ahead_threshold ? "tracking ahead"', 'C.z >= C.ahead_threshold ? "領先"'),
-        ('C.z <= C.behind_threshold ? "tracking behind" : "in line"', 'C.z <= C.behind_threshold ? "落後" : "符合"'),
-        ('callNow === "in line" ? "t-good" : "t-warn"', 'callNow === "符合" ? "t-good" : "t-warn"'),
         ("'<span class=\"tag t-good\">correct</span>'", "'<span class=\"tag t-good\">正確</span>'"),
         ("'<span class=\"tag t-bad\">wrong</span>'", "'<span class=\"tag t-bad\">錯誤</span>'"),
-        ('state === "leaning"', 'state === "傾向"'),
         ('paceUnits: "millions of downloads, cumulative"',
          'paceUnits: "單位：百萬次下載，累計"'),
-        ('h.role === "control"', 'h.role === "對照組"'),
-        ('c.in_model.startsWith("yes")', 'c.in_model.startsWith("是")'),
-        ('c.in_model === "appendix"', 'c.in_model === "附錄"'),
-        ('\'<span class="tag t-good">yes</span>\'', '\'<span class="tag t-good">是</span>\''),
-        ('\'<span class="tag t-dim">appendix</span>\'', '\'<span class="tag t-dim">附錄</span>\''),
-        ('\'<span class="tag t-bad">no</span>\'', '\'<span class="tag t-bad">否</span>\''),
-        ('c.role === "HEADLINE INPUT"', 'c.role === "頭條輸入"'),
     ):
         if en not in tpl:
             raise SystemExit(f"zh: template literal not found: {en}")
         tpl = tpl.replace(en, zh)
+
+    # Inject the display-only table. TRV is `{}` in the shared template, so the
+    # English build renders identity and the Chinese build renders Chinese from
+    # the *same* branch logic -- no comparison is ever patched.
+    trv_anchor = "const TRV = {};"
+    if trv_anchor not in tpl:
+        raise SystemExit("zh: TRV anchor missing from template")
+    tpl = tpl.replace(
+        trv_anchor,
+        "const TRV = " + json.dumps(DISPLAY_MAP, ensure_ascii=False) + ";",
+    )
 
     tpl = tpl.replace('<html lang="en">', '<html lang="zh-Hant">')
 
@@ -542,12 +660,30 @@ def main() -> None:
     out.parent.mkdir(exist_ok=True)
     out.write_text(html)
 
-    # leftover-English scan over visible prose
-    prose = re.findall(r">([A-Za-z][A-Za-z ,'&;/-]{25,})<", html)
-    leftovers = [p.strip() for p in prose if not p.strip().startswith("http")]
     print(f"Wrote {out.relative_to(sc.REPO)}  ({out.stat().st_size / 1024:.0f} KB)")
     print(f"translation mappings applied: {len(TEMPLATE_MAP)} template, "
           f"{len(PAYLOAD_MAP)} payload")
+    shown = smoke_test(out, sc.REPO / "dashboard" / "index.html")
+    # A branch value that reaches the rendered page in English means a display
+    # site is missing its T() wrapper: the data is right, the cell reads English.
+    shown_text = re.sub(r"<[^>]+>", " ", shown)
+    # Leftover-English scan, over the *rendered* text rather than the file: every
+    # panel is built by JS at load time, so scanning the source finds almost
+    # nothing and returns a clean bill on a page full of English.
+    plain = re.sub(r"&\w+;", " ", shown_text)
+    leftovers = sorted({
+        m.group(0).strip()
+        for m in re.finditer(r"[A-Za-z][A-Za-z0-9 ,.:;()%$&#'/+-]{45,}", plain)
+    })
+    missed = sorted(
+        k for k in DISPLAY_MAP
+        if len(k) > 6 and re.search(r"(?<![\w-])" + re.escape(k) + r"(?![\w-])", shown_text)
+    )
+    if missed:
+        raise SystemExit(
+            "zh: branch values rendered untranslated (missing T() at the display "
+            "site): " + ", ".join(missed)
+        )
     if leftovers:
         print(f"leftover English prose blocks: {len(leftovers)}")
         for p in leftovers[:8]:

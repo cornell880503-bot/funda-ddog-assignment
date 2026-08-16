@@ -49,6 +49,27 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
          border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
 .lead { color: var(--text); font-size: 13.5px; line-height: 1.5; margin: -4px 0 15px;
   padding-left: 11px; border-left: 2px solid var(--accent); opacity: .93; }
+.explain { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 18px; }
+.explain-h { font-size: 12px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 12px; }
+.explain-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 22px; }
+@media (max-width: 820px) { .explain-grid { grid-template-columns: 1fr; } }
+.step { font-size: 13.5px; line-height: 1.55; margin-bottom: 10px; padding-left: 26px;
+  position: relative; }
+.step .n { position: absolute; left: 0; top: 1px; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--accent); color: #0d1117; font-size: 10.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); }
+.calc { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 13px 15px; }
+.calc-h { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 9px; font-weight: 600; }
+.calcT { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.calcT td { padding: 3px 0; border: 0; color: var(--muted); }
+.calcT td.num { text-align: right; color: var(--text); font-family: var(--mono); }
+.calc-eq { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: 14px; color: var(--text); }
+.calc-eq b { color: var(--accent); font-size: 17px; }
+.calc-note { margin-top: 9px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .lead b { color: var(--accent); font-weight: 600; }
 .howto { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
   padding: 16px 18px; margin: 0 0 18px; }
@@ -131,9 +152,16 @@ function panel(title, inner, lead) {
   const l = lead ? `<div class="lead">${lead}</div>` : "";
   return `<section class="panel"><h2>${title}</h2>${l}${inner}</section>`;
 }
+// Display-only translation table. The payload always carries machine values in
+// English so that every branch below compares against a stable literal; the
+// localised build fills TRV and the identical code renders Chinese. Translating
+// a value the code branches on is how the Chinese build silently lost eight
+// panels -- keep branch values and display values on opposite sides of T().
+const TRV = {};
+const T = (v) => (TRV[v] !== undefined ? TRV[v] : v);
 function stateTag(state) {
   const cls = state === "diverging" ? "t-bad" : state === "leaning" ? "t-warn" : "t-good";
-  return `<span class="tag ${cls}">${state}</span>`;
+  return `<span class="tag ${cls}">${T(state)}</span>`;
 }
 
 /* ------------------------------------------------------------------ header */
@@ -309,18 +337,63 @@ const callNow = C.z >= C.ahead_threshold ? "tracking ahead"
               : C.z <= C.behind_threshold ? "tracking behind" : "in line";
 const callCls = callNow === "in line" ? "t-good" : "t-warn";
 app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
+  ${(() => {
+    // The z-score has to be derived on screen, before any z is shown. A reader
+    // who meets "+2.41" cold has no way to know what it is measuring.
+    const abs = DATA.divergence.find(r => r.feature.indexOf("dd_abs") === 0);
+    const pct = v => ((Math.exp(v) - 1) * 100).toFixed(0);
+    const hz = DATA.divergence[0].label.match(/\((d\d+)\)/);
+    const day = hz ? hz[1].replace("d", "") : "45";
+    return `<div class="explain">
+      <div class="explain-h">First: what the z on this page actually is, and why it is not the raw growth rate</div>
+      <div class="explain-grid">
+        <div>
+          <div class="step"><span class="n">1</span><b>The raw number cannot answer the question.</b>
+            Datadog downloads through day ${day} of this quarter are
+            <b>${pct(abs.current)}% YoY</b>. Ahead or behind? On its own that is unreadable
+            &mdash; the whole registry grew too, and the quarter is not finished.</div>
+          <div class="step"><span class="n">2</span><b>So compare the signal with its own past,
+            at the same point in the quarter.</b> Downloads accumulate, so day ${day} has to be
+            measured against day ${day} of the prior 8 quarters &mdash; never against a full quarter.</div>
+          <div class="step"><span class="n">3</span><b>That comparison is the z.</b> It says how
+            unusual today is <em>for this signal</em>, in units of its own normal quarter-to-quarter
+            variation.</div>
+        </div>
+        <div class="calc">
+          <div class="calc-h">Worked, on the live reading</div>
+          <table class="calcT">
+            <tr><td>this quarter, day ${day}</td><td class="num">${pct(abs.current)}%</td></tr>
+            <tr><td>prior 8 quarters, same day &mdash; average</td><td class="num">${pct(abs.hist_mean)}%</td></tr>
+            <tr><td>prior 8 quarters &mdash; standard deviation</td><td class="num">${abs.hist_sd.toFixed(3)} log</td></tr>
+          </table>
+          <div class="calc-eq">z = (${abs.current.toFixed(3)} &minus; ${abs.hist_mean.toFixed(3)}) &divide; ${abs.hist_sd.toFixed(3)}
+            = <b>${abs.z >= 0 ? "+" : ""}${abs.z.toFixed(2)}</b></div>
+          <div class="calc-note">Read as: Datadog's absolute download growth is
+            <b>${Math.abs(abs.z).toFixed(1)} standard deviations ${abs.z >= 0 ? "above" : "below"}</b>
+            what this signal normally does by day ${day}. <b>z = 0</b> would be an
+            exactly typical quarter.</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:12px"><b>Why this is the right unit for "tracking
+        ahead / behind".</b> Ahead of what? Not of zero, and not of the ecosystem &mdash; of
+        <em>this quarter's own precedent</em>. A z answers exactly that, in a unit that is
+        comparable across signals measured on different scales, which is what makes averaging
+        them into one call defensible at all.</div>
+    </div>`;
+  })()}
+
   <div class="row">
     <div>
       <div class="label">Composite tracking indicator, day ${M.days_elapsed} (${C.horizon} window)</div>
       <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
-      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
+      <div><span class="tag ${callCls}" style="font-size:14px">${T(callNow).toUpperCase()}</span></div>
     </div>
-    <div class="kv">
-      <div><span>Combines</span><b>${C.parts.join(" + ")}</b></div>
-      <div><span>Weighting</span><b>equal</b></div>
-      <div><span>Excluded</span><b>${C.excluded}</b></div>
-      <div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
-      <div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
+    <div>
+      <div class="kv"><span>Combines</span><span>${C.parts.join(" + ")}</span></div>
+      <div class="kv"><span>Weighting</span><span>equal</span></div>
+      <div class="kv"><span>Excluded</span><span>${C.excluded}</span></div>
+      <div class="kv"><span>Tracking ahead</span><span>z &ge; +${C.ahead_threshold.toFixed(1)}</span></div>
+      <div class="kv"><span>Tracking behind</span><span>z &le; ${C.behind_threshold.toFixed(1)}</span></div>
     </div>
   </div>
   <div class="note"><strong>Why these two, equally weighted.</strong>
@@ -341,7 +414,7 @@ app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
     <tbody>${C.examples.map(e => `<tr>
       <td>${e.quarter}</td>
       <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
-      <td>${e.call}</td>
+      <td>${T(e.call)}</td>
       <td class="num">${e.beat_pct.toFixed(2)}%</td>
       <td class="num">${e.trailing_pct.toFixed(2)}%</td>
       <td>${e.outcome}</td>
@@ -369,7 +442,7 @@ app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
 /* ------------------------------------------------------- tracking ahead/behind */
 const rows = DATA.divergence.map(d => `
   <tr>
-    <td>${d.label}<div style="color:var(--dim);font-size:11px">${d.note}</div></td>
+    <td>${d.label}<div style="color:var(--dim);font-size:11px">${T(d.note)}</div></td>
     <td class="num">${d.current.toFixed(3)}</td>
     <td class="num">${d.hist_mean.toFixed(3)}</td>
     <td class="num">${d.hist_sd.toFixed(3)}</td>
@@ -392,7 +465,7 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
       <text x="${x(0)}" y="${MID+31}" text-anchor="middle" font-size="9.5" fill="var(--good)" font-family="var(--mono)">IN LINE</text>
       <text x="${x(2)}" y="${MID+31}" text-anchor="middle" font-size="9.5" fill="var(--warn)" font-family="var(--mono)">TRACKING AHEAD</text>
       ${[...rows].sort((a,b) => a.z - b.z).map((r, i) => {
-        const isPlc = r.note.indexOf("control") >= 0;
+        const isPlc = r.feature.indexOf("plc_") === 0;
         const col = isPlc ? "var(--muted)" : (Math.abs(r.z) >= 2 ? "var(--bad)" : Math.abs(r.z) >= 1 ? "var(--warn)" : "var(--good)");
         // Sorted by z, then staggered across three levels, so neighbouring dots
         // never share a label row -- three of the four cluster inside one sigma.
@@ -433,7 +506,7 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
     <em>not</em> translate into revenue: the mapping from these signals to revenue
     failed out-of-sample validation. Note the current reading &mdash; the absolute
     Datadog measure is diverging while the ecosystem-adjusted measure is in line and
-    the <em>placebo</em> sits at z=+0.93. That pattern says the ecosystem is running
+    the <em>placebo</em> sits at z=${(() => { const p = DATA.divergence.find(r => r.feature.indexOf("plc_") === 0); return (p.z >= 0 ? "+" : "") + p.z.toFixed(2); })()}. That pattern says the ecosystem is running
     hot, not that Datadog is.
   </div>
 `, `The four component series behind the composite above. Read them <b>together</b>, not one at a time &mdash; the placebo row is what tells you whether a Datadog reading means anything.`)));
@@ -448,10 +521,10 @@ app.appendChild(el(panel("Observability &mdash; what the signal can and cannot s
       <td class="num">${c.cumulative ? (c.cumulative / 1e9).toFixed(2) + "bn" : "&mdash;"}</td>
       <td style="font-size:12px">${c.history}</td>
       <td>${c.in_model.startsWith("yes")
-            ? '<span class="tag t-good">yes</span>'
+            ? `<span class="tag t-good">${T("yes")}</span>`
             : c.in_model === "appendix"
-              ? '<span class="tag t-dim">appendix</span>'
-              : '<span class="tag t-bad">no</span>'}</td></tr>`).join("")}
+              ? `<span class="tag t-dim">${T("appendix")}</span>`
+              : `<span class="tag t-bad">${T("no")}</span>`}</td></tr>`).join("")}
     </tbody>
   </table>
   <div class="note"><strong>This is the project's binding constraint.</strong>
@@ -602,7 +675,7 @@ app.appendChild(el(panel("Risk flags", `
             font-family="var(--mono)">${cell.ratio.toFixed(3)}</text>`;
       }).join("")).join("");
     gridHtml += `<div style="margin-bottom:12px"><div class="sub" style="margin-bottom:4px">
-      target: <code>${tg}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)</div>
+      target: <code>${T(tg)}</code> &mdash; RMSE ratio vs strongest baseline (&lt;1 would beat it)</div>
       <svg viewBox="0 0 ${W} ${HT}" width="100%" style="max-width:${W}px" role="img"
         aria-label="Heatmap of RMSE ratios for ${tg}; no cell is below one">
         ${wins.map((w, j) => `<text x="${LEFT + j*CW + CW/2}" y="15" text-anchor="middle"
@@ -614,12 +687,12 @@ app.appendChild(el(panel("Risk flags", `
     <strong>There is no green.</strong> Amber is 1.0&ndash;1.3, red is worse, and the
     deeper the red the further from parity.</div>`;
 
-  const bl = DATA.baselines.map(b => `<tr><td>${b.target}</td><td>${b.baseline}</td>
+  const bl = DATA.baselines.map(b => `<tr><td>${T(b.target)}</td><td>${T(b.baseline)}</td>
     <td class="num">${b.rmse.toFixed(4)}</td><td class="num">${b.mape.toFixed(2)}</td>
     <td class="num">${b.baseline === "random walk" ? "n/a" : b.hit.toFixed(3)}</td></tr>`).join("");
 
-  const hy = D.hyperscaler.map(h => `<tr><td>${h.target}</td><td>${h.feature}
-    <span class="tag ${h.role === "control" ? "t-dim" : "t-warn"}">${h.role}</span></td>
+  const hy = D.hyperscaler.map(h => `<tr><td>${T(h.target)}</td><td>${h.feature}
+    <span class="tag ${h.role === "control" ? "t-dim" : "t-warn"}">${T(h.role)}</span></td>
     <td class="num">${h.ratio.toFixed(3)}</td>
     <td class="num">[${h.ci[0].toFixed(2)}, ${h.ci[1].toFixed(2)}]</td>
     <td class="num">${h.dm_p.toFixed(3)}</td></tr>`).join("");
@@ -648,7 +721,7 @@ app.appendChild(el(panel("Risk flags", `
     <div class="sub" style="margin:16px 0 6px">Other target metrics from the brief</div>
     <table><thead><tr><th>Target</th><th class="num">n OOS</th>
       <th class="num">Cells beating baseline</th><th class="num">Best cell</th></tr></thead>
-      <tbody>${DATA.extended.map(e => `<tr><td>${e.target}</td>
+      <tbody>${DATA.extended.map(e => `<tr><td>${T(e.target)}</td>
         <td class="num">${e.n_oos}</td>
         <td class="num">${e.beating} of ${e.cells}</td>
         <td class="num">${e.best.toFixed(3)}</td></tr>`).join("")}</tbody></table>
@@ -682,7 +755,7 @@ app.appendChild(el(panel("Risk flags", `
     <table><thead><tr><th>Target</th><th class="num">n</th>
       <th class="num">detect r=0.95</th><th class="num">r=0.90</th>
       <th class="num">r=0.80</th></tr></thead>
-      <tbody>${DATA.power.map(p => `<tr><td>${p.target}</td><td class="num">${p.n}</td>
+      <tbody>${DATA.power.map(p => `<tr><td>${T(p.target)}</td><td class="num">${p.n}</td>
         <td class="num">${p.p95}</td><td class="num">${p.p90}</td>
         <td class="num">${p.p80}</td></tr>`).join("")}</tbody></table>
     <div class="note" style="margin-top:6px"><strong>A genuine 5&ndash;10% edge would
@@ -699,7 +772,7 @@ app.appendChild(el(panel("Risk flags", `
       <th class="num">DM p</th><th class="num">Hit</th></tr></thead>
       <tbody>${(DATA.diagnostics.hyperscaler_rev || []).map(h => `<tr>
         <td>${h.role === "control" ? "<em>" + h.feature + "</em>" : "<strong>" + h.feature + "</strong>"}</td>
-        <td>${h.role}</td><td class="num">${h.n_oos}</td>
+        <td>${T(h.role)}</td><td class="num">${h.n_oos}</td>
         <td class="num ${h.ratio < 1 ? "good" : "bad"}">${h.ratio.toFixed(3)}</td>
         <td class="num">[${h.ci[0].toFixed(2)}, ${h.ci[1].toFixed(2)}]</td>
         <td class="num">${h.dm_p.toFixed(3)}</td>
@@ -725,7 +798,7 @@ app.appendChild(el(panel("Update cadence", `
   <table><thead><tr><th>Signal</th><th>Frequency</th><th>Latency</th><th>Role</th></tr></thead>
   <tbody>${DATA.cadence.map(c => `<tr><td>${c.signal}</td><td>${c.freq}</td>
     <td>${c.latency}</td><td>${c.role === "HEADLINE INPUT"
-      ? `<span class="tag t-good">${c.role}</span>` : c.role}</td></tr>`).join("")}
+      ? `<span class="tag t-good">${T(c.role)}</span>` : T(c.role)}</td></tr>`).join("")}
   </tbody></table>
 `, `How often each block above actually moves, and how stale it can be at the moment you look at it.`)));
 

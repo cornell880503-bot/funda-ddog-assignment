@@ -5,9 +5,9 @@
   "live_quarter": "2026Q3",
   "quarter_end": "2026-09-30",
   "expected_report": "early November 2026",
-  "generated": "2026-08-16",
-  "data_through": "2026-08-15",
-  "days_elapsed": 47,
+  "generated": "2026-08-17",
+  "data_through": "2026-08-16",
+  "days_elapsed": 48,
   "days_in_quarter": 92
  },
  "headline": {
@@ -98,27 +98,27 @@
  "treatments": [
   {
    "name": "causal-imputed (point estimate)",
-   "dd_rel_plc": 0.192,
-   "dd_rel": 0.3992,
-   "dd_abs": 0.7356
+   "dd_rel_plc": 0.189,
+   "dd_rel": 0.4002,
+   "dd_abs": 0.7387
   },
   {
    "name": "dropped days, rescaled",
-   "dd_rel_plc": 0.2067,
-   "dd_rel": 0.4043,
-   "dd_abs": 0.7796
+   "dd_rel_plc": 0.2038,
+   "dd_rel": 0.4062,
+   "dd_abs": 0.7815
   },
   {
    "name": "raw, outage zeros kept",
-   "dd_rel_plc": 0.2332,
-   "dd_rel": 0.4051,
-   "dd_abs": 0.7008
+   "dd_rel_plc": 0.2302,
+   "dd_rel": 0.407,
+   "dd_abs": 0.705
   }
  ],
  "imputation": {
-  "share_pct": 10.9,
+  "share_pct": 10.6,
   "days": 5,
-  "elapsed": 46
+  "elapsed": 47
  },
  "pace": {
   "2024Q2": {
@@ -1864,7 +1864,8 @@
     43,
     44,
     45,
-    46
+    46,
+    47
    ],
    "cum": [
     1.924,
@@ -1912,7 +1913,8 @@
     69.3,
     71.78,
     73.732,
-    74.196
+    74.317,
+    74.722
    ]
   }
  },

@@ -141,7 +141,7 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 
 ---
 
-## Slide 8 — The observability boundary
+## Slide 8 — Why the signal fails: the wrong slice, and it is decaying
 
 | Channel | What it carries | Cumulative | History available |
 |---|---|---|---|
@@ -149,40 +149,60 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 | **Docker Hub `datadog/agent`** | **core Go agent — hosts, containers, logs** | **11.25bn** | **lifetime counter only** |
 | APT/YUM, Helm, cloud marketplaces | core Go agent | not published | none |
 
-**Roughly 90% of the install surface publishes no time series at all.**
-
-> **The binding constraint is observability, not modelling.** No amount of modelling recovers a series that was never recorded — and inside the observable tenth, the downloads-to-revenue coupling has already decayed 346% (next slide).
->
-> So the finding is **not** "alternative data cannot predict Datadog". It is: *the freely and historically observable slice is the wrong slice, and the right slice is not retrospectively observable at all.*
-
-**The forward fix is one API call a day.** Snapshotting the Docker Hub counter yields a correct series **from that day on**; the 27 elapsed quarters cannot be recovered.
-
-> **Notes.** Own this. I built the analysis on the channel that was easy to
-> observe rather than the one that mattered, and one API call would have caught
-> it on day one.
-
----
-
-## Slide 9 — Economic decoupling, tested against SaaS hypotheses
+**Roughly 90% of the install surface publishes no time series at all** — and the tenth I could measure is the wrong tenth.
 
 # Downloads per $1m of revenue: 21,818 → 97,228
 ### +346% · Spearman ρ = +0.927 · p < 0.0001 · near-monotonic over 28 quarters
-
-**Normalised by disclosed $100k+ ARR customers:**
 
 | Per large customer | first 4 → last 4 | ρ vs time | Reading |
 |---|---|---|---|
 | Revenue | **+67%** | +0.993 | cross-sell and tiering are real |
 | Downloads | **+644%** | +0.981 | **but downloads inflated ~10× faster** |
 
-- **Cross-sell explains a minority of the gap**, not the whole of it.
-- **Private-registry mirroring pushes the opposite way** — fewer public pulls per host — so it cannot explain a +644% rise.
-- **CI/CD re-pulls fail the test too:** the weekday/weekend ratio went 6.39 → 5.61, slope p = 0.77.
+**The three obvious explanations were tested and fail.** Cross-sell explains a minority of the gap. Private-registry mirroring pushes the *opposite* way — fewer public pulls per host. CI/CD re-pulls fail too: the weekday/weekend ratio went 6.39 → 5.61, slope p = 0.77.
 
 **Counts vs dollars:** downloads are an unweighted count, so a count target should fit better — and it does, 1.137 → **1.049** against $100k+ customer growth. Closest any signal came. Still a loss, at n=11.
 
-> **Notes.** This is the original-research moment: a measurable, transferable
-> statement about a whole class of alternative data, not a post-mortem. Pause here.
+> **Notes.** Two failures, one slide, because they compound: the observable
+> channel is the minor one *and* its link to revenue is decaying. Own the first —
+> I built on the channel that was easy to observe rather than the one that
+> mattered, and one API call a day would have caught it on day one. The forward
+> fix is exactly that: snapshotting the Docker Hub counter gives a correct series
+> **from that day on**; the 27 elapsed quarters cannot be recovered.
+> The decoupling half is the original-research moment — a transferable statement
+> about a whole class of alternative data, not a post-mortem. Pause there.
+
+---
+
+## Slide 9 — Part 3: what the signals *are* used for — the tracking call
+
+**Demoted from estimator to divergence monitor.** They do not set the number. They answer one question: *is this quarter still behaving like the eight the rule was fitted on?*
+
+**The unit is a z, and the baseline is the non-obvious part.** Each signal is scored against **its own value at the same day of quarter across the prior 8 quarters** — never against zero, never against a full quarter, because downloads accumulate. So "tracking ahead" means ahead of *this quarter's own precedent*, and signals on different scales become comparable — which is what makes averaging them defensible.
+
+| Component (day 45) | Current | 8q mean | 8q sd | z | State |
+|---|---|---|---|---|---|
+| Datadog vs ecosystem *(rank 1)* | 0.200 | 0.194 | 0.121 | **+0.06** | in line |
+| Datadog vs competitors *(rank 2)* | 0.404 | 0.269 | 0.109 | **+1.23** | leaning |
+| Datadog absolute *(rank 3)* | 0.752 | 0.413 | 0.140 | **+2.41** | diverging |
+| **PLACEBO** vs competitors *(negative control)* | 0.203 | 0.075 | 0.090 | **+1.42** | leaning |
+
+**Read the placebo row first.** It cannot contain Datadog information, and it is leaning almost as hard as the signal. **Composite +0.65, in line** — the two drift-adjusted components, equally weighted; absolute is excluded because it carries the ecosystem inflation above. Thresholds ±1σ / ±2σ are **conventional, not fitted** — calibrating on 8 observations would repeat the overfitting Part 2 just rejected.
+
+| Horizon | Directional calls | Correct | Hit rate | p vs coin flip |
+|---|---|---|---|---|
+| d30 | 10 | 7 | 70% | 0.344 |
+| **d45** | **10** | **7** | **70%** | **0.344** |
+| d60 | 9 | 6 | 67% | 0.508 |
+
+**70% at ten calls is not a result — and it is stated on the dashboard, not hidden.** The signals do **not** combine into a revenue estimate, because no construction beat a naive baseline out of sample. They combine into a *directional flag with a measured, unimpressive reliability*, which is the only defensible way to put one on an analyst's screen.
+
+> **Notes.** This is Part 3. Read the live figure off the dashboard before you
+> present — it advances daily; as of writing it was in line, leaving the number
+> on slide 1 unchallenged. Say the placebo line
+> slowly; it is the whole argument. If asked "so why build it at all": because
+> the alternative is an analyst eyeballing a raw growth rate that has no baseline,
+> and a flag with a known 70% is more honest than a chart with an unknown one.
 
 ---
 
@@ -199,6 +219,8 @@ The 8-K press release is the one qualitative source that is cleanly backfillable
 | **Start the Docker Hub daily snapshot today.** One API call turns a lifetime counter into a usable series covering the invisible 90%. Not backfillable — every day of delay is history lost. | Does the right channel behave differently from the one I could measure? |
 | **Price a dollar-weighted panel** (card / invoice). Download counts weight an enterprise and a hobbyist the same; free data cannot fix that. | Does the count-vs-dollars mismatch explain the gap? |
 | **Re-run quarterly and let it change its mind.** | Ratio stabilises · a candidate beats the *strongest* baseline while its placebo fails · replicates in a second ecosystem. |
+
+**The dashboard is the second deliverable** — slide 9 running live, updating daily against the same as-of panel. It reports a call, not a number.
 
 All three are automated tests, not judgement calls. **Repointing at SNOW or MDB takes three changes; the harness is ticker-agnostic. What does not transfer is the conclusion.**
 

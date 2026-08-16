@@ -1209,3 +1209,43 @@ weight. Weights should come from validation; asserting them is the error this
 report exists to argue against. The proposal's own fallback — route extreme
 Level 2 readings to an analyst alert rather than into the number — is exactly
 the divergence-monitor design already implemented, and is kept.
+
+## D45 — The Chinese dashboard was silently dropping eight of ten panels
+
+**Symptom (user-reported).** Everything below the z-score explainer was missing
+from `report-zh/dashboard.html`. The file was complete and correctly translated;
+it just stopped executing partway down.
+
+**Cause.** The page builds itself in JS at load time, and the localisation was a
+post-process that rewrote strings in the *payload* — including values the code
+branches on. `DATA.divergence.find(r => r.label.indexOf("absolute") >= 0)` found
+nothing once the label read `Datadog 絕對值`, so `abs` was `undefined`, the panel
+threw, and panels 3–10 never appended. An audit of every literal comparison in
+the template found 12 such sites; 4 had no compensating patch on the Chinese side.
+
+**Why three separate checks all passed.** (a) Template-coverage asserted every
+source string matched — it did. (b) The leftover-English scan read the *file*,
+but the file is a script, so it saw almost no prose and reported clean. (c) The
+numeric parity check compared payloads, which were identical — the data was
+never wrong, only unreachable.
+
+**Fix — structural, not per-site.** The payload now keeps machine values in
+English; a `TRV` table is injected into the localised build and every display
+site is wrapped in `T()`. Branch values and display values are on opposite sides
+of one function, so translating a value can no longer change control flow. Two
+label-based lookups were repointed at the stable `feature` code.
+
+**Guards added, each verified against a deliberately reintroduced bug:**
+1. runtime smoke test — executes both builds under a DOM stub and requires equal
+   block counts (catches the throw; verified: exits 1 with `N=3`);
+2. static branch-value check — `DISPLAY_MAP` and `PAYLOAD_MAP` must be disjoint
+   and no branch value may appear translated in the payload (catches the quiet
+   variant that mislabels a row without throwing; verified: exits 1);
+3. leftover-English scan moved from the file to the *rendered* text — which
+   immediately surfaced two English paragraphs and a table header that the old
+   scan had passed for weeks.
+
+**Kept as a caution.** The first two fixes I shipped for this report were prose
+fixes found by reading. The defect that actually mattered was only visible by
+running the artefact. Checking that a build *succeeds* is not checking that its
+output *works*.

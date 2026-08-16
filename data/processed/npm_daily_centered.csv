@@ -3512,7 +3512,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,@opentelemetry/api,13656403.0,control,False,centered
 2026-08-13,@opentelemetry/api,14058455.0,control,False,centered
 2026-08-14,@opentelemetry/api,11316111.0,control,True,centered
-2026-08-15,@opentelemetry/api,5662235.0,control,True,centered
+2026-08-15,@opentelemetry/api,5990087.0,control,False,centered
+2026-08-16,@opentelemetry/api,5652550.5,control,True,centered
 2017-01-01,@sentry/node,0.0,control,False,centered
 2017-01-02,@sentry/node,0.0,control,False,centered
 2017-01-03,@sentry/node,0.0,control,False,centered
@@ -7026,7 +7027,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,@sentry/node,5787391.0,control,False,centered
 2026-08-13,@sentry/node,5826107.0,control,False,centered
 2026-08-14,@sentry/node,4735079.0,control,True,centered
-2026-08-15,@sentry/node,2424328.0,control,True,centered
+2026-08-15,@sentry/node,2518851.0,control,False,centered
+2026-08-16,@sentry/node,2463290.0,control,True,centered
 2017-01-01,elastic-apm-node,0.0,control,False,centered
 2017-01-02,elastic-apm-node,0.0,control,False,centered
 2017-01-03,elastic-apm-node,0.0,control,False,centered
@@ -10540,7 +10542,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,elastic-apm-node,90739.0,control,False,centered
 2026-08-13,elastic-apm-node,91856.0,control,False,centered
 2026-08-14,elastic-apm-node,72382.0,control,True,centered
-2026-08-15,elastic-apm-node,25200.0,control,True,centered
+2026-08-15,elastic-apm-node,24775.0,control,False,centered
+2026-08-16,elastic-apm-node,23997.0,control,True,centered
 2017-01-01,newrelic,4974.0,control,False,centered
 2017-01-02,newrelic,9661.0,control,False,centered
 2017-01-03,newrelic,16283.0,control,False,centered
@@ -14054,7 +14057,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,newrelic,263074.0,control,False,centered
 2026-08-13,newrelic,262722.0,control,False,centered
 2026-08-14,newrelic,218276.0,control,True,centered
-2026-08-15,newrelic,57669.0,control,True,centered
+2026-08-15,newrelic,54925.0,control,False,centered
+2026-08-16,newrelic,62650.0,control,True,centered
 2017-01-01,@datadog/browser-logs,0.0,datadog,False,centered
 2017-01-02,@datadog/browser-logs,0.0,datadog,False,centered
 2017-01-03,@datadog/browser-logs,0.0,datadog,False,centered
@@ -17568,7 +17572,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,@datadog/browser-logs,643442.0,datadog,False,centered
 2026-08-13,@datadog/browser-logs,635711.0,datadog,False,centered
 2026-08-14,@datadog/browser-logs,553415.0,datadog,True,centered
-2026-08-15,@datadog/browser-logs,129269.0,datadog,True,centered
+2026-08-15,@datadog/browser-logs,147913.0,datadog,False,centered
+2026-08-16,@datadog/browser-logs,120761.0,datadog,True,centered
 2017-01-01,@datadog/browser-rum,0.0,datadog,False,centered
 2017-01-02,@datadog/browser-rum,0.0,datadog,False,centered
 2017-01-03,@datadog/browser-rum,0.0,datadog,False,centered
@@ -21082,7 +21087,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,@datadog/browser-rum,1215067.0,datadog,False,centered
 2026-08-13,@datadog/browser-rum,1213809.0,datadog,False,centered
 2026-08-14,@datadog/browser-rum,1041135.0,datadog,True,centered
-2026-08-15,@datadog/browser-rum,229617.0,datadog,True,centered
+2026-08-15,@datadog/browser-rum,244968.0,datadog,False,centered
+2026-08-16,@datadog/browser-rum,226864.0,datadog,True,centered
 2017-01-01,@datadog/datadog-ci,0.0,datadog,False,centered
 2017-01-02,@datadog/datadog-ci,0.0,datadog,False,centered
 2017-01-03,@datadog/datadog-ci,0.0,datadog,False,centered
@@ -24596,7 +24602,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,@datadog/datadog-ci,868312.0,datadog,False,centered
 2026-08-13,@datadog/datadog-ci,869551.0,datadog,False,centered
 2026-08-14,@datadog/datadog-ci,783158.0,datadog,True,centered
-2026-08-15,@datadog/datadog-ci,170167.0,datadog,True,centered
+2026-08-15,@datadog/datadog-ci,166668.0,datadog,False,centered
+2026-08-16,@datadog/datadog-ci,145705.0,datadog,True,centered
 2017-01-01,datadog-metrics,40.0,datadog,False,centered
 2017-01-02,datadog-metrics,169.0,datadog,False,centered
 2017-01-03,datadog-metrics,270.0,datadog,False,centered
@@ -28110,7 +28117,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,datadog-metrics,510348.0,datadog,False,centered
 2026-08-13,datadog-metrics,518511.0,datadog,False,centered
 2026-08-14,datadog-metrics,457862.0,datadog,True,centered
-2026-08-15,datadog-metrics,97613.0,datadog,True,centered
+2026-08-15,datadog-metrics,101757.0,datadog,False,centered
+2026-08-16,datadog-metrics,98640.5,datadog,True,centered
 2017-01-01,dd-trace,0.0,datadog,False,centered
 2017-01-02,dd-trace,0.0,datadog,False,centered
 2017-01-03,dd-trace,0.0,datadog,False,centered
@@ -31624,7 +31632,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,dd-trace,1947811.0,datadog,False,centered
 2026-08-13,dd-trace,1961986.0,datadog,False,centered
 2026-08-14,dd-trace,1652866.0,datadog,True,centered
-2026-08-15,dd-trace,388240.0,datadog,True,centered
+2026-08-15,dd-trace,483263.0,datadog,False,centered
+2026-08-16,dd-trace,396986.0,datadog,True,centered
 2017-01-01,axios,4376.0,placebo,False,centered
 2017-01-02,axios,10636.0,placebo,False,centered
 2017-01-03,axios,19968.0,placebo,False,centered
@@ -35138,7 +35147,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,axios,21323208.0,placebo,False,centered
 2026-08-13,axios,21267802.0,placebo,False,centered
 2026-08-14,axios,19126614.0,placebo,True,centered
-2026-08-15,axios,8550239.0,placebo,True,centered
+2026-08-15,axios,8210825.0,placebo,False,centered
+2026-08-16,axios,8638661.0,placebo,True,centered
 2017-01-01,chalk,171789.0,placebo,False,centered
 2017-01-02,chalk,357664.0,placebo,False,centered
 2017-01-03,chalk,644585.0,placebo,False,centered
@@ -38652,7 +38662,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,chalk,86620794.0,placebo,False,centered
 2026-08-13,chalk,86568829.0,placebo,False,centered
 2026-08-14,chalk,77037913.0,placebo,True,centered
-2026-08-15,chalk,38138115.0,placebo,True,centered
+2026-08-15,chalk,39131115.0,placebo,False,centered
+2026-08-16,chalk,38077126.0,placebo,True,centered
 2017-01-01,lodash,398489.0,placebo,False,centered
 2017-01-02,lodash,821577.0,placebo,False,centered
 2017-01-03,lodash,1393116.0,placebo,False,centered
@@ -42166,7 +42177,8 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,lodash,29389260.0,placebo,False,centered
 2026-08-13,lodash,29228830.0,placebo,False,centered
 2026-08-14,lodash,25271015.0,placebo,True,centered
-2026-08-15,lodash,13592101.0,placebo,True,centered
+2026-08-15,lodash,14046245.0,placebo,False,centered
+2026-08-16,lodash,13576239.0,placebo,True,centered
 2017-01-01,react,14519.0,placebo,False,centered
 2017-01-02,react,46047.0,placebo,False,centered
 2017-01-03,react,95502.0,placebo,False,centered
@@ -45680,4 +45692,5 @@ date,package,downloads,cohort,is_imputed,impute_mode
 2026-08-12,react,28221368.0,placebo,False,centered
 2026-08-13,react,28442032.0,placebo,False,centered
 2026-08-14,react,24781398.0,placebo,True,centered
-2026-08-15,react,15082055.0,placebo,True,centered
+2026-08-15,react,16059353.0,placebo,False,centered
+2026-08-16,react,15259211.5,placebo,True,centered
