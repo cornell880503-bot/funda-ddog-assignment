@@ -47,6 +47,16 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
 .cols2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
 .panel { background: var(--panel); border: 1px solid var(--line);
          border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+.lead { color: var(--text); font-size: 13.5px; line-height: 1.5; margin: -4px 0 15px;
+  padding-left: 11px; border-left: 2px solid var(--accent); opacity: .93; }
+.lead b { color: var(--accent); font-weight: 600; }
+.howto { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 18px; margin: 0 0 18px; }
+.howto h3 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.howto ol { margin: 0; padding-left: 20px; }
+.howto li { font-size: 13.5px; line-height: 1.6; margin-bottom: 5px; }
+.howto .track { color: var(--accent); font-weight: 600; }
 .big { font-size: 42px; font-weight: 650; letter-spacing: -0.025em;
        font-family: var(--mono); line-height: 1.05; }
 .band { color: var(--muted); font-family: var(--mono); font-size: 14px; margin-top: 4px; }
@@ -114,8 +124,12 @@ const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.tri
 const fmt = (v, d = 1) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (v, d = 1) => (v >= 0 ? "+" : "") + v.toFixed(d) + "%";
 const app = document.getElementById("app");
-function panel(title, inner) {
-  return `<section class="panel"><h2>${title}</h2>${inner}</section>`;
+function panel(title, inner, lead) {
+  // `lead` is the one-line answer to "why is this block here, and how does it
+  // connect to the one above". Without it every panel reads as a standalone
+  // artefact and the reader has to reconstruct the argument themselves.
+  const l = lead ? `<div class="lead">${lead}</div>` : "";
+  return `<section class="panel"><h2>${title}</h2>${l}${inner}</section>`;
 }
 function stateTag(state) {
   const cls = state === "diverging" ? "t-bad" : state === "leaning" ? "t-warn" : "t-good";
@@ -138,6 +152,27 @@ app.appendChild(el(`
     <span class="badge good">guidance ${H.guidance_verified} vs 8-K ${H.guidance_accession}</span>
   </div>
 </header>`));
+
+/* --------------------------------------------- how to read this page */
+app.appendChild(el(`
+<div class="howto">
+  <h3>How to read this page &mdash; two tracks, deliberately separate</h3>
+  <ol>
+    <li><span class="track">Track A &mdash; the number.</span> The estimate comes from
+      Datadog's own guidance plus its trailing beat. The beat-history chart below it is
+      the variance the &plusmn;$${fmt((H.hi - H.lo) / 2, 1)}m band is built from.</li>
+    <li><span class="track">Track B &mdash; the monitor.</span> The alternative signals.
+      They do <b>not</b> feed the number: <b>0 of ${DATA.diagnostics.grid_cells}</b> tested
+      constructions beat a naive baseline out of sample. They answer a different question
+      &mdash; <em>is this quarter still behaving like the eight the rule was fitted on?</em></li>
+    <li><span class="track">Track C &mdash; how much to trust either.</span> The validation
+      record, the update cadence, and what it takes to repoint the page at another ticker.</li>
+  </ol>
+  <div class="note" style="margin-top:10px">If Track B is quiet, Track A's number stands on
+    its own. If Track B diverges, the number does not change &mdash; but its <em>assumption</em>,
+    that this quarter resembles the last eight, is the thing under strain.</div>
+</div>
+`));
 
 /* ---------------------------------------------------------------- headline */
 const width = H.hi - H.lo;
@@ -266,7 +301,70 @@ app.appendChild(el(panel("Headline nowcast &mdash; Q3 2026 revenue", `
   supported over the last 16 quarters (ADF p=0.007, KPSS p=0.100), mildly strained
   over the last 8 (Spearman &rho;=+0.69, p=0.058). It excludes guidance-philosophy
   changes, customer concentration events, and M&amp;A.</div>
-`)));
+`, `The number, and the two inputs it is made of. Everything below either <b>supports</b> this figure or <b>monitors the assumption</b> behind it &mdash; nothing below changes it.`)));
+
+/* --------------------------------------------- composite tracking indicator */
+const C = DATA.composite;
+const callNow = C.z >= C.ahead_threshold ? "tracking ahead"
+              : C.z <= C.behind_threshold ? "tracking behind" : "in line";
+const callCls = callNow === "in line" ? "t-good" : "t-warn";
+app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
+  <div class="row">
+    <div>
+      <div class="label">Composite tracking indicator, day ${M.days_elapsed} (${C.horizon} window)</div>
+      <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
+      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
+    </div>
+    <div class="kv">
+      <div><span>Combines</span><b>${C.parts.join(" + ")}</b></div>
+      <div><span>Weighting</span><b>equal</b></div>
+      <div><span>Excluded</span><b>${C.excluded}</b></div>
+      <div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
+      <div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
+    </div>
+  </div>
+  <div class="note"><strong>Why these two, equally weighted.</strong>
+    Both are drift-adjusted. <em>Datadog absolute</em> is excluded from the
+    composite because it carries the ecosystem-wide inflation documented below &mdash;
+    including it would make the indicator fire on registry activity rather than on
+    Datadog. Weights are equal because nothing here survived validation, and fitting
+    weights on ${DATA.diagnostics.grid_cells} cells that all failed would be exactly
+    the error this project exists to warn about.</div>
+
+  <div class="sub" style="margin:16px 0 6px">What "tracking ahead / behind" has actually meant</div>
+  <div class="note" style="margin-top:0">A directional label is decoration until
+    someone checks it. For every historical quarter the call is recomputed from
+    prior quarters only, then compared with whether that quarter beat guidance by
+    <em>more</em> than its own trailing 8-quarter mean beat.</div>
+  <table><thead><tr><th>Quarter</th><th class="num">Composite z</th><th>Call</th>
+    <th class="num">Beat</th><th class="num">Trailing mean</th><th>Outcome</th><th></th></tr></thead>
+    <tbody>${C.examples.map(e => `<tr>
+      <td>${e.quarter}</td>
+      <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
+      <td>${e.call}</td>
+      <td class="num">${e.beat_pct.toFixed(2)}%</td>
+      <td class="num">${e.trailing_pct.toFixed(2)}%</td>
+      <td>${e.outcome}</td>
+      <td>${e.correct === null ? "" : e.correct
+            ? '<span class="tag t-good">correct</span>'
+            : '<span class="tag t-bad">wrong</span>'}</td></tr>`).join("")}
+    </tbody></table>
+
+  <table style="margin-top:10px"><thead><tr><th>Horizon</th>
+    <th class="num">Directional calls</th><th class="num">Correct</th>
+    <th class="num">Hit rate</th><th class="num">p vs coin flip</th></tr></thead>
+    <tbody>${C.backtest.map(b => `<tr><td>${b.horizon}</td>
+      <td class="num">${b.calls}</td><td class="num">${b.correct}</td>
+      <td class="num">${(b.hit_rate * 100).toFixed(0)}%</td>
+      <td class="num">${b.p.toFixed(3)}</td></tr>`).join("")}</tbody></table>
+  <div class="note" style="margin-top:6px"><strong>70% at ten calls is not a
+    result.</strong> The binomial p-value against a coin flip is 0.34. The
+    indicator is a monitoring aid with a measured and unimpressive reliability,
+    stated here rather than hidden &mdash; which is the only defensible way to put a
+    directional call on an analyst's screen. It does <em>not</em> feed the headline
+    number, and the signals do not combine into a revenue estimate, because no
+    construction beat a naive baseline out of sample.</div>
+`, `Track B starts here. This is the &ldquo;how do the signals combine&rdquo; question: the four series in the next panel are reduced to <b>one directional call</b>, and that call is backtested rather than asserted.`)));
 
 /* ------------------------------------------------------- tracking ahead/behind */
 const rows = DATA.divergence.map(d => `
@@ -338,70 +436,7 @@ app.appendChild(el(panel("Tracking ahead / behind &mdash; divergence monitor", `
     the <em>placebo</em> sits at z=+0.93. That pattern says the ecosystem is running
     hot, not that Datadog is.
   </div>
-`)));
-
-/* --------------------------------------------- composite tracking indicator */
-const C = DATA.composite;
-const callNow = C.z >= C.ahead_threshold ? "tracking ahead"
-              : C.z <= C.behind_threshold ? "tracking behind" : "in line";
-const callCls = callNow === "in line" ? "t-good" : "t-warn";
-app.appendChild(el(panel("How the signals combine &mdash; the tracking call", `
-  <div class="row">
-    <div>
-      <div class="label">Composite tracking indicator, day ${M.days_elapsed} (${C.horizon} window)</div>
-      <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
-      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
-    </div>
-    <div class="kv">
-      <div><span>Combines</span><b>${C.parts.join(" + ")}</b></div>
-      <div><span>Weighting</span><b>equal</b></div>
-      <div><span>Excluded</span><b>${C.excluded}</b></div>
-      <div><span>Tracking ahead</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
-      <div><span>Tracking behind</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
-    </div>
-  </div>
-  <div class="note"><strong>Why these two, equally weighted.</strong>
-    Both are drift-adjusted. <em>Datadog absolute</em> is excluded from the
-    composite because it carries the ecosystem-wide inflation documented below &mdash;
-    including it would make the indicator fire on registry activity rather than on
-    Datadog. Weights are equal because nothing here survived validation, and fitting
-    weights on ${DATA.diagnostics.grid_cells} cells that all failed would be exactly
-    the error this project exists to warn about.</div>
-
-  <div class="sub" style="margin:16px 0 6px">What "tracking ahead / behind" has actually meant</div>
-  <div class="note" style="margin-top:0">A directional label is decoration until
-    someone checks it. For every historical quarter the call is recomputed from
-    prior quarters only, then compared with whether that quarter beat guidance by
-    <em>more</em> than its own trailing 8-quarter mean beat.</div>
-  <table><thead><tr><th>Quarter</th><th class="num">Composite z</th><th>Call</th>
-    <th class="num">Beat</th><th class="num">Trailing mean</th><th>Outcome</th><th></th></tr></thead>
-    <tbody>${C.examples.map(e => `<tr>
-      <td>${e.quarter}</td>
-      <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
-      <td>${e.call}</td>
-      <td class="num">${e.beat_pct.toFixed(2)}%</td>
-      <td class="num">${e.trailing_pct.toFixed(2)}%</td>
-      <td>${e.outcome}</td>
-      <td>${e.correct === null ? "" : e.correct
-            ? '<span class="tag t-good">correct</span>'
-            : '<span class="tag t-bad">wrong</span>'}</td></tr>`).join("")}
-    </tbody></table>
-
-  <table style="margin-top:10px"><thead><tr><th>Horizon</th>
-    <th class="num">Directional calls</th><th class="num">Correct</th>
-    <th class="num">Hit rate</th><th class="num">p vs coin flip</th></tr></thead>
-    <tbody>${C.backtest.map(b => `<tr><td>${b.horizon}</td>
-      <td class="num">${b.calls}</td><td class="num">${b.correct}</td>
-      <td class="num">${(b.hit_rate * 100).toFixed(0)}%</td>
-      <td class="num">${b.p.toFixed(3)}</td></tr>`).join("")}</tbody></table>
-  <div class="note" style="margin-top:6px"><strong>70% at ten calls is not a
-    result.</strong> The binomial p-value against a coin flip is 0.34. The
-    indicator is a monitoring aid with a measured and unimpressive reliability,
-    stated here rather than hidden &mdash; which is the only defensible way to put a
-    directional call on an analyst's screen. It does <em>not</em> feed the headline
-    number, and the signals do not combine into a revenue estimate, because no
-    construction beat a naive baseline out of sample.</div>
-`)));
+`, `The four component series behind the composite above. Read them <b>together</b>, not one at a time &mdash; the placebo row is what tells you whether a Datadog reading means anything.`)));
 
 /* ----------------------------------------------------- observability panel */
 app.appendChild(el(panel("Observability &mdash; what the signal can and cannot see", `
@@ -428,7 +463,7 @@ app.appendChild(el(panel("Observability &mdash; what the signal can and cannot s
     elapsed. A daily snapshot of that counter yields a usable delta series
     <em>from the day collection starts</em>, which is the correct forward fix and
     the single highest-value addition to this pipeline.</div>
-`)));
+`, `Why Track B is a monitor and not an estimator: the signals above see roughly <b>a tenth</b> of Datadog&rsquo;s install surface, and the other nine tenths publish no history at all.`)));
 
 /* ------------------------------------------------------------- pace chart */
 (function () {
@@ -492,7 +527,7 @@ app.appendChild(el(panel("Observability &mdash; what the signal can and cannot s
       permanent artificial jump. Outage days are filled with a
       <strong>backward-only</strong> estimate (same weekday, prior 42 days), so every
       point on this chart was computable on the day it sits.</div>
-  `)));
+  `, `The raw series underneath those z-scores &mdash; same data before standardisation, so the live quarter&rsquo;s path can be read against prior quarters at the same day.`)));
 })();
 
 /* ------------------------------------------------ imputation treatment spread */
@@ -514,7 +549,7 @@ app.appendChild(el(panel("Outage-treatment sensitivity", `
     and raw-with-zeros bound it. The relative constructions are an order of magnitude
     less sensitive to the treatment than the absolute one &mdash; an outage suppresses
     every basket at once, so it largely cancels in a difference.</div>
-`)));
+`, `How much of the divergence reading is an artefact of patching missing days rather than real movement.`)));
 
 /* ------------------------------------------------------------- risk flags */
 const flags = [
@@ -536,7 +571,7 @@ app.appendChild(el(panel("Risk flags", `
     <tr><td style="width:34%">${f.name}</td><td>${stateTag(f.state)}</td>
     <td style="color:var(--muted);font-size:12.5px">${f.detail}</td></tr>`).join("")}
   </tbody></table>
-`)));
+`, `Standing conditions that would break Track A&rsquo;s assumption or invalidate Track B&rsquo;s reading. Monitored continuously, not recomputed each quarter.`)));
 
 /* ------------------------------------------------------- model diagnostics */
 (function () {
@@ -682,7 +717,7 @@ app.appendChild(el(panel("Risk flags", `
       It does achieve an 0.846 directional hit rate on revenue growth while carrying
       ~3x the baseline error, which is a clean illustration of why hit rate alone is a
       poor metric: right direction, badly wrong magnitude.</div>
-  `)));
+  `, `Track C. The full validation record behind the claim that the signals do not feed the number &mdash; on the face of the dashboard rather than buried, because the analyst has to price that confidence themselves.`)));
 })();
 
 /* --------------------------------------------------------- update cadence */
@@ -692,7 +727,7 @@ app.appendChild(el(panel("Update cadence", `
     <td>${c.latency}</td><td>${c.role === "HEADLINE INPUT"
       ? `<span class="tag t-good">${c.role}</span>` : c.role}</td></tr>`).join("")}
   </tbody></table>
-`)));
+`, `How often each block above actually moves, and how stale it can be at the moment you look at it.`)));
 
 /* ------------------------------------------------------------- templating */
 app.appendChild(el(panel("Pointing this at another ticker", `
@@ -711,7 +746,7 @@ app.appendChild(el(panel("Pointing this at another ticker", `
   ${CONFIG.ticker}. For a company that guides less reliably, the same pipeline could
   well promote a different input &mdash; which is the point of running the baselines
   and the placebo before choosing.</div>
-`)));
+`, `What is generic infrastructure here, versus what is specific to Datadog.`)));
 
 app.appendChild(el(`<footer>
   Sources: SEC EDGAR XBRL company facts and Item 2.02 8-K exhibits; npm registry

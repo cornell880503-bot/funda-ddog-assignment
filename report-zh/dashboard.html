@@ -32,6 +32,16 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
 .cols2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
 .panel { background: var(--panel); border: 1px solid var(--line);
          border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+.lead { color: var(--text); font-size: 13.5px; line-height: 1.5; margin: -4px 0 15px;
+  padding-left: 11px; border-left: 2px solid var(--accent); opacity: .93; }
+.lead b { color: var(--accent); font-weight: 600; }
+.howto { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 18px; margin: 0 0 18px; }
+.howto h3 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.howto ol { margin: 0; padding-left: 20px; }
+.howto li { font-size: 13.5px; line-height: 1.6; margin-bottom: 5px; }
+.howto .track { color: var(--accent); font-weight: 600; }
 .big { font-size: 42px; font-weight: 650; letter-spacing: -0.025em;
        font-family: var(--mono); line-height: 1.05; }
 .band { color: var(--muted); font-family: var(--mono); font-size: 14px; margin-top: 4px; }
@@ -99,8 +109,12 @@ const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.tri
 const fmt = (v, d = 1) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (v, d = 1) => (v >= 0 ? "+" : "") + v.toFixed(d) + "%";
 const app = document.getElementById("app");
-function panel(title, inner) {
-  return `<section class="panel"><h2>${title}</h2>${inner}</section>`;
+function panel(title, inner, lead) {
+  // `lead` is the one-line answer to "why is this block here, and how does it
+  // connect to the one above". Without it every panel reads as a standalone
+  // artefact and the reader has to reconstruct the argument themselves.
+  const l = lead ? `<div class="lead">${lead}</div>` : "";
+  return `<section class="panel"><h2>${title}</h2>${l}${inner}</section>`;
 }
 function stateTag(state) {
   const cls = state === "背離" ? "t-bad" : state === "傾向" ? "t-warn" : "t-good";
@@ -123,6 +137,24 @@ app.appendChild(el(`
     <span class="badge good">指引已核對 8-K ${H.guidance_accession}</span>
   </div>
 </header>`));
+
+/* --------------------------------------------- how to read this page */
+app.appendChild(el(`
+<div class="howto">
+  <h3>如何讀這一頁 &mdash; 兩條軌道，刻意分開</h3>
+  <ol>
+    <li><span class="track">軌道 A &mdash; 那個數字。</span> 預估來自 Datadog 自己的指引
+      加上它的近期超額。下方的超額歷史圖，就是 &plusmn;$${fmt((H.hi - H.lo) / 2, 1)}m 區間所依據的變異。</li>
+    <li><span class="track">軌道 B &mdash; 監控器。</span> 另類數據訊號。它們<b>不</b>餵入那個數字：
+      ${DATA.diagnostics.grid_cells} 個受測構造中 <b>0 個</b>在樣本外勝過樸素基準。
+      它們回答的是另一個問題 &mdash; <em>這一季的行為，是否仍然像那條規則所擬合的八季？</em></li>
+    <li><span class="track">軌道 C &mdash; 該對它們信任多少。</span> 驗證紀錄、更新頻率，
+      以及把這一頁指向另一檔標的需要什麼。</li>
+  </ol>
+  <div class="note" style="margin-top:10px">若軌道 B 安靜，軌道 A 的數字自己站得住。若軌道 B 出現背離，數字不會改變 &mdash;
+    但它的<em>假設</em>（這一季像過去八季）就是承受壓力的那一環。</div>
+</div>
+`));
 
 /* ---------------------------------------------------------------- headline */
 const width = H.hi - H.lo;
@@ -245,7 +277,64 @@ app.appendChild(el(panel("頭條即時預測 &mdash; 2026Q3 營收", `
   本區間僅反映超額的歷史變異，且<strong>條件於超額分布維持定態</strong> &mdash;
   該條件在近 16 季獲支持（ADF p=0.007、KPSS p=0.100），在近 8 季略顯緊張
   （Spearman &rho;=+0.69、p=0.058）。區間不涵蓋指引哲學改變、客戶集中度事件與併購。</div>
-`)));
+`, `那個數字，以及構成它的兩個輸入。下方所有內容不是<b>支撐</b>這個數字，就是<b>監控它背後的假設</b> &mdash; 沒有任何一塊會改變它。`)));
+
+/* --------------------------------------------- composite tracking indicator */
+const C = DATA.composite;
+const callNow = C.z >= C.ahead_threshold ? "領先"
+              : C.z <= C.behind_threshold ? "落後" : "符合";
+const callCls = callNow === "符合" ? "t-good" : "t-warn";
+app.appendChild(el(panel("訊號如何合成 &mdash; 追蹤判斷", `
+  <div class="row">
+    <div>
+      <div class="label">合成追蹤指標，第 ${M.days_elapsed} 天 (${C.horizon} window)</div>
+      <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
+      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
+    </div>
+    <div class="kv">
+      <div><span>合成自</span><b>${C.parts.join(" + ")}</b></div>
+      <div><span>權重</span><b>等權</b></div>
+      <div><span>排除</span><b>${C.excluded}</b></div>
+      <div><span>領先</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
+      <div><span>落後</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
+    </div>
+  </div>
+  <div class="note"><strong>為什麼是這兩個，而且等權。</strong>
+    兩者都做過漂移調整。<em>Datadog 絕對值</em>被排除在合成之外，因為它帶著下方記錄的
+    全生態系膨脹 &mdash; 納入它會讓指標對 registry 活動亮燈而不是對 Datadog 亮燈。
+    權重等權，是因為這裡沒有任何東西通過驗證，而在 ${DATA.diagnostics.grid_cells} 個
+    全數失敗的格子上去擬合權重，正是本專案要警告的那個錯誤。</div>
+
+  <div class="sub" style="margin:16px 0 6px">「領先／落後」在歷史上實際代表什麼</div>
+  <div class="note" style="margin-top:0">方向標籤在有人驗證它之前只是裝飾。每一個歷史季度的判斷都只用先前季度重算，
+    再比對該季實際超額是否**高於**它自己近八季的平均超額。</div>
+  <table><thead><tr><th>季度</th><th class="num">合成 z</th><th>判斷</th>
+    <th class="num">實際超額</th><th class="num">近八季均值</th><th>結果</th><th></th></tr></thead>
+    <tbody>${C.examples.map(e => `<tr>
+      <td>${e.quarter}</td>
+      <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
+      <td>${e.call}</td>
+      <td class="num">${e.beat_pct.toFixed(2)}%</td>
+      <td class="num">${e.trailing_pct.toFixed(2)}%</td>
+      <td>${e.outcome}</td>
+      <td>${e.correct === null ? "" : e.correct
+            ? '<span class="tag t-good">正確</span>'
+            : '<span class="tag t-bad">錯誤</span>'}</td></tr>`).join("")}
+    </tbody></table>
+
+  <table style="margin-top:10px"><thead><tr><th>視窗</th>
+    <th class="num">方向判斷次數</th><th class="num">正確</th>
+    <th class="num">命中率</th><th class="num">對擲硬幣的 p</th></tr></thead>
+    <tbody>${C.backtest.map(b => `<tr><td>${b.horizon}</td>
+      <td class="num">${b.calls}</td><td class="num">${b.correct}</td>
+      <td class="num">${(b.hit_rate * 100).toFixed(0)}%</td>
+      <td class="num">${b.p.toFixed(3)}</td></tr>`).join("")}</tbody></table>
+  <div class="note" style="margin-top:6px"><strong>十次判斷 70% 不是結果。</strong>
+    對擲硬幣的 binomial p 值是 0.34。這個指標是一個可靠度經過量測、而且並不亮眼的
+    監控工具，數字放在這裡而不是藏起來 &mdash; 那是把方向判斷放上分析師螢幕
+    唯一站得住的做法。它<em>不</em>餵入頭條數字，而且訊號不會合成為營收估計，
+    因為沒有任何構造在樣本外勝過樸素基準。</div>
+`, `軌道 B 從這裡開始。這回答「訊號如何合成」：下一塊的四條序列被收斂成<b>一個方向判斷</b>，而那個判斷是回測過的，不是宣稱的。`)));
 
 /* ------------------------------------------------------- tracking ahead/behind */
 const rows = DATA.divergence.map(d => `
@@ -311,64 +400,7 @@ app.appendChild(el(panel("領先／落後追蹤 &mdash; 背離監控器", `
     Datadog 絕對值指標呈背離，但經生態系調整後的指標是符合，而<em>安慰劑</em>
     位在 z=+0.93。這個組合說的是生態系在發燙，不是 Datadog。
   </div>
-`)));
-
-/* --------------------------------------------- composite tracking indicator */
-const C = DATA.composite;
-const callNow = C.z >= C.ahead_threshold ? "領先"
-              : C.z <= C.behind_threshold ? "落後" : "符合";
-const callCls = callNow === "符合" ? "t-good" : "t-warn";
-app.appendChild(el(panel("訊號如何合成 &mdash; 追蹤判斷", `
-  <div class="row">
-    <div>
-      <div class="label">合成追蹤指標，第 ${M.days_elapsed} 天 (${C.horizon} window)</div>
-      <div class="big" style="font-size:38px">${C.z >= 0 ? "+" : ""}${C.z.toFixed(2)}<span class="unit">z</span></div>
-      <div><span class="tag ${callCls}" style="font-size:14px">${callNow.toUpperCase()}</span></div>
-    </div>
-    <div class="kv">
-      <div><span>合成自</span><b>${C.parts.join(" + ")}</b></div>
-      <div><span>權重</span><b>等權</b></div>
-      <div><span>排除</span><b>${C.excluded}</b></div>
-      <div><span>領先</span><b>z &ge; +${C.ahead_threshold.toFixed(1)}</b></div>
-      <div><span>落後</span><b>z &le; ${C.behind_threshold.toFixed(1)}</b></div>
-    </div>
-  </div>
-  <div class="note"><strong>為什麼是這兩個，而且等權。</strong>
-    兩者都做過漂移調整。<em>Datadog 絕對值</em>被排除在合成之外，因為它帶著下方記錄的
-    全生態系膨脹 &mdash; 納入它會讓指標對 registry 活動亮燈而不是對 Datadog 亮燈。
-    權重等權，是因為這裡沒有任何東西通過驗證，而在 ${DATA.diagnostics.grid_cells} 個
-    全數失敗的格子上去擬合權重，正是本專案要警告的那個錯誤。</div>
-
-  <div class="sub" style="margin:16px 0 6px">「領先／落後」在歷史上實際代表什麼</div>
-  <div class="note" style="margin-top:0">方向標籤在有人驗證它之前只是裝飾。每一個歷史季度的判斷都只用先前季度重算，
-    再比對該季實際超額是否**高於**它自己近八季的平均超額。</div>
-  <table><thead><tr><th>季度</th><th class="num">合成 z</th><th>判斷</th>
-    <th class="num">實際超額</th><th class="num">近八季均值</th><th>結果</th><th></th></tr></thead>
-    <tbody>${C.examples.map(e => `<tr>
-      <td>${e.quarter}</td>
-      <td class="num">${e.z >= 0 ? "+" : ""}${e.z.toFixed(2)}</td>
-      <td>${e.call}</td>
-      <td class="num">${e.beat_pct.toFixed(2)}%</td>
-      <td class="num">${e.trailing_pct.toFixed(2)}%</td>
-      <td>${e.outcome}</td>
-      <td>${e.correct === null ? "" : e.correct
-            ? '<span class="tag t-good">正確</span>'
-            : '<span class="tag t-bad">錯誤</span>'}</td></tr>`).join("")}
-    </tbody></table>
-
-  <table style="margin-top:10px"><thead><tr><th>視窗</th>
-    <th class="num">方向判斷次數</th><th class="num">正確</th>
-    <th class="num">命中率</th><th class="num">對擲硬幣的 p</th></tr></thead>
-    <tbody>${C.backtest.map(b => `<tr><td>${b.horizon}</td>
-      <td class="num">${b.calls}</td><td class="num">${b.correct}</td>
-      <td class="num">${(b.hit_rate * 100).toFixed(0)}%</td>
-      <td class="num">${b.p.toFixed(3)}</td></tr>`).join("")}</tbody></table>
-  <div class="note" style="margin-top:6px"><strong>十次判斷 70% 不是結果。</strong>
-    對擲硬幣的 binomial p 值是 0.34。這個指標是一個可靠度經過量測、而且並不亮眼的
-    監控工具，數字放在這裡而不是藏起來 &mdash; 那是把方向判斷放上分析師螢幕
-    唯一站得住的做法。它<em>不</em>餵入頭條數字，而且訊號不會合成為營收估計，
-    因為沒有任何構造在樣本外勝過樸素基準。</div>
-`)));
+`, `上方合成指標背後的四條成分序列。要<b>一起讀</b>，不要單看一條 &mdash; 安慰劑那一列，才是判斷 Datadog 讀數有沒有意義的依據。`)));
 
 /* ----------------------------------------------------- observability panel */
 app.appendChild(el(panel("可觀測性 &mdash; 訊號看得到什麼、看不到什麼", `
@@ -393,7 +425,7 @@ app.appendChild(el(panel("可觀測性 &mdash; 訊號看得到什麼、看不到
     因此已經過去的 27 季無法回補。每日對該計數取快照可以得到一條可用的差分序列，
     但<em>只能從開始蒐集那天起算</em>。這是正確的前瞻性補救，
     也是這條管線單一價值最高的補強。</div>
-`)));
+`, `為什麼軌道 B 是監控器而不是估計器：上方訊號只看得到 Datadog 安裝面向的<b>約十分之一</b>，其餘九成完全不公布歷史。`)));
 
 /* ------------------------------------------------------------- pace chart */
 (function () {
@@ -455,7 +487,7 @@ app.appendChild(el(panel("可觀測性 &mdash; 訊號看得到什麼、看不到
       <code>datadog-metrics</code>）&mdash; 樣本起點尚不存在的套件已排除，
       因為套件進入籃子會造成永久性的人為跳升。Outage 日以<strong>只回看</strong>的
       方式估計填補（同星期幾、前 42 天），因此圖上每一個點在它所在的那一天都是可計算的。</div>
-  `)));
+  `, `那些 z 分數底下的原始序列 &mdash; 同一份資料在標準化之前，因此可以把本季路徑對照前幾季的同一天來讀。`)));
 })();
 
 /* ------------------------------------------------ imputation treatment spread */
@@ -475,7 +507,7 @@ app.appendChild(el(panel("Outage 處理方式敏感度", `
     是真實的不確定性來源：因果插補列是點估計，丟棄重標與原始帶零則界定其上下界。
     相對構造對處理方式的敏感度比絕對值低一個數量級 &mdash;
     outage 會同時壓低所有籃子，因此在差分中大致抵消。</div>
-`)));
+`, `背離讀數裡，有多少是補缺失日造成的假象，而不是真實變動。`)));
 
 /* ------------------------------------------------------------- risk flags */
 const flags = [
@@ -497,7 +529,7 @@ app.appendChild(el(panel("風險旗標", `
     <tr><td style="width:34%">${f.name}</td><td>${stateTag(f.state)}</td>
     <td style="color:var(--muted);font-size:12.5px">${f.detail}</td></tr>`).join("")}
   </tbody></table>
-`)));
+`, `會破壞軌道 A 假設、或使軌道 B 讀數失效的長期條件。持續監控，不是每季重算。`)));
 
 /* ------------------------------------------------------- model diagnostics */
 (function () {
@@ -634,7 +666,7 @@ app.appendChild(el(panel("風險旗標", `
       信賴區間排除 1.0，但落在錯誤的那一側。它在營收成長上確實達到 0.846 的方向命中率，
       誤差卻是基準的約 3 倍，這清楚說明了為什麼單看命中率是壞指標：
       方向對、幅度大錯。</div>
-  `)));
+  `, `軌道 C。「訊號不餵入數字」這個主張背後的完整驗證紀錄 &mdash; 放在 dashboard 正面而不是藏起來，因為分析師必須自己判斷該給多少信心。`)));
 })();
 
 /* --------------------------------------------------------- update cadence */
@@ -644,7 +676,7 @@ app.appendChild(el(panel("更新頻率", `
     <td>${c.latency}</td><td>${c.role === "頭條輸入"
       ? `<span class="tag t-good">${c.role}</span>` : c.role}</td></tr>`).join("")}
   </tbody></table>
-`)));
+`, `上方每一塊實際多久會變動一次，以及你看到它時它可能已經多舊。`)));
 
 /* ------------------------------------------------------------- templating */
 app.appendChild(el(panel("把這套指向另一檔標的", `
@@ -659,7 +691,7 @@ app.appendChild(el(panel("把這套指向另一檔標的", `
   <em>不能</em>移轉的是結論。本 dashboard 的頭條數字建立在指引之上，
   是因為那是在 ${CONFIG.ticker} 上通過驗證的東西。對一家指引可靠度較低的公司，
   同一條管線很可能拱出不同的輸入 &mdash; 而那正是「先跑基準與安慰劑再做選擇」的意義。</div>
-`)));
+`, `這裡哪些是通用基礎設施，哪些是 Datadog 專屬的。`)));
 
 app.appendChild(el(`<footer>
   資料來源：SEC EDGAR XBRL company facts 與 Item 2.02 8-K 附件；npm registry
