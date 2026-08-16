@@ -124,8 +124,17 @@ def qtd_pace(panel: pd.DataFrame) -> pd.DataFrame:
     ]
 
 
-def main(force: bool = False, end: str | None = None) -> None:
+def main(force: bool = False, end: str | None = None, since: str | None = None) -> None:
     end_date = date.fromisoformat(end) if end else date.today() - timedelta(days=1)
+    start_date = date.fromisoformat(since) if since else START
+    existing = None
+    if since:
+        prev = sc.PROCESSED / "npm_daily.csv"
+        if prev.exists():
+            existing = pd.read_csv(prev, parse_dates=["date"])
+            existing["date"] = existing["date"].dt.date
+            existing = existing[existing["date"] < start_date]
+            print(f"incremental: keeping {len(existing):,} rows before {start_date}")
     frames = []
     for cohort, pkgs in (
         ("datadog", DATADOG_PACKAGES),
@@ -134,7 +143,7 @@ def main(force: bool = False, end: str | None = None) -> None:
     ):
         for pkg in pkgs:
             print(f"npm: {pkg}")
-            df = fetch_package(pkg, START, end_date, force=force)
+            df = fetch_package(pkg, start_date, end_date, force=force)
             if df.empty:
                 print(f"  no data for {pkg}")
                 continue
@@ -147,6 +156,10 @@ def main(force: bool = False, end: str | None = None) -> None:
             )
             frames.append(df)
     panel = pd.concat(frames, ignore_index=True)
+    if existing is not None:
+        panel = pd.concat([existing, panel], ignore_index=True)
+        panel = panel.drop_duplicates(subset=["date", "package"], keep="last")
+        panel = panel.sort_values(["cohort", "package", "date"]).reset_index(drop=True)
     out = sc.PROCESSED / "npm_daily.csv"
     panel.to_csv(out, index=False)
     print(f"\nWrote {out.relative_to(sc.REPO)}  ({len(panel):,} rows)")
@@ -160,5 +173,15 @@ def main(force: bool = False, end: str | None = None) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
+    ap.add_argument(
+        "--since",
+        default=None,
+        help=(
+            "YYYY-MM-DD. Incremental top-up: fetch only from this date and merge "
+            "into the existing panel. A full --force re-pull walks 2017 onward for "
+            "every package and gets rate-limited (429); day-to-day refreshes only "
+            "need the tail."
+        ),
+    )
     ap.add_argument("--end", default=None, help="YYYY-MM-DD, defaults to yesterday")
     main(**vars(ap.parse_args()))

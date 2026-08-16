@@ -11,6 +11,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/browser-logs,0.0,95361.5,causal
 2026-07-26,@datadog/browser-logs,0.0,99269.0,causal
 2026-08-14,@datadog/browser-logs,0.0,534069.5,causal
+2026-08-15,@datadog/browser-logs,0.0,118588.5,causal
 2018-05-26,@datadog/browser-rum,0.0,0.0,causal
 2018-05-27,@datadog/browser-rum,0.0,0.0,causal
 2020-06-22,@datadog/browser-rum,0.0,5705.0,causal
@@ -23,6 +24,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/browser-rum,0.0,170271.5,causal
 2026-07-26,@datadog/browser-rum,209445.0,174321.0,causal
 2026-08-14,@datadog/browser-rum,0.0,984238.5,causal
+2026-08-15,@datadog/browser-rum,0.0,211317.5,causal
 2018-05-26,@datadog/datadog-ci,0.0,0.0,causal
 2018-05-27,@datadog/datadog-ci,0.0,0.0,causal
 2020-06-22,@datadog/datadog-ci,0.0,1.0,causal
@@ -35,6 +37,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/datadog-ci,0.0,185176.5,causal
 2026-07-26,@datadog/datadog-ci,148776.0,208040.0,causal
 2026-08-14,@datadog/datadog-ci,0.0,743238.5,causal
+2026-08-15,@datadog/datadog-ci,0.0,145724.5,causal
 2018-05-26,@opentelemetry/api,0.0,0.0,causal
 2018-05-27,@opentelemetry/api,0.0,0.0,causal
 2020-06-22,@opentelemetry/api,0.0,10853.0,causal
@@ -47,6 +50,7 @@ date,package,raw,imputed,mode
 2026-07-12,@opentelemetry/api,0.0,4271384.0,causal
 2026-07-26,@opentelemetry/api,5130146.0,4516665.0,causal
 2026-08-14,@opentelemetry/api,0.0,10787227.5,causal
+2026-08-15,@opentelemetry/api,0.0,5038757.5,causal
 2018-05-26,@sentry/node,33.0,54.0,causal
 2018-05-27,@sentry/node,23.0,31.5,causal
 2020-06-22,@sentry/node,0.0,150506.5,causal
@@ -59,6 +63,7 @@ date,package,raw,imputed,mode
 2026-07-12,@sentry/node,0.0,1768187.5,causal
 2026-07-26,@sentry/node,2278995.0,1803646.0,causal
 2026-08-14,@sentry/node,0.0,4560761.0,causal
+2026-08-15,@sentry/node,0.0,2234720.5,causal
 2018-05-26,axios,27624.0,108857.5,causal
 2018-05-27,axios,27771.0,93193.0,causal
 2020-06-22,axios,0.0,1727916.0,causal
@@ -71,6 +76,7 @@ date,package,raw,imputed,mode
 2026-07-12,axios,0.0,7860783.0,causal
 2026-07-26,axios,0.0,7870292.0,causal
 2026-08-14,axios,0.0,17995163.5,causal
+2026-08-15,axios,0.0,8264393.5,causal
 2018-05-26,chalk,167652.0,770342.0,causal
 2018-05-27,chalk,185193.0,720921.0,causal
 2020-06-22,chalk,0.0,8164007.0,causal
@@ -83,6 +89,7 @@ date,package,raw,imputed,mode
 2026-07-12,chalk,0.0,30005735.0,causal
 2026-07-26,chalk,0.0,31552707.0,causal
 2026-08-14,chalk,0.0,74077334.5,causal
+2026-08-15,chalk,0.0,36282469.5,causal
 2018-05-26,datadog-metrics,34.0,158.5,causal
 2018-05-27,datadog-metrics,18.0,92.5,causal
 2020-06-22,datadog-metrics,0.0,5807.5,causal
@@ -95,6 +102,7 @@ date,package,raw,imputed,mode
 2026-07-12,datadog-metrics,0.0,84999.0,causal
 2026-07-26,datadog-metrics,92253.0,86723.0,causal
 2026-08-14,datadog-metrics,0.0,417333.5,causal
+2026-08-15,datadog-metrics,0.0,87458.0,causal
 2018-05-26,dd-trace,3.0,3.5,causal
 2018-05-27,dd-trace,2.0,1.5,causal
 2020-06-22,dd-trace,0.0,41750.0,causal
@@ -107,6 +115,7 @@ date,package,raw,imputed,mode
 2026-07-12,dd-trace,0.0,260475.5,causal
 2026-07-26,dd-trace,332545.0,267533.0,causal
 2026-08-14,dd-trace,0.0,1534170.0,causal
+2026-08-15,dd-trace,0.0,376984.5,causal
 2018-05-26,elastic-apm-node,37.0,75.0,causal
 2018-05-27,elastic-apm-node,11.0,116.5,causal
 2020-06-22,elastic-apm-node,0.0,15634.5,causal
@@ -119,6 +128,7 @@ date,package,raw,imputed,mode
 2026-07-12,elastic-apm-node,0.0,20711.0,causal
 2026-07-26,elastic-apm-node,20533.0,21268.0,causal
 2026-08-14,elastic-apm-node,0.0,74083.0,causal
+2026-08-15,elastic-apm-node,0.0,26517.5,causal
 2018-05-26,lodash,165059.0,842140.5,causal
 2018-05-27,lodash,173704.0,774984.5,causal
 2020-06-22,lodash,0.0,4662469.5,causal
@@ -131,6 +141,7 @@ date,package,raw,imputed,mode
 2026-07-12,lodash,0.0,12073178.0,causal
 2026-07-26,lodash,12858745.0,12230555.0,causal
 2026-08-14,lodash,0.0,24928147.5,causal
+2026-08-15,lodash,0.0,13234056.0,causal
 2018-05-26,newrelic,1661.0,18633.0,causal
 2018-05-27,newrelic,1446.0,16533.0,causal
 2020-06-22,newrelic,0.0,105137.0,causal
@@ -143,6 +154,7 @@ date,package,raw,imputed,mode
 2026-07-12,newrelic,0.0,59009.0,causal
 2026-07-26,newrelic,68198.0,59646.0,causal
 2026-08-14,newrelic,0.0,214681.5,causal
+2026-08-15,newrelic,0.0,55068.0,causal
 2018-05-26,react,42244.0,102011.5,causal
 2018-05-27,react,44944.0,89865.5,causal
 2020-06-22,react,0.0,1406553.0,causal
@@ -155,6 +167,7 @@ date,package,raw,imputed,mode
 2026-07-12,react,0.0,12322605.0,causal
 2026-07-26,react,14866416.0,13586133.0,causal
 2026-08-14,react,0.0,23940848.5,causal
+2026-08-15,react,0.0,15144765.5,causal
 2018-05-26,@datadog/browser-logs,0.0,0.0,centered
 2018-05-27,@datadog/browser-logs,0.0,0.0,centered
 2020-06-22,@datadog/browser-logs,0.0,6682.0,centered
@@ -167,6 +180,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/browser-logs,0.0,99366.0,centered
 2026-07-26,@datadog/browser-logs,0.0,104393.5,centered
 2026-08-14,@datadog/browser-logs,0.0,553415.0,centered
+2026-08-15,@datadog/browser-logs,0.0,129269.0,centered
 2018-05-26,@datadog/browser-rum,0.0,0.0,centered
 2018-05-27,@datadog/browser-rum,0.0,0.0,centered
 2020-06-22,@datadog/browser-rum,0.0,8699.5,centered
@@ -179,6 +193,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/browser-rum,0.0,175509.0,centered
 2026-07-26,@datadog/browser-rum,209445.0,194189.5,centered
 2026-08-14,@datadog/browser-rum,0.0,1041135.0,centered
+2026-08-15,@datadog/browser-rum,0.0,229617.0,centered
 2018-05-26,@datadog/datadog-ci,0.0,0.0,centered
 2018-05-27,@datadog/datadog-ci,0.0,0.0,centered
 2020-06-22,@datadog/datadog-ci,0.0,13.0,centered
@@ -191,6 +206,7 @@ date,package,raw,imputed,mode
 2026-07-12,@datadog/datadog-ci,0.0,129972.0,centered
 2026-07-26,@datadog/datadog-ci,148776.0,127084.5,centered
 2026-08-14,@datadog/datadog-ci,0.0,783158.0,centered
+2026-08-15,@datadog/datadog-ci,0.0,170167.0,centered
 2018-05-26,@opentelemetry/api,0.0,0.0,centered
 2018-05-27,@opentelemetry/api,0.0,0.0,centered
 2020-06-22,@opentelemetry/api,0.0,28232.0,centered
@@ -203,6 +219,7 @@ date,package,raw,imputed,mode
 2026-07-12,@opentelemetry/api,0.0,4649745.0,centered
 2026-07-26,@opentelemetry/api,5130146.0,5175194.5,centered
 2026-08-14,@opentelemetry/api,0.0,11316111.0,centered
+2026-08-15,@opentelemetry/api,0.0,5662235.0,centered
 2018-05-26,@sentry/node,33.0,41.5,centered
 2018-05-27,@sentry/node,23.0,48.0,centered
 2020-06-22,@sentry/node,0.0,154272.0,centered
@@ -215,6 +232,7 @@ date,package,raw,imputed,mode
 2026-07-12,@sentry/node,0.0,2079108.0,centered
 2026-07-26,@sentry/node,2278995.0,2260651.5,centered
 2026-08-14,@sentry/node,0.0,4735079.0,centered
+2026-08-15,@sentry/node,0.0,2424328.0,centered
 2018-05-26,axios,27624.0,108392.0,centered
 2018-05-27,axios,27771.0,93929.5,centered
 2020-06-22,axios,0.0,1756894.0,centered
@@ -227,6 +245,7 @@ date,package,raw,imputed,mode
 2026-07-12,axios,0.0,7870292.0,centered
 2026-07-26,axios,0.0,8142519.0,centered
 2026-08-14,axios,0.0,19126614.0,centered
+2026-08-15,axios,0.0,8550239.0,centered
 2018-05-26,chalk,167652.0,777318.0,centered
 2018-05-27,chalk,185193.0,725683.5,centered
 2020-06-22,chalk,0.0,8589650.5,centered
@@ -239,6 +258,7 @@ date,package,raw,imputed,mode
 2026-07-12,chalk,0.0,34737496.0,centered
 2026-07-26,chalk,0.0,35979035.5,centered
 2026-08-14,chalk,0.0,77037913.0,centered
+2026-08-15,chalk,0.0,38138115.0,centered
 2018-05-26,datadog-metrics,34.0,164.0,centered
 2018-05-27,datadog-metrics,18.0,115.0,centered
 2020-06-22,datadog-metrics,0.0,6921.0,centered
@@ -251,6 +271,7 @@ date,package,raw,imputed,mode
 2026-07-12,datadog-metrics,0.0,89586.0,centered
 2026-07-26,datadog-metrics,92253.0,90966.0,centered
 2026-08-14,datadog-metrics,0.0,457862.0,centered
+2026-08-15,datadog-metrics,0.0,97613.0,centered
 2018-05-26,dd-trace,3.0,29.0,centered
 2018-05-27,dd-trace,2.0,13.5,centered
 2020-06-22,dd-trace,0.0,47302.5,centered
@@ -263,6 +284,7 @@ date,package,raw,imputed,mode
 2026-07-12,dd-trace,0.0,276220.0,centered
 2026-07-26,dd-trace,332545.0,314481.5,centered
 2026-08-14,dd-trace,0.0,1652866.0,centered
+2026-08-15,dd-trace,0.0,388240.0,centered
 2018-05-26,elastic-apm-node,37.0,108.0,centered
 2018-05-27,elastic-apm-node,11.0,116.5,centered
 2020-06-22,elastic-apm-node,0.0,16902.5,centered
@@ -275,6 +297,7 @@ date,package,raw,imputed,mode
 2026-07-12,elastic-apm-node,0.0,21905.0,centered
 2026-07-26,elastic-apm-node,20533.0,22525.5,centered
 2026-08-14,elastic-apm-node,0.0,72382.0,centered
+2026-08-15,elastic-apm-node,0.0,25200.0,centered
 2018-05-26,lodash,165059.0,843679.5,centered
 2018-05-27,lodash,173704.0,805101.0,centered
 2020-06-22,lodash,0.0,4587647.5,centered
@@ -287,6 +310,7 @@ date,package,raw,imputed,mode
 2026-07-12,lodash,0.0,13178344.0,centered
 2026-07-26,lodash,12858745.0,13277656.5,centered
 2026-08-14,lodash,0.0,25271015.0,centered
+2026-08-15,lodash,0.0,13592101.0,centered
 2018-05-26,newrelic,1661.0,15289.0,centered
 2018-05-27,newrelic,1446.0,13205.5,centered
 2020-06-22,newrelic,0.0,107989.0,centered
@@ -299,6 +323,7 @@ date,package,raw,imputed,mode
 2026-07-12,newrelic,0.0,59723.0,centered
 2026-07-26,newrelic,68198.0,59684.5,centered
 2026-08-14,newrelic,0.0,218276.0,centered
+2026-08-15,newrelic,0.0,57669.0,centered
 2018-05-26,react,42244.0,101981.0,centered
 2018-05-27,react,44944.0,93525.5,centered
 2020-06-22,react,0.0,1342471.0,centered
@@ -311,3 +336,4 @@ date,package,raw,imputed,mode
 2026-07-12,react,0.0,14869321.0,centered
 2026-07-26,react,14866416.0,15122812.0,centered
 2026-08-14,react,0.0,24781398.0,centered
+2026-08-15,react,0.0,15082055.0,centered
